@@ -1,0 +1,10 @@
+pandas
+numpy
+scikit-learn
+duckdb
+networkx
+streamlit
+plotly
+matplotlib
+faker
+pytest

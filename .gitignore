@@ -1,0 +1,17 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+#  never commit API keysSecrets 
+.streamlit/secrets.toml
+.env
+
+# Data & artifacts that can be regenerated (we'll adjust this later per phase)
+data/raw/*
+data/processed/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+
+# OS noise
+.DS_Store
