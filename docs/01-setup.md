@@ -406,6 +406,24 @@ The two safety commands come **first**, on purpose: there's no point staging or 
 
 **If it goes wrong:** if a push is *rejected* with a message about "non-fast-forward", it means the remote has a change your local branch doesn't. For a solo project this is rare; if it happens, run `git pull origin develop` to bring the changes down, resolve any conflicts your editor highlights, then push again. If `git pull --ff-only origin master` refuses because it "cannot fast-forward", it means local `master` has drifted; the safe fix is `git switch master && git reset --hard origin/master && git switch develop` (this makes local `master` an exact copy of the remote — safe here because you never edit `master` directly, only ever on `develop`).
 
+**If a push fails partway with `HTTP 400`, `RPC failed`, or `unexpected disconnect while reading sideband packet`:** this is a *transfer* error, not a problem with your commit — the upload was cut off mid-flight. Your commit is safe locally (confirm with `git log --oneline -1`); only the upload needs to finish. It most often appears on the first push that includes larger files (images, an interactive HTML chart), because Git's default upload buffer is only 1 MB. The fix, in order:
+
+1. **Raise Git's HTTP buffer once**, then retry the push:
+   ```bash
+   git config --global http.postBuffer 524288000    # allow pushes up to 500 MB
+   git push origin develop develop:beta develop:master
+   ```
+   (This only *permits* larger pushes; it doesn't force anything.)
+2. **Still failing? Push the branches one at a time** — smaller requests are less likely to drop:
+   ```bash
+   git push origin develop
+   git push origin develop:beta
+   git push origin develop:master
+   ```
+3. **Still failing?** It's usually a flaky or proxied connection at that moment. If you're on a corporate VPN or proxy, switch to a plain network and retry — proxies are a common cause of `HTTP 400` on larger pushes.
+
+> A misleading detail: after a failed multi-branch push you may see `Everything up-to-date` for `beta`/`master`. That does **not** mean your new commit landed — the `develop` push failed, so nothing was published. After a successful retry, confirm with `git branch -vv`: all three local branches should show the same latest commit, each `0 ahead` of its origin.
+
 > **This same ritual — safety checks first, then commit, push to all three, sync master — is how every phase in this project ends.** Each phase guide repeats the exact commands so it becomes second nature.
 
 ### The pre-push safety gate: `check-public-safe.sh`
