@@ -158,7 +158,7 @@ present. The box-by-box tour below says the same thing in words.)*
 **Why it exists:** it's the most natural way for a non-expert to interrogate the project, and it's a strong, modern capability. Staged as a later feature because it builds on Boxes 7 and 9.
 
 ### (Roadmap) MCP Server
-**What it does:** exposes a few of the project's functions so an AI assistant like an AI assistant can call them directly and operate the model live.
+**What it does:** exposes a few of the project's functions so an AI assistant can call them directly and operate the model live.
 **Why it exists:** it turns your repo from "code someone reads" into "a tool an AI can use" — an unusual, forward-looking capability. Documented as roadmap, honestly labelled as not-yet-built until you build it.
 
 ---

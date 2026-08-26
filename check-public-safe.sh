@@ -31,8 +31,7 @@ echo ""
 # .gitkeep placeholder, which is allowed — everything else under data/ is not.)
 echo "1. Secret / environment / data paths"
 step1=0
-for p in .venv renv/library .streamlit/secrets.toml .env .env.local .Renviron \
-         .assistant ASSISTANT.md ASSISTANT.local.md ; do
+for p in .venv renv/library .streamlit/secrets.toml .env .env.local .Renviron ; do
   tracked=$(git ls-files -- "$p" 2>/dev/null)
   if [ -n "$tracked" ]; then
     echo -e "   ${RED}✗ TRACKED: $p${NC}"

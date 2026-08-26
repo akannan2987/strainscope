@@ -415,15 +415,7 @@ git switch develop
 
 ---
 
-## 11. Notes
-
-If you'd rather have automation scaffold or extend this phase inside your repo, paste this at the project root:
-
-> *"In this Python project, create `src/strainscope/generate_data.py` that generates a synthetic multi-omics dataset of 600 microbial strains and writes three CSVs to `data/raw/`: `genomics.csv` (binary presence/absence of ~21 real biocontrol gene families, including housekeeping and noise genes), `metabolomics.csv` (log-normal abundances of ~14 secreted compounds, where signal metabolites are correlated with their producing gene and a batch effect is applied across 6 batches), and `phenotype.csv` (a `suppression_score` 0–100 driven by the signal genes and metabolites plus noise, an `is_effective` label with ~22% positives, a secondary `growth_promotion` score, and messy metadata columns). Use a fixed random seed (42) via `numpy.random.default_rng`, use `pathlib` for cross-platform output paths, inject ~6% missing metabolite values, ~2% missing gene calls, ~1% outliers, 8 duplicated strain rows, and a few impossible scores. Print a summary ledger. Comment every step for a beginner, explaining the reasoning. Then create `figures/make_phase1_figures.py` that reads the CSVs and writes teaching figures (class balance, a three-layer overview heatmap, a signal scatter, gene prevalence by type, metabolite–outcome correlations, a missingness heatmap, and a batch-effect boxplot) plus one interactive Plotly HTML."*
-
----
-
-## 12. What you learned, and what's next
+## 11. What you learned, and what's next
 
 **You learned:** what data science needs to begin; what genomics / metabolomics / phenotype are, in plain terms and real biology; what a random seed is and why reproducibility rests on it; why realistic data must contain signal, housekeeping, *and* noise; and why we build imperfection in on purpose. You generated the dataset, made it reproducible, and — crucially — *saw* it.
 
