@@ -6,6 +6,16 @@ __pycache__/
 #  never commit API keysSecrets 
 .streamlit/secrets.toml
 .env
+.Renviron
+
+# R /  keep the lockfile (the receipt), ignore the built library.renv 
+# (renv also writes its own .gitignore inside renv/ automatically.)
+renv/library/
+renv/local/
+renv/cellar/
+renv/lock/
+renv/python/
+renv/staging/
 
 # Data & artifacts that can be regenerated (we'll adjust this later per phase)
 data/raw/*
@@ -15,3 +25,4 @@ data/processed/*
 
 # OS noise
 .DS_Store
+.Rproj.user
