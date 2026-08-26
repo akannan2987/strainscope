@@ -162,16 +162,16 @@ anyone who clones the repo reproduces it exactly. It is designed to mirror a rea
 biocontrol-screening scenario and is grounded in real gene families and compound
 classes, but it is not real measurement data. See [About the data](#about-the-data-honesty-notes).*
 
-The planned shape of the dataset (final numbers land when Phase 1 completes):
+The planned shape of the dataset (final numbers from the generator, fixed seed):
 
 | Fact | Value |
 | --- | --- |
-| Samples (microbial strains) | ~600 |
-| Genomic layer | presence/absence of real biocontrol gene families (antibiotic biosynthesis, siderophore, chitinase, ACC-deaminase, …) |
-| Metabolomic layer | abundances of real secreted-compound classes (lipopeptides — surfactin/iturin/fengycin, siderophores, HCN, …) |
-| Phenotype (the target) | disease-suppression score, plus a "works / doesn't" label |
-| Built-in realism | correlations across layers, class imbalance (few strong performers), missing values, batch effects, duplicates |
-| Reproducibility | one generator script, fixed seed — identical data on every machine |
+| Samples (microbial strains) | 600 (+8 deliberate duplicate rows = 608 raw rows) |
+| Genomic layer | 21 columns: real biocontrol gene families (`phlD`, `srfAA`, `ituA`, `chiA`, `pvdA`, …) plus housekeeping (`recA`/`gyrB`/`rpoB`) and accessory-noise genes |
+| Metabolomic layer | 14 columns: secreted-compound abundances (DAPG, surfactin, iturin, fengycin, pyoverdine, …) plus background-noise compounds |
+| Phenotype (the target) | `suppression_score` (0–100 %) and an `is_effective` label — **142 effective (23.7 %)**, plus a secondary `growth_promotion` score |
+| Built-in realism | cross-layer correlations, class imbalance (~24 % positives), 491 missing metabolite cells, 245 missing gene calls, 86 outliers, 8 duplicated strains, a batch effect across 6 batches, and 6 impossible scores |
+| Reproducibility | one generator script, fixed seed (42) — identical data on every machine |
 
 ## Results, phase by phase
 
@@ -179,8 +179,11 @@ The planned shape of the dataset (final numbers land when Phase 1 completes):
 complete, one figure per phase appears here with what it means, exactly as in the
 build log below. Nothing is shown before it exists.*
 
-- **Phase 1 — Data generation:** *(pending)* the synthetic library and a
-  data-dictionary; a first look at the built-in class imbalance.
+- **Phase 1 — Data generation:** ✅ a reproducible generator (`src/strainscope/generate_data.py`, fixed seed) builds 600 strains across three grounded-in-real-biology omics layers, with class imbalance, missing values, batch effects, outliers, and duplicates injected on purpose. One picture — the same strains across all three layers:
+
+  ![The three data layers side by side](figures/dataset_overview.png)
+
+  The winners are deliberately rare (23.7 % effective), and the hidden signal is real: strains producing more antifungal compounds tend to suppress disease more — with the honest noise and artifacts that make the later cleaning and modelling phases meaningful. Interactive version: `docs/interactive/signal_scatter.html`.
 - **Phase 2 — Harmonization & QC:** *(pending)* before/after cleaning ledger —
   rows in, rows out, what each check caught.
 - **Phase 3 — Integration:** *(pending)* the cross-layer signature (which genes
@@ -200,7 +203,7 @@ build log below. Nothing is shown before it exists.*
 | — | [Glossary — every term in plain words](docs/GLOSSARY.md) | 🔨 living document |
 | 0 | [Architecture — how it all fits together](docs/00-architecture.md) | ✅ |
 | 0 | [Environment setup from a blank laptop](docs/01-setup.md) | ✅ |
-| 1 | [Data generation: a realistic synthetic library](docs/02-data-generation.md) | ⬜ planned |
+| 1 | [Data generation: a realistic synthetic library](docs/02-data-generation.md) | ✅ |
 | 2 | [Harmonization & quality control](docs/03-harmonization-qc.md) | ⬜ planned |
 | 3 | [Multi-omics integration (DIABLO + Python)](docs/04-integration.md) | ⬜ planned |
 | 4 | [Machine learning & honest evaluation](docs/05-machine-learning.md) | ⬜ planned |
@@ -306,7 +309,7 @@ strainscope/
 ├── docs/                          ← the tutorial (the repo IS the tutorial)
 │   ├── 00-architecture.md         ← how it all fits together                     ✅
 │   ├── 01-setup.md                ← blank laptop → working workshop              ✅
-│   ├── 02-data-generation.md      ← the synthetic library                        ⬜
+│   ├── 02-data-generation.md      ← the synthetic library                        ✅
 │   ├── 03-harmonization-qc.md     ← cleaning & quality control                   ⬜
 │   ├── 04-integration.md          ← multi-omics integration (DIABLO + Python)    ⬜
 │   ├── 05-machine-learning.md     ← models & honest evaluation                   ⬜
@@ -315,11 +318,16 @@ strainscope/
 │   ├── 08-deployment-ai.md        ← going live + AI explanation layer            ⬜
 │   ├── 09-packaging.md            ← release notes, roadmap, license              ⬜
 │   ├── GLOSSARY.md                ← every term, plain language, by phase         🔨
-│   └── img/                       ← teaching figures + the cover/logo            ⬜
+│   └── interactive/               ← self-contained interactive charts (Plotly)   ✅
+│       └── signal_scatter.html    ← Phase 1: hover any strain (open in browser)
+│
+├── figures/                       ← teaching figures, generated from the data
+│   ├── make_phase1_figures.py     ← Phase 1: regenerates every figure below      ✅
+│   └── *.png                      ← class balance, 3-layer overview, signal, …   ✅
 │
 ├── src/strainscope/               ← the reusable backend code (Python)
 │   ├── __init__.py
-│   ├── generate_data.py           ← Phase 1: the synthetic data generator        ⬜
+│   ├── generate_data.py           ← Phase 1: the synthetic data generator        ✅
 │   ├── harmonize.py               ← Phase 2: harmonization + QC                   ⬜
 │   ├── database.py                ← Phase 2: load into / query DuckDB             ⬜
 │   ├── integrate.py               ← Phase 3: Python multi-omics integration       ⬜
