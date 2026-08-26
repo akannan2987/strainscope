@@ -43,11 +43,16 @@ scratch, in public, fully explained.**
 ## What is a beneficial microbe? (start here)
 
 Imagine a farmer whose crop is under attack by a fungal disease. Instead of
-spraying a synthetic chemical, they treat the field with a *living* helper: a
-harmless soil bacterium that naturally out-competes the fungus, or produces a
-compound that keeps it in check. That helper is a **beneficial microbe**, and
-using nature's own organisms this way — to protect plants or improve soil —
-is the world of **biologicals**.
+spraying a synthetic chemical, they treat the field with a *living* helper — for
+example a harmless soil **bacterium** that out-competes the pest, a **fungus**
+like *Trichoderma* that parasitises the disease, a **yeast** that crowds it out,
+or an **oomycete** that triggers the plant's own defences. Those helpers are
+**beneficial microbes**, and using nature's own organisms this way — to protect
+plants or improve soil — is the world of **biologicals**.
+
+Different microbes fight with different weapons — bacteria with antibiotics and
+lipopeptides, fungi with wall-digesting enzymes and toxins, yeasts by
+competition — which is part of what makes picking the good ones hard.
 
 Here's the catch that makes it a data problem. There are thousands of candidate
 microbes, and only a few actually work well in the real world. Testing each one
@@ -166,11 +171,12 @@ The planned shape of the dataset (final numbers from the generator, fixed seed):
 
 | Fact | Value |
 | --- | --- |
-| Samples (microbial strains) | 600 (+8 deliberate duplicate rows = 608 raw rows) |
-| Genomic layer | 21 columns: real biocontrol gene families (`phlD`, `srfAA`, `ituA`, `chiA`, `pvdA`, …) plus housekeeping (`recA`/`gyrB`/`rpoB`) and accessory-noise genes |
-| Metabolomic layer | 14 columns: secreted-compound abundances (DAPG, surfactin, iturin, fengycin, pyoverdine, …) plus background-noise compounds |
-| Phenotype (the target) | `suppression_score` (0–100 %) and an `is_effective` label — **142 effective (23.7 %)**, plus a secondary `growth_promotion` score |
-| Built-in realism | cross-layer correlations, class imbalance (~24 % positives), 491 missing metabolite cells, 245 missing gene calls, 86 outliers, 8 duplicated strains, a batch effect across 6 batches, and 6 impossible scores |
+| Samples (microbial strains) | 600 across **4 kingdoms** — Bacteria 267, Fungi 183, Yeast 95, Oomycete 55 (+8 duplicate rows = 608 raw rows) |
+| Genomic layer | 31 columns of real biocontrol gene families, grouped by kingdom: bacterial antibiotics/lipopeptides (`phlD`, `srfAA`, `ituA`, `pvdA`…), fungal/oomycete mycoparasitism & toxins (`ech42`, `prb1`, `dtxS`, `olpA`…), yeast killer-toxin/siderophore (`kilT`, `sidA`), plus housekeeping and accessory-noise genes |
+| Metabolomic layer | 20 columns of secreted-compound abundances (DAPG, surfactin, iturin, six_PP, destruxin, oligandrin, killer_toxin…) plus background-noise compounds |
+| Phenotype (the target) | `suppression_score` (0–100 %) and an `is_effective` label — **145 effective (24.2 %)**, every kingdom producing winners (19–28 %); plus a secondary `growth_promotion` score |
+| Built-in realism | different weapons per kingdom, cross-layer correlations, class imbalance (~24 %), 714 missing metabolite cells, 338 missing gene calls, 120 outliers, 8 duplicated strains, a batch effect across 6 batches, and a few impossible scores |
+| Honest scope | the four **cellular** kingdoms that share a genome+metabolome basis are modelled; viruses and protozoa are named as part of the biocontrol landscape but deliberately not forced into the molecular matrix |
 | Reproducibility | one generator script, fixed seed (42) — identical data on every machine |
 
 ## Results, phase by phase
@@ -179,11 +185,11 @@ The planned shape of the dataset (final numbers from the generator, fixed seed):
 complete, one figure per phase appears here with what it means, exactly as in the
 build log below. Nothing is shown before it exists.*
 
-- **Phase 1 — Data generation:** ✅ a reproducible generator (`src/strainscope/generate_data.py`, fixed seed) builds 600 strains across three grounded-in-real-biology omics layers, with class imbalance, missing values, batch effects, outliers, and duplicates injected on purpose. One picture — the same strains across all three layers:
+- **Phase 1 — Data generation:** ✅ a reproducible generator (`src/strainscope/generate_data.py`, fixed seed) builds 600 strains across **four kingdoms** of biocontrol microbes (bacteria, fungi, yeasts, oomycetes), each fighting with its own real weapons, plus three grounded-in-real-biology omics layers — with class imbalance, missing values, batch effects, outliers, and duplicates injected on purpose. Each kingdom carries a distinct arsenal:
 
-  ![The three data layers side by side](figures/dataset_overview.png)
+  ![Different kingdoms carry different weapons](figures/weapons_by_kingdom.png)
 
-  The winners are deliberately rare (23.7 % effective), and the hidden signal is real: strains producing more antifungal compounds tend to suppress disease more — with the honest noise and artifacts that make the later cleaning and modelling phases meaningful. Interactive version: `docs/interactive/signal_scatter.html`.
+  The winners are deliberately rare (24.2 % effective) and every kingdom produces some, so a model must learn *how each group fights* rather than reading the kingdom label. Interactive version: `docs/interactive/signal_scatter.html`.
 - **Phase 2 — Harmonization & QC:** *(pending)* before/after cleaning ledger —
   rows in, rows out, what each check caught.
 - **Phase 3 — Integration:** *(pending)* the cross-layer signature (which genes
@@ -323,7 +329,7 @@ strainscope/
 │
 ├── figures/                       ← teaching figures, generated from the data
 │   ├── make_phase1_figures.py     ← Phase 1: regenerates every figure below      ✅
-│   └── *.png                      ← class balance, 3-layer overview, signal, …   ✅
+│   └── *.png                      ← kingdom mix, weapons-by-kingdom, 3-layer …    ✅
 │
 ├── src/strainscope/               ← the reusable backend code (Python)
 │   ├── __init__.py

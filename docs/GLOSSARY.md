@@ -42,20 +42,29 @@ first appears. If a term is missing, that's a documentation bug worth fixing.
 
 ### Biology
 - **Biologicals** — crop-protection products derived from nature (living microbes, extracts, or natural molecules) instead of synthetic chemicals.
-- **Microbe** — a tiny organism (usually a bacterium or fungus). Some protect plants from disease or help them grow.
-- **Strain** — one specific "breed" of a microbe. Our samples are strains; each gets a `strain_id`.
+- **Microbe** — a tiny living organism. Beneficial ones protect plants or help them grow.
+- **Kingdom** — a top-level grouping of living things. We model four *cellular* microbial kingdoms: **Bacteria**, **Fungi**, **Yeasts** (single-celled fungi), and **Oomycetes** (fungus-like organisms). Each fights pests differently.
+- **Fungi** — a kingdom of organisms (moulds, mushrooms, yeasts). Biocontrol fungi like *Trichoderma* attack plant pathogens directly.
+- **Yeast** — a single-celled fungus; biocontrol yeasts mostly work by out-competing pests for space and nutrients.
+- **Oomycete** — a fungus-like microbe (e.g. *Pythium oligandrum*); a few are helpful biocontrol agents even though many relatives are pathogens.
+- **Viruses / protozoa** — also part of the biocontrol landscape, but they don't share the genome+metabolome "fingerprint" of the cellular kingdoms, so StrainScope names them as context and does *not* put them in the molecular dataset (an honest scoping choice).
+- **Genus** — the next level of naming below kingdom (e.g. *Bacillus*, *Trichoderma*). Each strain has one.
+- **Strain** — one specific isolate of a microbe. Our samples are strains; each gets a `strain_id`.
+- **Mycoparasitism** — one fungus (or oomycete) literally attacking and feeding on another fungus; a key biocontrol mechanism of *Trichoderma* and *Pythium oligandrum*.
+- **Entomopathogen** — an "insect-killing" microbe; entomopathogenic fungi like *Beauveria*/*Metarhizium* make insecticidal toxins (beauvericin, destruxin).
 - **Biocontrol** — using a beneficial microbe to suppress a plant disease or pest.
 - **Pathogen** — the disease-causing organism a biocontrol strain fights (often a fungus, here).
 - **-omics** — "measuring a whole category at once." *Genomics* = all the genes; *metabolomics* = all the metabolites.
 - **Multi-omics** — looking at several -omics layers together, and analysing them jointly.
 - **Genome / gene** — the microbe's DNA blueprint; a gene is one instruction in it. Here: which helpful genes a strain carries.
-- **Metabolite** — a small-molecule chemical a microbe produces. Some are natural antifungals/antibiotics.
+- **Metabolite** — a small-molecule chemical a microbe produces. Some are natural antifungals/antibiotics/toxins.
 - **Phenotype** — an observable outcome. Here: how well a strain suppresses disease (`suppression_score`).
-- **Lipopeptide** — a class of soap-like antifungal molecules (surfactin, iturin, fengycin) made by some bacteria.
-- **Siderophore** — a molecule (like pyoverdine) that grabs iron, starving competing pathogens.
-- **Chitinase** — an enzyme that digests fungal cell walls (dissolving their "armour").
-- **Housekeeping gene** — an essential gene present in almost every microbe (e.g. `recA`, `gyrB`, `rpoB`); carries no signal because it doesn't vary.
-- **Plant-growth promotion (PGP)** — helping the plant grow directly (via nitrogen, phosphate, stress relief); a secondary outcome here.
+- **Lipopeptide** — a class of soap-like antifungal molecules (surfactin, iturin, fengycin) made by some **bacteria**.
+- **Siderophore** — a molecule (pyoverdine in bacteria; a yeast version too) that grabs iron, starving competing pathogens.
+- **Chitinase / glucanase** — enzymes that digest fungal cell walls (dissolving their "armour"); used across kingdoms.
+- **Killer toxin** — a protein some yeasts secrete to kill rival microbes.
+- **Housekeeping gene** — a conserved gene present in almost every microbe of every kingdom (e.g. `ssu_rRNA`, `ef1a`, `rpb1`); carries no signal because it doesn't vary.
+- **Plant-growth promotion (PGP)** — helping the plant grow directly (via nitrogen, phosphate, auxin, stress relief); a secondary outcome here.
 
 ### Data & method
 - **Sample** — one thing you measured. Here, one strain.

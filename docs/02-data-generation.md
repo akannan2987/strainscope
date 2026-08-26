@@ -18,7 +18,20 @@
 
 Let me set the scene with zero assumed knowledge — biology *or* software.
 
-Farmers lose a huge share of their crops to diseases and pests. The usual defence is synthetic chemical sprays, but those have downsides (cost, resistance, environmental harm). There's a gentler alternative: **biologicals** — using *living helpers from nature* to protect plants. The most common helper is a **microbe**: a tiny organism (usually a bacterium or fungus) that, for example, produces a natural compound that keeps a crop disease in check, or simply out-competes the pest.
+Farmers lose a huge share of their crops to diseases and pests. The usual defence is synthetic chemical sprays, but those have downsides (cost, resistance, environmental harm). There's a gentler alternative: **biologicals** — using *living helpers from nature* to protect plants. A helper is a **microbe**: a tiny living organism that, for example, produces a natural compound that keeps a crop disease in check, or simply out-competes the pest.
+
+Crucially, "microbe" is not one kind of thing. Beneficial biocontrol microbes span several very different groups (biologists call them **kingdoms**), and — this is the important part — **each group fights with different weapons**:
+
+- **Bacteria** (e.g. *Bacillus*, *Pseudomonas*) — release **antibiotics and soap-like lipopeptides** that poison or dissolve pests.
+- **Fungi** (e.g. *Trichoderma*, *Beauveria*) — practise **mycoparasitism** (literally attacking other fungi with wall-digesting enzymes) and make antifungal or insect-killing toxins.
+- **Yeasts** (single-celled fungi) — mostly **out-compete** pests for space and nutrients, and some release "killer toxins".
+- **Oomycetes** (e.g. *Pythium oligandrum*) — fungus-like organisms that **parasitise other microbes** and trigger the plant's own defences.
+
+> **Everyday analogy:** think of a team of bodyguards from different backgrounds — one is a boxer, one a wrestler, one wins by sheer stamina. They all protect you, but *how* they do it differs. A good scout (our model) has to recognise each fighting style, not just look for one.
+
+There are two more groups in the real biocontrol world — **viruses** and **protozoa** — that genuinely matter, but they work so differently that they don't fit the same molecular measurements (a virus has no "chemistry output" to measure). We name them as part of the landscape and, honestly, leave them out of the molecular dataset — more on that, and *why*, in §4.
+
+"one strain" = one specific isolate of a microbe. Every strain in our data is one row, tagged with its **kingdom** and **genus**.
 
 Here's the problem that turns this into a *data* problem:
 
@@ -66,7 +79,7 @@ We create **600 strains**, and for each strain, three tables plus some metadata.
 |---|---|---|
 | `genomics.csv` | one strain | for each **gene family**, a `1` (the strain carries it) or `0` (it doesn't) |
 | `metabolomics.csv` | one strain | for each **chemical**, how much the strain produces (a number) |
-| `phenotype.csv` | one strain | the **outcome** (`suppression_score`, `is_effective`) plus metadata (genus, site, batch, date) |
+| `phenotype.csv` | one strain | the **kingdom** and **genus**, the **outcome** (`suppression_score`, `is_effective`), plus metadata (site, batch, date) |
 
 All three tables share a **`strain_id`** column (like `STRAIN_0001`) — that's the shared key that lets us line the fingerprints up later. (Lining tables up on a shared key is exactly what a database `JOIN` does — you'll meet it next phase.)
 
@@ -82,22 +95,49 @@ This is the single most important design idea, so here it is slowly. In real dat
 
 Every gene and chemical below is a **real** one known to matter for microbes that protect plants. You don't need to memorise these — but seeing that they're real (not invented) is what makes the simulator trustworthy. Here's the friendly version:
 
+Because different kingdoms fight differently, the genes are grouped by *whose weapon they are*. You don't need to memorise these — seeing that they're real, and that each kingdom has its own kit, is the point.
+
+**Bacterial weapons** (antibiotics, lipopeptides, iron-theft):
+
 | Gene | What it does, in plain words |
 |---|---|
-| `phlD` | makes **DAPG**, a natural antifungal (kills or slows fungi) |
-| `prnD` | makes **pyrrolnitrin**, another antifungal |
+| `phlD` | makes **DAPG**, a natural antifungal |
+| `prnD` | makes **pyrrolnitrin**, another antifungal antibiotic |
 | `phzE` | makes **phenazine**, a broad antibiotic |
 | `hcnA` | makes **hydrogen cyanide**, which suppresses fungi and some pests |
 | `srfAA` | makes **surfactin**, a soap-like molecule that damages microbe membranes |
-| `ituA` | makes **iturin**, a strong antifungal |
-| `fenA` | makes **fengycin**, an antifungal |
-| `chiA` | makes **chitinase**, an enzyme that digests fungal cell walls (like dissolving their armour) |
+| `ituA` | makes **iturin**, a strong antifungal lipopeptide |
+| `fenA` | makes **fengycin**, an antifungal lipopeptide |
 | `pvdA` | makes **pyoverdine**, which "steals" iron so pathogens starve |
-| `acdS`, `nifH`, `gcd` | help the **plant grow** (stress relief, nitrogen, phosphate) — a *second* outcome |
-| `recA`, `gyrB`, `rpoB` | **housekeeping** — essential genes in ~every microbe, so they carry no signal |
+
+**Fungal & oomycete weapons** (mycoparasitism — attacking other microbes — plus toxins):
+
+| Gene | What it does, in plain words |
+|---|---|
+| `chiA`, `glcA` | **chitinase** and **glucanase** — enzymes that dissolve fungal cell walls (their armour); used by bacteria, fungi *and* oomycetes |
+| `ech42`, `prb1` | *Trichoderma*'s **mycoparasitism** enzymes (a wall-digesting chitinase and a protease) |
+| `sixPP` | makes **6-pentyl-α-pyrone**, an antifungal aroma compound (the "coconut" smell of *Trichoderma*) |
+| `dtxS`, `beaS` | insect-killing fungi (*Metarhizium*, *Beauveria*) making the toxins **destruxin** and **beauvericin** |
+| `olpA` | *Pythium oligandrum*'s **oligandrin**, which alerts the plant's own immune system |
+
+**Yeast weapons** (competition & killer toxins):
+
+| Gene | What it does, in plain words |
+|---|---|
+| `kilT` | a yeast **killer toxin** that kills rival microbes |
+| `sidA` | a yeast **siderophore** — iron competition, like the bacterial one |
+
+**Not weapons** (present in the data, but for different reasons):
+
+| Gene | What it does, in plain words |
+|---|---|
+| `acdS`, `nifH`, `gcd`, `iaaM` | help the **plant grow** (stress relief, nitrogen, phosphate, auxin) — a *second* outcome |
+| `ssu_rRNA`, `ef1a`, `rpb1` | **housekeeping** — conserved genes in ~every microbe of every kingdom, so they carry no signal |
 | `accA…accF` | stand-in **accessory** genes: they vary but don't affect the outcome (noise) |
 
-The **metabolites** (chemicals) mirror the genes: if a strain has the gene, it *tends* to produce the matching chemical — but not perfectly, because biology has regulation and randomness. That imperfect gene→chemical link is precisely why looking at **both** layers together beats looking at either alone.
+The **metabolites** (chemicals) mirror the genes: if a strain has the producing gene, it *tends* to make the matching chemical — but not perfectly, because biology has regulation and randomness. That imperfect gene→chemical link is precisely why looking at **both** layers together beats looking at either alone. (A few genes, like the wall-digesting enzymes, are *enzymes* rather than small molecules, so they show up only in the genomics layer — a small honest realism: not every mechanism leaves a chemical trace.)
+
+> **Why viruses and protozoa aren't in the data (an honest scoping choice).** They're real biocontrol agents — baculoviruses kill insect pests, some protozoa attack pathogens. But a virus has **no genome-plus-metabolome fingerprint** in the sense the other groups do (it has a handful of genes and produces no secreted chemicals of its own). Forcing them into the same three-table structure would mean inventing measurements that don't exist — which an expert would rightly distrust. So we cover the **four cellular kingdoms that genuinely share this molecular basis** (bacteria, fungi, yeasts, oomycetes) and name viruses/protozoa as context. Knowing *what not to model, and why*, is as much a part of good data science as the modelling.
 
 ### 4c. The mess we build in on purpose
 
@@ -107,7 +147,7 @@ Real lab data is dirty. To make the simulator honest — and to give the *next* 
 - **A batch effect** — strains are processed in **6 batches**, and each batch's chemical readings drift by a systematic factor. (Real instruments/reagents drift between runs.)
 - **Outliers** — a few chemical readings spike to absurd values (measurement errors).
 - **Duplicate rows** — a handful of strains get recorded **twice** (classic data-entry mistake).
-- **Messy text** — the `collection_site` and `genus` columns have inconsistent capitalisation, stray spaces, and a deliberate typo (`Psuedomonas`), so the cleaning phase has real text to harmonise.
+- **Messy text** — the `collection_site` and `genus` columns have inconsistent capitalisation, stray spaces, and deliberate typos (`Psuedomonas` for *Pseudomonas*, lowercase `trichoderma`), so the cleaning phase has real text to harmonise across all kingdoms.
 - **A few "impossible" values** — a suppression score can't really be below 0% or above 100%, but noise pushes a few outside that range, so cleaning has to catch and clip them.
 
 None of this is sloppiness — it's **realism, on purpose**, and each item is documented so nothing is a surprise later.
@@ -121,9 +161,11 @@ A **data dictionary** is a reference table that says, for every column: what it'
 | Column | Type | Meaning |
 |---|---|---|
 | `strain_id` | text | unique strain key (`STRAIN_0001`…); the shared key across all three files |
-| `phlD, prnD, phzE, hcnA, srfAA, ituA, fenA, chiA, pvdA` | 0/1 (some blank) | **signal** genes — antifungal/antibiotic/lipopeptide/siderophore machinery linked to suppression |
-| `acdS, nifH, gcd` | 0/1 | **growth-promotion** genes — linked to the secondary outcome |
-| `recA, gyrB, rpoB` | 0/1 | **housekeeping** genes — present in ~all strains, so no signal |
+| `phlD, prnD, phzE, hcnA, srfAA, ituA, fenA, pvdA` | 0/1 (some blank) | **bacterial** signal genes — antibiotics, lipopeptides, siderophore |
+| `chiA, glcA, ech42, prb1, sixPP, dtxS, beaS, olpA` | 0/1 | **fungal / oomycete** signal genes — wall-digesting enzymes, mycoparasitism, antifungal & insecticidal toxins, elicitor |
+| `kilT, sidA` | 0/1 | **yeast** signal genes — killer toxin, siderophore |
+| `acdS, nifH, gcd, iaaM` | 0/1 | **growth-promotion** genes — linked to the secondary outcome |
+| `ssu_rRNA, ef1a, rpb1` | 0/1 | **housekeeping** genes — present in ~all strains of every kingdom, so no signal |
 | `accA … accF` | 0/1 | **accessory noise** genes — vary, but unrelated to any outcome |
 
 **`metabolomics.csv`** — one row per strain; abundances are non-negative numbers (blank = missing reading).
@@ -131,15 +173,20 @@ A **data dictionary** is a reference table that says, for every column: what it'
 | Column | Type | Meaning |
 |---|---|---|
 | `strain_id` | text | shared key |
-| `DAPG, pyrrolnitrin, phenazine, HCN, surfactin, iturin, fengycin, pyoverdine` | float ≥ 0 (some blank) | **signal** metabolites — each produced by its matching gene; some values are outlier spikes |
+| `DAPG, pyrrolnitrin, phenazine, HCN, surfactin, iturin, fengycin, pyoverdine` | float ≥ 0 (some blank) | **bacterial** signal metabolites |
+| `six_PP, destruxin, beauvericin, oligandrin` | float ≥ 0 | **fungal / oomycete** signal metabolites |
+| `killer_toxin, yeast_siderophore` | float ≥ 0 | **yeast** signal metabolites |
 | `bg_metabolite_1 … bg_metabolite_6` | float ≥ 0 | **background noise** metabolites — measured, but unrelated to the outcome |
+
+*(Note: some signal genes — `chiA`, `glcA`, `ech42`, `prb1` — are enzymes, not small molecules, so they have no metabolite column; they contribute through genomics only.)*
 
 **`phenotype.csv`** — one row per strain; the outcome plus sample metadata.
 
 | Column | Type | Meaning |
 |---|---|---|
 | `strain_id` | text | shared key |
-| `genus` | text (messy) | microbe genus label — inconsistent case, stray spaces, one deliberate typo |
+| `kingdom` | text | one of **Bacteria / Fungi / Yeast / Oomycete** — the microbe group |
+| `genus` | text (messy) | microbe genus label — inconsistent case, stray spaces, deliberate typos |
 | `collection_site` | text (messy) | where the strain was isolated — inconsistent case/whitespace |
 | `isolation_date` | date (ISO `YYYY-MM-DD`) | a plausible fake isolation date (from Faker) |
 | `batch_id` | integer 1–6 | the processing batch — the source of the batch effect |
@@ -199,25 +246,27 @@ python src/strainscope/generate_data.py
 **Expected output** (your numbers will match exactly, because of the fixed seed):
 
 ```
-  wrote data/raw/genomics.csv  (608 rows, 22 columns)
-  wrote data/raw/metabolomics.csv  (608 rows, 15 columns)
-  wrote data/raw/phenotype.csv  (608 rows, 8 columns)
+  wrote data/raw/genomics.csv  (608 rows, 32 columns)
+  wrote data/raw/metabolomics.csv  (608 rows, 21 columns)
+  wrote data/raw/phenotype.csv  (608 rows, 9 columns)
 
   ── StrainScope synthetic dataset — ledger ──────────────────────
   strains (samples ....... 600
-  effective strains ...... 142  (23.7%)  <- the rare winners
-  genes (genomics cols) .. 21
-  metabolites (metab cols) 14
-  missing metabolite cells 491  (instrument dropouts)
-  missing gene cells ..... 245  (assembly gaps)
-  outlier metabolite cells 86  (measurement spikes)
+  effective strains ...... 145  (24.2%)  <- the rare winners
+  kingdoms ............... Bacteria:267  Fungi:183  Yeast:95  Oomycete:55
+  effective by kingdom ... Bacteria:28.1%  Fungi:21.3%  Oomycete:23.6%  Yeast:18.9%
+  genes (genomics cols) .. 31
+  metabolites (metab cols) 20
+  missing metabolite cells 714  (instrument dropouts)
+  missing gene cells ..... 338  (assembly gaps)
+  outlier metabolite cells 120  (measurement spikes)
   duplicated strains ..... 8  (recorded twice)
-  impossible scores ...... 6  (<0 or >100 %; QC will clip)
+  impossible scores ...... 3  (<0 or >100 %; QC will clip)
   ────────────────────────────────────────────────────────────────
   Reminder: this data is SIMULATED. It proves the workflow, not real-world accuracy.
 ```
 
-> **Why 608 rows, not 600?** Because we deliberately duplicated 8 strains — those 8 extra rows are the mess the next phase will clean. Seeing `608` is the point, not a bug.
+> **Why 608 rows, not 600?** Because we deliberately duplicated 8 strains — those 8 extra rows are the mess the next phase will clean. And notice the **effective-by-kingdom** line: every kingdom produces some winners (18–28%), with a mild, realistic tilt toward bacteria — so a model can't just cheat by reading the kingdom label; it has to learn each group's weapons.
 
 ### Step 4 — look at the data with your own eyes
 
@@ -229,11 +278,11 @@ head -3 data/raw/phenotype.csv
 ```
 **Expected** (something like):
 ```
-strain_id,genus,collection_site,isolation_date,batch_id,suppression_score,growth_promotion,is_effective
-STRAIN_0001,Streptomyces,phyllosphere,2019-08-12,3,41.87,45.9,0
-STRAIN_0002,Bacillus ,Rhizosphere,2021-03-04,5,58.31,52.1,0
+strain_id,kingdom,genus,collection_site,isolation_date,batch_id,suppression_score,growth_promotion,is_effective
+STRAIN_0001,Yeast,Candida,Endosphere,2023-10-07,2,40.85,30.81,0
+STRAIN_0002,Bacteria,Pseudomonas, rhizosphere,2018-11-07,6,46.25,27.78,0
 ```
-Notice the mess already visible: `Bacillus ` has a trailing space, `Rhizosphere` is capitalised inconsistently. Good — that's real.
+Notice the mess already visible: `Pseudomonas` here has a leading space on the *site* (` rhizosphere`), and elsewhere you'll find trailing spaces, odd capitalisation, and the `Psuedomonas`/`trichoderma` typos. Good — that's real, and it now spans four kingdoms.
 
 Or open `data/raw/genomics.csv` in VS Code and scroll: you'll see `1`s and `0`s, and some blank cells (the missing gene calls).
 
@@ -249,43 +298,55 @@ python figures/make_phase1_figures.py
 
 That writes the PNGs below into `figures/` and an interactive chart into `docs/interactive/`.
 
+### Four kingdoms, and each produces winners
+
+![Kingdom mix and effective rate](../figures/kingdom_mix.png)
+
+Our 600 strains span four kingdoms (left): bacteria are the most common (they're the most-studied biocontrol agents), then fungi, yeasts, and oomycetes. On the right is each kingdom's **effective rate** — all of them produce some winners (roughly 19–28%), with a mild, realistic tilt toward bacteria. That balance is deliberate: it forces the model to learn *how each kingdom fights*, not just to memorise "bacteria good, yeast bad."
+
+### Different kingdoms carry different weapons
+
+![Weapons by kingdom](../figures/weapons_by_kingdom.png)
+
+This is the heart of the multi-kingdom idea. Each row is a kingdom, each column a "weapon" gene, and the colour is how common that gene is in that kingdom. See how the arsenals barely overlap: bacteria carry the antibiotics and lipopeptides (`phlD`…`pvdA`); fungi carry the mycoparasitism enzymes and toxins (`ech42`…`beaS`); oomycetes carry `olpA` plus the shared wall-digesting enzymes; yeasts carry `kilT`/`sidA`. *A strain's kingdom shapes which weapons it can even have* — which is exactly why a one-size-fits-all model would fail.
+
 ### The three layers, one set of strains
 
 ![The three data layers side by side](../figures/dataset_overview.png)
 
-Read left to right: the same 40 strains appear in all three panels. **Genomics** (left) is blue where a gene is present — notice `recA`/`gyrB`/`rpoB` are blue for almost everyone (housekeeping), and the white gaps are missing calls. **Metabolomics** (middle) is a heat-map of chemical amounts (darker = more), with white gaps for missing readings. **Phenotype** (right) is each strain's suppression score; green bars cross the red "effective" line, grey bars don't. *This one picture is the whole project in miniature: three fingerprints, one outcome.*
+Read left to right: the same 40 strains appear in every panel. A thin **kingdom** strip (far left) colours each strain by group. **Genomics** is blue where a gene is present — notice the housekeeping genes (`ssu_rRNA`/`ef1a`/`rpb1`) are blue for almost everyone, and the white gaps are missing calls. **Metabolomics** is a heat-map of chemical amounts (darker = more), with white gaps for missing readings. **Phenotype** (right) is each strain's suppression score; green bars cross the red "effective" line, grey bars don't. *This one picture is the whole project in miniature: several fingerprints, one outcome.*
 
 ### The winners are rare
 
 ![Class balance](../figures/class_balance.png)
 
-Only **23.7%** of strains are "effective." This **class imbalance** is realistic (most candidates don't work) and it matters later: a lazy model could score 76% "accuracy" just by always guessing "not effective" — which is useless. Handling this honestly is a skill the modelling phase will teach.
+Only **24.2%** of strains are "effective." This **class imbalance** is realistic (most candidates don't work) and it matters later: a lazy model could score ~76% "accuracy" just by always guessing "not effective" — which is useless. Handling this honestly is a skill the modelling phase will teach.
 
 ### Not all genes are informative
 
 ![Gene prevalence by type](../figures/gene_prevalence.png)
 
-The housekeeping genes (grey) sit near 100% — they're in almost every strain, so they can't help *distinguish* good strains from bad. The signal genes (green) and noise genes (purple) vary more. A good model must learn to **lean on the informative genes and ignore the rest** — exactly the "which ingredients matter?" problem.
+The housekeeping genes (grey) sit near 100% — they're in almost every strain of every kingdom, so they can't help *distinguish* good strains from bad. The signal genes (green) and noise genes (purple) vary more. A good model must learn to **lean on the informative genes and ignore the rest** — exactly the "which ingredients matter?" problem.
 
 ### The hidden signal is really there
 
 ![Signal scatter: iturin vs suppression](../figures/signal_scatter.png)
 
-Each dot is a strain: how much **iturin** (an antifungal) it makes (across) versus how well it suppresses disease (up). Green (effective) dots sit higher — strains making more iturin tend to suppress more. The relationship is **real but noisy** (not a clean line), which is honest. You can also spot the artifacts we injected: a couple of dots above 100% (the "impossible" scores) and the far-right dots at extreme iturin values (the outlier spikes). The next phase cleans those.
+Each dot is a strain, coloured by **kingdom**: how much **iturin** (a *bacterial* antifungal lipopeptide) it makes (across) versus how well it suppresses disease (up). Look at the blue (bacteria) dots — the ones making more iturin tend to suppress more. The other kingdoms sit near zero iturin (it's not *their* weapon) yet many still suppress disease — because they fight with their *own* chemicals. That's the multi-kingdom story in one picture: **a weapon predicts success within the kingdom that wields it.** The relationship is real but noisy (honest), and you can still spot injected artifacts (a dot or two above 100%, the far-right outlier spikes) that the next phase cleans.
 
-**▶ Try the interactive version:** [`docs/interactive/signal_scatter.html`](interactive/signal_scatter.html) — open it in any web browser (double-click the file), and **hover over any dot** to see that strain's ID, genus, how many signal genes it carries, and its key chemical amounts. Dragging to zoom and toggling the legend works too. *(On GitHub, this file renders as a live page only when published via GitHub Pages; opened locally it works straight away.)*
+**▶ Try the interactive version:** [`docs/interactive/signal_scatter.html`](interactive/signal_scatter.html) — open it in any web browser (double-click the file). It plots **how many weapon genes a strain carries** against its suppression, coloured by kingdom, and **hovering any dot** shows that strain's ID, genus, kingdom, and score. You can see the same upward trend *within every kingdom*. Dragging to zoom and toggling a kingdom in the legend works too. *(On GitHub, this file renders as a live page only when published via GitHub Pages; opened locally it works straight away.)*
 
 ### Which chemicals carry the signal?
 
 ![Metabolite–outcome correlation](../figures/metabolite_correlation.png)
 
-Each bar is how strongly a chemical tracks the outcome. The **signal** chemicals (green) lean positive; the **background noise** chemicals (purple) hover around zero — they genuinely carry no information. This is the "find the signal among distractions" challenge, made visible.
+Each bar is how strongly a chemical tracks the outcome. All **signal** chemicals (green) — bacterial, fungal, oomycete *and* yeast — lean positive; the **background noise** chemicals (purple) hover around zero. Even though each weapon only helps its own kingdom, pooled across all strains the signal chemicals still carry real information and the noise ones don't. This is the "find the signal among distractions" challenge, made visible.
 
 ### The mess we must clean (next phase)
 
 ![Missing metabolite readings](../figures/missingness.png)
 
-Gold cells are **missing** readings scattered through the metabolomics table (491 in total). Missing data can't be ignored — most models refuse to run with holes in the input — so the next phase decides, deliberately and documented, what to do about each gap.
+Gold cells are **missing** readings scattered through the metabolomics table (714 in total). Missing data can't be ignored — most models refuse to run with holes in the input — so the next phase decides, deliberately and documented, what to do about each gap.
 
 ![Batch effect](../figures/batch_effect.png)
 
@@ -337,6 +398,7 @@ Real work has bumps, and hiding them helps no one. Here are the honest ones from
 - **The first version made too many "winners."** My first run marked **33.7%** of strains effective — too many for a realistic "rare winners" scenario. The fix was to lower the score's centre in the generator so ~24% pass the threshold. **Lesson:** designing synthetic data is *iterative* — you generate, check the result against your intent, and tune. Don't assume the first draft is right; look at the ledger and adjust.
 - **The safety gate flagged this very document.** When I first ran `check-public-safe.sh`, it stopped the push because a doc contained an example that *looked* like a real home-directory path. It was only an illustration — but the scanner can't tell an example from a real leak, and that's exactly what you want it to do. **Lesson:** the honest fix is to make the text unmistakably an example (a `<placeholder>`), **never** to weaken the check. A gate that trusts you is not a gate.
 - **A figure setting crashed the plotting script on the first run.** One styling option I used doesn't exist in this version of the plotting library, and the script stopped with a `KeyError` naming the bad setting. **Lesson:** read the actual error message — it usually names the exact problem. "Read the error, don't panic" is the single most useful debugging habit, and library options genuinely differ between versions.
+- **The first multi-kingdom version made yeasts unwinnable.** When I first broadened the data to four kingdoms, bacteria (which have the most "weapons") ended up ~40% effective while yeasts were **0%** — so the outcome was almost decided by kingdom alone. The fix was to judge each strain *relative to its own kingdom's arsenal*, with only a mild realistic tilt toward bacteria. **Lesson:** when a dataset spans groups with very different feature sets, check that the outcome isn't accidentally a proxy for the group label — otherwise a model "learns" the label instead of the biology.
 - **A package wasn't installed the first time.** The generator imports `faker`; on a fresh environment it wasn't there yet, so Python raised `ModuleNotFoundError`. **Lesson:** this is *precisely* what the virtual environment and `requirements.txt` exist to prevent — `pip install -r requirements.txt` inside your active `.venv` installs everything the project needs, so anyone who clones the repo gets an identical, complete toolbox.
 
 None of these are failures — they're the normal texture of building software, and each left the project a little more robust.
@@ -386,7 +448,7 @@ SELECT SUM(is_effective) AS effective, COUNT(*) AS total
 FROM (SELECT DISTINCT ON (strain_id) * FROM phenotype);
 ```
 
-All three give the same answer (142 effective of 600). The takeaways, honestly: **pandas** is the everyday workhorse for Python data work; **dplyr** reads almost like English and shines for statistics and the specialised omics tools we'll use later; **SQL** is unbeatable when the data already lives in a database and you want a precise slice of it. Knowing *why* you'd reach for each matters more than memorising any one.
+All three give the same answer (145 effective of 600). The takeaways, honestly: **pandas** is the everyday workhorse for Python data work; **dplyr** reads almost like English and shines for statistics and the specialised omics tools we'll use later; **SQL** is unbeatable when the data already lives in a database and you want a precise slice of it. Knowing *why* you'd reach for each matters more than memorising any one.
 
 ---
 
@@ -417,7 +479,7 @@ git switch develop
 
 ## 11. What you learned, and what's next
 
-**You learned:** what data science needs to begin; what genomics / metabolomics / phenotype are, in plain terms and real biology; what a random seed is and why reproducibility rests on it; why realistic data must contain signal, housekeeping, *and* noise; and why we build imperfection in on purpose. You generated the dataset, made it reproducible, and — crucially — *saw* it.
+**You learned:** what data science needs to begin; that beneficial microbes span several **kingdoms** (bacteria, fungi, yeasts, oomycetes) that fight with *different weapons*; what genomics / metabolomics / phenotype are, in plain terms and real biology; what a random seed is and why reproducibility rests on it; why realistic data must contain signal, housekeeping, *and* noise; why we build imperfection in on purpose; and why some real agents (viruses, protozoa) are honestly scoped *out* of the molecular matrix. You generated the dataset, made it reproducible, and — crucially — *saw* it.
 
 **Try it yourself (extensions — optional, but this is how understanding sticks):**
 - **Change the seed** at the top of `generate_data.py` (say `SEED = 7`), rerun, and watch *every* number in the ledger change — then set it back to `42` and confirm the original numbers return *exactly*. That's reproducibility, felt firsthand.
