@@ -270,65 +270,20 @@ Now we create the project's skeleton and link it to the empty GitHub repo.
    - `notebooks/` — optional exploratory notebooks.
    - `docs/` — this tutorial (the docs you're reading).
    - `.streamlit/` — configuration for the app when deployed.
-4. Create a few starter files:
+4. Add a few starter files. **The three files below — `.gitignore`, `requirements.txt`, and the placeholder `README.md` — are provided with this project as ready-made files. Save each one into the project root (the folder with `docs/` in it) rather than typing them out.** Saving the files avoids copy-paste mistakes that can scramble a multi-line file in some terminals.
+
+   - **`.gitignore`** — the list of files Git should never save. Save the provided `.gitignore` into the project root.
+   - **`requirements.txt`** — the project's Python "shopping list". Save the provided `requirements.txt` into the project root. (If you're curious, it currently lists: `pandas`, `numpy`, `scikit-learn`, `duckdb`, `networkx`, `streamlit`, `plotly`, `matplotlib`, `faker`, `pytest`. We grow it each phase.)
+   - **`README.md`** — the project's front page. Save the provided full `README.md` into the project root. (There's no need for a placeholder — use the real one.)
+
+   Then create the two placeholder files that keep the empty data folders visible to Git:
    ```bash
-   # A .gitignore tells Git which files to NEVER save (secrets, the huge .venv, caches).
-   cat > .gitignore <<'EOF'
-   # Python
-   .venv/
-   __pycache__/
-   *.pyc
-
-   # Secrets — never commit API keys
-   .streamlit/secrets.toml
-   .env
-   .Renviron
-
-   # R / renv — keep the lockfile (the receipt), ignore the built library.
-   # (renv also writes its own .gitignore inside renv/ automatically.)
-   renv/library/
-   renv/local/
-   renv/cellar/
-   renv/lock/
-   renv/python/
-   renv/staging/
-
-   # Data & artifacts that can be regenerated (we'll adjust this later per phase)
-   data/raw/*
-   data/processed/*
-   !data/raw/.gitkeep
-   !data/processed/.gitkeep
-
-   # OS noise
-   .DS_Store
-   EOF
-
-   # Keep empty data folders in Git with placeholder files
    touch data/raw/.gitkeep data/processed/.gitkeep
-
-   # A minimal requirements file (the project's toolbox list). We'll grow it each phase.
-   cat > requirements.txt <<'EOF'
-   pandas
-   numpy
-   scikit-learn
-   duckdb
-   networkx
-   streamlit
-   plotly
-   matplotlib
-   faker
-   pytest
-   EOF
-
-   # A tiny placeholder README so the repo isn't empty; we replace it with the real one later.
-   cat > README.md <<'EOF'
-   # StrainScope
-
-   A multi-omics workflow that ranks beneficial microbial strains and explains why.
-   Full documentation lives in the `docs/` folder — start with `docs/00-architecture.md`.
-   EOF
    ```
-   > **What is `.gitignore`?** A list of files Git should pretend it can't see. We ignore the giant `.venv` folder (anyone can rebuild it from `requirements.txt`) and, critically, any secrets file with API keys. Committing a secret to a public repo is the classic beginner mistake; this prevents it.
+
+   > **Prefer to create them from the terminal instead of saving files?** You can, but on some terminals pasting a long multi-line block with comments can reflow or scramble the text. If you go that route, create each file in your editor (VS Code: New File → paste → Save) rather than pasting a `cat > file <<'EOF' … EOF` block into the shell. Saving the provided files is the safest path.
+
+   > **What is `.gitignore`?** A list of files Git should pretend it can't see. We ignore the giant `.venv` folder (anyone can rebuild it from `requirements.txt`) and, critically, any secrets file with API keys. Committing a secret to a public repo is the classic beginner mistake; this prevents it. The provided file is fully commented so you can see *why* each entry is there — and which files are deliberately **kept** (the "receipts": `requirements.txt`, `renv.lock`, `.Rprofile`, `strainscope.Rproj`).
 5. Install the starter packages into your environment:
    ```bash
    pip install -r requirements.txt
@@ -518,12 +473,14 @@ You can do this now, or skip it and come back when you reach the integration doc
    R --version
    ```
    **Expected output:** a few lines starting with `R version 4.x.x`.
-3. Install the mixOmics package (this is what provides DIABLO). Open R by typing `R` in your terminal, then paste:
+3. Install the mixOmics package (this is what provides DIABLO). First **start R** by typing `R` in your terminal and pressing Enter — your prompt changes from `$` to `>`. Then, **at the `>` prompt**, paste:
    ```r
    install.packages("BiocManager")
    BiocManager::install("mixOmics")
    ```
    When it asks whether to update other packages, typing `n` (no) is usually fine for a first install. This download is sizeable; let it finish.
+
+   > **Common trip-up:** these are **R** commands, so they only work **inside R** (after the `>` prompt). If you paste `BiocManager::install("mixOmics")` at the plain shell prompt (`$`) you'll get `bash: syntax error near unexpected token '"mixOmics"'` — that just means "you're talking R to the shell." Start R first (`R`), then paste. The rule of thumb: lines with `::`, `install.packages(...)`, or `library(...)` belong after `>`; lines starting with `R -e '...'` (which start *and* run R in one go) belong at `$`.
 4. Confirm it loaded, still inside R:
    ```r
    library(mixOmics)
@@ -549,21 +506,31 @@ Do this once, from your project folder (the one with the `(.venv)` prefix is fin
    R -e 'install.packages("renv", repos="https://cloud.r-project.org")'
    ```
    **Expected output:** download messages ending with `* DONE (renv)`.
-2. Initialise `renv` for this project. Because installing mixOmics from scratch into a fresh renv library is slow, we tell renv to reuse the packages you already installed in Part I rather than re-downloading them:
+2. Initialise `renv` for this project. We pass `bare = TRUE`, which sets up renv's scaffolding **without** trying to auto-discover and reinstall packages — that keeps this step fast and avoids rebuilding the big mixOmics install you just did:
    ```bash
    R -e 'renv::init(bare = TRUE)'
    ```
-   **Expected output:** messages ending with something like `renv activated -- please restart the R session`. This creates three things in your project: an `renv/` folder (the sealed R library), a `renv.lock` file (the receipt of versions), and an `.Rprofile` file (which auto-activates renv whenever R starts here).
-3. Record mixOmics (and its dependencies) into the project's lockfile so the receipt is complete:
+   **Expected output:** a line like `- Project '.../strainscope' loaded. [renv 1.2.4]`. This creates three things in your project: an `renv/` folder (the sealed R library), an `.Rprofile` file (which auto-activates renv whenever R starts here), and — after the next step — a `renv.lock` file (the receipt of versions).
+3. Take the first snapshot — write the lockfile (the receipt). We also switch on renv's **Bioconductor** support here, because mixOmics comes from Bioconductor (a specialist package shop for biology), not from the ordinary CRAN shop that renv checks by default:
    ```bash
-   R -e 'renv::record("mixOmics"); renv::snapshot()'
+   R -e 'options(renv.config.bioconductor.enabled = TRUE); renv::snapshot()'
    ```
-   If it asks you to confirm writing the lockfile, answer `y`. **Expected output:** `The lockfile has been updated.`
+   If it asks you to confirm, answer `y`. **Expected output** ends with:
+   ```
+   - Lockfile written to ".../strainscope/renv.lock".
+   ```
 4. Confirm the receipt exists:
    ```bash
    ls renv.lock
    ```
    **Expected output:** `renv.lock`
+5. Sanity-check that renv is happy:
+   ```bash
+   R -e 'renv::status()'
+   ```
+   **Expected output:** `No issues found -- the project is in a consistent state.`
+
+> **Wait — why isn't mixOmics in the lockfile yet?** If you open `renv.lock` now, you'll see `renv` (and maybe `BiocManager`) but **not** mixOmics. That is correct, not a bug. `renv::snapshot()` only records a package once your **project code actually uses it** — it works by scanning your R scripts for `library(...)` calls. There are no R scripts yet, so renv has no reason to record mixOmics. When we write the integration script later (it begins with `library(mixOmics)`) and run `renv::snapshot()` again, mixOmics and all its versions join the lockfile then. mixOmics is installed and loads fine today; it simply gets *recorded* at the phase that uses it. Nothing to do about it now.
 
 > **What each new file is for:**
 > - `renv.lock` — the receipt of exact R package versions (this **is** committed to Git; it's how others rebuild your R toolbox).
@@ -572,7 +539,39 @@ Do this once, from your project folder (the one with the `(.venv)` prefix is fin
 >
 > **Later, on any machine**, a person restores your exact R setup with one command from inside the project: `R -e 'renv::restore()'`. That's the R equivalent of `pip install -r requirements.txt`.
 
-**If it goes wrong:** if `renv::init()` warns that it found no packages to record, that's fine at this stage — you'll snapshot again after the integration phase adds real R code. If R can't reach the internet through a proxy at work, `renv` respects the same proxy settings as base R; setting the `https_proxy` environment variable before launching R usually resolves it.
+**If it goes wrong:**
+- **`failed to resolve remote 'mixOmics' -- package 'mixOmics' is not available`** — this appears if you try to name mixOmics directly (e.g. an older `renv::record("mixOmics")` step). The cause is that renv looked for it in the ordinary CRAN shop, but mixOmics lives in **Bioconductor**. The fix is the command in step 3 above — `renv::snapshot()` with `renv.config.bioconductor.enabled = TRUE` — which records what's installed without you naming the package, and understands Bioconductor sources. You do **not** need `renv::record()` at all.
+- **renv says it "found no packages to record"** — fine at this stage; you'll snapshot again once the integration phase adds real R code.
+- **Behind a corporate proxy** — `renv` respects the same proxy settings as base R; setting the `https_proxy` environment variable before launching R usually resolves it.
+
+### Optional: open the project in RStudio (`strainscope.Rproj`)
+
+Everything in this project runs fine from the terminal (`R`, `Rscript`) — you do **not** need RStudio. But if you'd prefer a friendly graphical environment for the R work, RStudio is the standard choice, and a small **project file** makes it open cleanly with the right settings.
+
+**What a `.Rproj` file is, plainly:** a tiny text file that tells RStudio "this folder is a project." Opening it makes RStudio (a) set the working directory to the project root, so R always finds files by the same relative paths; (b) **auto-activate `renv`** (via the `.Rprofile` you just created), so you're always in the sealed R toolbox; and (c) apply consistent settings (UTF-8 encoding, spaces-for-tabs, and — importantly — *not* saving or restoring a hidden `.RData` workspace, so your scripts stay the single source of truth). Think of it as a shortcut that opens your workshop with the tools already laid out.
+
+1. *(If you don't have RStudio)* install **RStudio Desktop** — it's free and needs the R you already installed. Download it from `https://posit.co/download/rstudio-desktop/` and run the installer (on macOS you can instead run `brew install --cask rstudio`; on RHEL 8 / Rocky / Alma, download the `.rpm` from the same page and install it with `sudo dnf install ./rstudio-*.rpm`).
+2. Save the **`strainscope.Rproj`** file (provided with this project) into the **root** of your repo — the same folder as `README.md`. It's plain text; here's what it contains and why:
+   ```
+   Version: 1.0
+
+   RestoreWorkspace: No      # don't reload a hidden .RData on open — start clean
+   SaveWorkspace: No         # don't save one on exit — scripts are the source of truth
+   AlwaysSaveHistory: No     # don't keep an .Rhistory file
+
+   EnableCodeIndexing: Yes   # let RStudio navigate your code
+   UseSpacesForTab: Yes      # consistent formatting across machines
+   NumSpacesForTab: 2
+   Encoding: UTF-8           # cross-platform text safety
+
+   RnwWeave: knitr
+   LaTeX: pdfLaTeX
+   ```
+3. Open it: double-click `strainscope.Rproj` (or, in RStudio, **File → Open Project…**). The title bar will show *strainscope*, and the Console should print an renv line like `- Project '.../strainscope' loaded. [renv 1.2.4]` — that confirms renv activated automatically.
+
+> **Commit the `.Rproj`, ignore the junk.** `strainscope.Rproj` is part of the project, so it **is** committed to Git (OrthoWatch does the same). But RStudio also creates a hidden `.Rproj.user/` folder and may create `.RData` / `.Rhistory` files — those are personal session clutter and are already in your `.gitignore`, so they never reach the public repo.
+
+**If it goes wrong:** if opening the `.Rproj` doesn't activate renv (no renv line in the Console), make sure the `.Rprofile` file from the renv step is present in the project root — that's the file that switches renv on. Reopening the project after confirming `.Rprofile` exists resolves it.
 
 ---
 
