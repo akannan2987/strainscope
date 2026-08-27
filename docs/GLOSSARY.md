@@ -83,3 +83,25 @@ first appears. If a term is missing, that's a documentation bug worth fixing.
 - **Ledger** — an honest, printed summary of exactly what a step produced (counts in, counts out), so nothing changes silently.
 - **`pathlib`** — Python's tool for building file paths that work the same on Windows, macOS, and Linux.
 - **`__init__.py`** — an empty marker file that makes a folder an importable Python "package."
+
+## Phase 1b — real-data ingestion (doc 02b)
+
+- **API (Application Programming Interface)** — a website designed for programs instead of people: request a carefully-shaped URL, get raw data back. "A restaurant's service hatch — structured orders in, plates out."
+- **JSON** — the labelled-boxes-inside-labelled-boxes format most APIs answer in: `{}` objects with named fields, `[]` lists.
+- **Endpoint** — one specific "counter" of an API, reached by its URL path (e.g. PubChem's `/compound/name/...` counter).
+- **REST** — the common style of web API where each URL names a thing and standard web requests (GET etc.) act on it. All three of our sources are REST-style.
+- **Rate limit** — the maximum request speed a service allows (e.g. KEGG's 3/second). Exceed it and you're blocked. Our adapters pause between calls on purpose.
+- **User-Agent** — the "who's calling" label sent with every request. Ours identifies the project politely.
+- **HTTP status codes** — the numeric verdict on every web request: `200` OK, `404` not found (often an honest "no such entry", not an outage), `403` forbidden, `5xx` server trouble.
+- **Provenance / provenance log** — the paper trail of where data came from. Our `fetch_log.csv` records when, which source, what was asked, which URL, and how much came back — the permanent answer to "where did this number come from?"
+- **Evidence locker** — `data/raw/real/<source>/`: every API response saved exactly as received, never edited. If parsing ever needs fixing, nothing was lost.
+- **Adapter (the socket-and-plugs pattern)** — one shared contract (`probe → fetch → tidy`) that every data source implements. One socket, many plugs: adding a source is one new file.
+- **Probe** — a cheap "what's out there?" call that counts what a fetch would bring back, before downloading anything. Measure twice, cut once.
+- **Idempotent** — safe to run again: re-fetching rewrites the same files rather than piling up duplicates or breaking.
+- **Canned response (offline testing)** — a tiny, hand-made copy of an API answer saved with the tests, so parsing logic can be verified in milliseconds, offline, without bothering a live server.
+- **Attribution / licence note** — the usage terms that travel with data. KEGG's API is **academic-use only**; our tables carry an attribution column so the condition is never separated from the rows.
+- **BacDive** — the DSMZ's Bacterial Diversity Metadatabase: ~82,000 real, curated bacterial strains, strain-level metadata, free API.
+- **PubChem** — the NIH's open chemistry reference (100M+ compounds); our metabolites' real IDs, formulas, and weights come from here.
+- **KEGG** — the Kyoto Encyclopedia of Genes and Genomes: the hand-curated map of how genes, enzymes, compounds, and pathways connect; the source of the knowledge graph's first real edges.
+- **CID / KEGG ID** — a database's permanent number for a molecule (PubChem CID, KEGG `C…` code). IDs beat names: names are ambiguous, IDs aren't.
+- **SMILES** — a text notation that encodes a molecule's structure in one line, so software can exchange chemical structures.

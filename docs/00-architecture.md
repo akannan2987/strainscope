@@ -65,6 +65,7 @@ Here is the whole system as a diagram, and then a plain-language tour of every b
 flowchart TD
     subgraph LAPTOP["🖥️  YOUR LAPTOP — where the build and heavy compute happen"]
         A["1 · Data generator (Python)<br/>simulate strains × 3 omics layers,<br/>grounded in real biocontrol biology"]
+        R["1b · Real-data ingestion (Python)<br/>BacDive · PubChem · KEGG →<br/>evidence locker + provenance log"]
         B["2 · Harmonise + quality control (Python)<br/>align the tables, clean the mess"]
         C[("3 · DuckDB database<br/>one queryable store · SQL")]
         D["4 · Integrate — DIABLO (R, offline)<br/>+ a Python twin<br/>the cross-layer signature"]
@@ -79,6 +80,7 @@ flowchart TD
     M["(roadmap) MCP server<br/>lets an AI assistant operate the model"]
 
     A -->|writes 3 raw tables| B
+    R -->|tidy real tables| C
     B -->|clean, aligned tables| C
     C --> D
     C --> E
@@ -96,7 +98,7 @@ flowchart TD
     classDef cloud fill:#E6F4EA,stroke:#4CAF7D,color:#0B3D2E;
     classDef ai fill:#F3E8FD,stroke:#9C6ADE,color:#3A1D6E;
     classDef roadmap fill:#F5F5F5,stroke:#B0B0B0,color:#555555,stroke-dasharray:4 3;
-    class A,B,D,E,F laptop
+    class A,B,D,E,F,R laptop
     class C store
     class G artifact
     class H cloud
@@ -117,6 +119,12 @@ present. The box-by-box tour below says the same thing in words.)*
 **What it does:** creates our dataset from scratch, in code. It invents a realistic library of microbial strains and, for each one, three tables of measurements plus a performance score.
 **Why it exists:** clean, matched multi-omics data on the same microbes is not something you can simply download in one tidy package. So instead of pretending, we *build* the data transparently with a script — and we ground it in real biology (real gene families and chemical classes known to matter for microbes that protect plants). Anyone who clones the repo runs this one script and gets the exact same data, because we fix the "random seed" (a starting number that makes randomness repeatable — like shuffling a deck the same way every time).
 **Honest note baked into the project:** this data is *simulated*. We say so plainly everywhere. Designing a realistic synthetic dataset is a genuine, valuable skill; but a model trained on it proves that the *workflow* is correct, not that the numbers would hold on real-world microbes. That honesty is part of what makes the project trustworthy.
+
+### Box 1b — Real-Data Ingestion (Python) · *backend*
+**What it does:** pulls *real* data from three of the world's reference databases through their public APIs — real bacterial strains from **BacDive**, verified chemistry for our metabolites from **PubChem**, and curated compound→pathway links from **KEGG** (attributed; academic-use terms honoured). Every response is saved untouched in an "evidence locker" (`data/raw/real/`), every request is written to a **provenance log** (who asked what, when, and how much came back), and small tidy tables land in `data/processed/real/` to join the database in Phase 2.
+**Why it exists:** it makes the project tangibly authentic — the molecules and strains our synthetic library models are real, checkable things — and it demonstrates the ingestion craft every data team needs: APIs, politeness and rate limits, traceability by design, and a "one socket, many plugs" adapter framework so new sources are one-file additions.
+**Honest boundary:** these real tables *complement* the synthetic library; no public source offers matched multi-omics with a biocontrol outcome, which is exactly why Box 1 exists.
+**Everyday analogy:** Box 1 is the flight simulator; Box 1b is bringing real aviation charts and real aircraft specs into the room — the simulation stays a simulation, but everything it's modelled on is verifiably real.
 
 ### Box 2 — Harmonise + Quality Control (Python) · *backend*
 **What it does:** takes the three raw tables and makes them *align* (same strains, same order, same identifiers) and *clean* (handles missing values, removes duplicates, flags outliers, corrects obvious mess).
@@ -221,6 +229,7 @@ Every box in the diagram is built and explained by one numbered document in `doc
 | Phase | Guide | Which box(es) of the diagram it builds |
 | --- | --- | --- |
 | 1 | `02-data-generation.md` | Box 1 — the synthetic data generator → `data/raw/` |
+| 1b | `02b-real-data-ingestion.md` | Box 1b — real data from BacDive · PubChem · KEGG → tidy real tables (join the database in Phase 2) |
 | 2 | `03-harmonization-qc.md` | Boxes 2–3 — harmonisation + QC → the DuckDB database |
 | 3 | `04-integration.md` | Box 4 — multi-omics integration (DIABLO in R + a Python twin) → an artifact |
 | 4 | `05-machine-learning.md` | Boxes 5–6 — ML models + honest evaluation → prediction & model artifacts |

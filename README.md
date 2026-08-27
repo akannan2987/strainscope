@@ -190,6 +190,11 @@ build log below. Nothing is shown before it exists.*
   ![Different kingdoms carry different weapons](figures/weapons_by_kingdom.png)
 
   The winners are deliberately rare (24.2 % effective) and every kingdom produces some, so a model must learn *how each group fights* rather than reading the kingdom label. Interactive version: `docs/interactive/signal_scatter.html`.
+- **Phase 1b — Real data lands:** ✅ a pluggable ingestion framework (one contract: probe → fetch → tidy) pulls **real** data from three reference databases — real bacterial strains from **BacDive** (DSMZ), verified chemistry for our metabolites from **PubChem** (NIH), and curated compound→pathway links from **KEGG** (attributed; academic use) — every request logged to a provenance file and every raw response kept untouched in an evidence locker. The framework diagram:
+
+  ![The ingestion framework](figures/ingestion_framework.png)
+
+  These real tables *complement* the synthetic library (no public source offers matched multi-omics with an outcome); the KEGG links become the knowledge graph's first real edges. Offline tests (`pytest`) verify all parsing without touching the live APIs.
 - **Phase 2 — Harmonization & QC:** *(pending)* before/after cleaning ledger —
   rows in, rows out, what each check caught.
 - **Phase 3 — Integration:** *(pending)* the cross-layer signature (which genes
@@ -210,6 +215,7 @@ build log below. Nothing is shown before it exists.*
 | 0 | [Architecture — how it all fits together](docs/00-architecture.md) | ✅ |
 | 0 | [Environment setup from a blank laptop](docs/01-setup.md) | ✅ |
 | 1 | [Data generation: a realistic synthetic library](docs/02-data-generation.md) | ✅ |
+| 1b | [Real data lands: BacDive · PubChem · KEGG](docs/02b-real-data-ingestion.md) | ✅ |
 | 2 | [Harmonization & quality control](docs/03-harmonization-qc.md) | ⬜ planned |
 | 3 | [Multi-omics integration (DIABLO + Python)](docs/04-integration.md) | ⬜ planned |
 | 4 | [Machine learning & honest evaluation](docs/05-machine-learning.md) | ⬜ planned |
@@ -232,6 +238,7 @@ Read in order:
 | 00 | [Architecture](docs/00-architecture.md) | How all the pieces fit together; backend/frontend/database in plain words |
 | 01 | [Setup](docs/01-setup.md) | Blank laptop → working workshop (Python, R, Git, `.venv`, `renv`, the `master`/`beta`/`develop` model) |
 | 02 | [Data generation](docs/02-data-generation.md) | Random seeds & reproducibility; designing realistic synthetic multi-omics data |
+| 02b | [Real-data ingestion](docs/02b-real-data-ingestion.md) | APIs, JSON, rate limits & politeness; the evidence locker and provenance log; one socket, many source plugs |
 | 03 | [Harmonization & QC](docs/03-harmonization-qc.md) | Aligning tables; missingness, duplicates, outliers, batch effects; the cleaning ledger |
 | 04 | [Integration](docs/04-integration.md) | What multi-omics integration *is*; DIABLO in R and a Python counterpart; the same task in two languages |
 | 05 | [Machine learning](docs/05-machine-learning.md) | Train/test splits, cross-validation, class imbalance, metrics, error analysis |
@@ -285,6 +292,12 @@ reasons, not promises:
   biosynthesis genes, siderophores, chitinases, ACC-deaminase; lipopeptides such
   as surfactin, iturin, and fengycin). This keeps the exercise realistic and
   educational without passing invented numbers off as measured ones.
+- **Real data now sits alongside the synthetic library — with its own honesty
+  notes.** Phase 1b fetches real strains (BacDive), real chemistry (PubChem),
+  and real pathway links (KEGG, attributed, academic-use) through a logged,
+  provenance-first ingestion framework. These tables *complement* the synthetic
+  core rather than replace it, and entries a source genuinely cannot answer
+  (proteins in a small-molecule database) are recorded as such, not hidden.
 - **The honest limitation:** a model trained on synthetic data proves the
   *workflow* is correct — the integration, the cleaning, the evaluation, the app —
   **not** that the predictions would hold on real-world strains. That boundary is
@@ -316,6 +329,7 @@ strainscope/
 │   ├── 00-architecture.md         ← how it all fits together                     ✅
 │   ├── 01-setup.md                ← blank laptop → working workshop              ✅
 │   ├── 02-data-generation.md      ← the synthetic library                        ✅
+│   ├── 02b-real-data-ingestion.md ← real data: BacDive · PubChem · KEGG          ✅
 │   ├── 03-harmonization-qc.md     ← cleaning & quality control                   ⬜
 │   ├── 04-integration.md          ← multi-omics integration (DIABLO + Python)    ⬜
 │   ├── 05-machine-learning.md     ← models & honest evaluation                   ⬜
@@ -329,11 +343,15 @@ strainscope/
 │
 ├── figures/                       ← teaching figures, generated from the data
 │   ├── make_phase1_figures.py     ← Phase 1: regenerates every figure below      ✅
+│   ├── make_phase2b_figures.py    ← Phase 1b: framework diagram + real-data charts ✅
 │   └── *.png                      ← kingdom mix, weapons-by-kingdom, 3-layer …    ✅
 │
 ├── src/strainscope/               ← the reusable backend code (Python)
 │   ├── __init__.py
 │   ├── generate_data.py           ← Phase 1: the synthetic data generator        ✅
+│   ├── fetch_real.py              ← Phase 1b: the real-data command (probe/fetch) ✅
+│   ├── sources/                   ← Phase 1b: the source adapters (one socket,
+│   │                                 many plugs: BacDive · PubChem · KEGG)       ✅
 │   ├── harmonize.py               ← Phase 2: harmonization + QC                   ⬜
 │   ├── database.py                ← Phase 2: load into / query DuckDB             ⬜
 │   ├── integrate.py               ← Phase 3: Python multi-omics integration       ⬜
@@ -353,7 +371,8 @@ strainscope/
 ├── app/
 │   └── streamlit_app.py           ← the deployed app (Phases 6–7)                 ⬜
 │
-├── tests/                         ← automated checks (pytest), grown each phase   ⬜
+├── tests/                         ← automated checks (pytest), grown each phase   ✅
+│   └── test_sources.py            ← offline tests of the ingestion parsers
 ├── notebooks/                     ← optional exploratory notebooks
 │
 ├── data/                          ← NOT in Git; regenerated by the generator
