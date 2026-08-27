@@ -448,7 +448,7 @@ SELECT SUM(is_effective) AS effective, COUNT(*) AS total
 FROM (SELECT DISTINCT ON (strain_id) * FROM phenotype);
 ```
 
-All three give the same answer (145 effective of 600). The takeaways, honestly: **pandas** is the everyday workhorse for Python data work; **dplyr** reads almost like English and shines for statistics and the specialised omics tools we'll use later; **SQL** is unbeatable when the data already lives in a database and you want a precise slice of it. Knowing *why* you'd reach for each matters more than memorising any one.
+All three give the same answer (145 effective of 600). *(The SQL becomes genuinely runnable in Phase 2, once the database exists — and the deduplication will already be done for you, so it's even shorter:* `python src/strainscope/sql.py "SELECT SUM(is_effective)::INT AS effective, COUNT(*) AS total FROM phenotype"` *.)* The takeaways, honestly: **pandas** is the everyday workhorse for Python data work; **dplyr** reads almost like English and shines for statistics and the specialised omics tools we'll use later; **SQL** is unbeatable when the data already lives in a database and you want a precise slice of it. Knowing *why* you'd reach for each matters more than memorising any one.
 
 ---
 

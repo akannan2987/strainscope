@@ -105,3 +105,27 @@ first appears. If a term is missing, that's a documentation bug worth fixing.
 - **KEGG** — the Kyoto Encyclopedia of Genes and Genomes: the hand-curated map of how genes, enzymes, compounds, and pathways connect; the source of the knowledge graph's first real edges.
 - **CID / KEGG ID** — a database's permanent number for a molecule (PubChem CID, KEGG `C…` code). IDs beat names: names are ambiguous, IDs aren't.
 - **SMILES** — a text notation that encodes a molecule's structure in one line, so software can exchange chemical structures.
+
+## Phase 2 — cleaning & the database (doc 03)
+
+- **Raw vs processed data** — raw files are *evidence*, never edited; cleaning reads them and writes new files into `data/processed/`. "Annotate a copy; never draw on the original."
+- **Cleaning ledger** — the accounting of cleaning: rows in, rows out, cells changed, per step. Reconciling it against what you *know* is how silent damage gets caught (it caught a real bug in this project).
+- **Harmonisation (text)** — forcing one agreed spelling per real-world thing: strip spaces, unify case, fix typos from a written-down list — never by guessing.
+- **Controlled vocabulary** — that written-down list of allowed values (e.g. the genus spellings). The antidote to `Soil`, `soil `, and `SOIL` being counted as three places.
+- **Clipping** — pushing an impossible value to the nearest possible boundary (a 104 % suppression becomes 100 %). The strain stays; only the overshoot goes.
+- **Winsorising / capping** — replacing extreme values with a ceiling instead of deleting the row. Keeps the sample, removes the distortion.
+- **Percentile (p95)** — the value below which 95 % of the data sits. Our outlier ceiling is 3×p95: "three times the upper edge of plausible is an artifact."
+- **Quartile / IQR** — Q1/Q3 are the 25 %/75 % marks; IQR is the spread between them. The textbook outlier fence (Q3 + k·IQR) assumes one-humped data — and fails on two-humped data like ours.
+- **Bimodal** — a distribution with two humps. Ours: a *trace* hump (gene absent) and a *producer* hump (gene present). Many textbook rules silently assume one hump.
+- **Batch-effect correction (median-scaling)** — per batch and metabolite, divide by (batch median ÷ overall median), cooling a hot batch by exactly its drift. Medians, so leftover extremes can't drag the factor.
+- **Imputation** — filling missing values. Deliberately *not* done in cleaning: the right strategy depends on the downstream method, so it's a modelling decision made openly later.
+- **Idempotent (cleaning)** — run it twice, get the identical result. What makes re-running safe and casual.
+- **Database** — the "filing cabinet": organised, permanent storage you question with SQL — versus the pandas "desk" (fast, in-memory, gone when you stand up).
+- **DuckDB** — a full SQL analytics database living in one ordinary file (`strainscope.duckdb`). No server, no setup drama. "A filing cabinet you can zip up and email."
+- **SQL** — the ~50-year-old language for questioning tables; still the most-demanded data skill. Reads almost like English.
+- **`SELECT` / `WHERE` / `ORDER BY` / `LIMIT`** — choose columns / keep matching rows / sort / take the first N.
+- **`GROUP BY`** — fold a table into one row per category ("per kingdom, count strains").
+- **`JOIN`** — line tables up on a shared key (`strain_id`) so one question can span genomics, metabolomics, and phenotype at once.
+- **`NULL`** — SQL's honest "no value here." Special grammar: `IS NULL`, never `= NULL` (which silently matches nothing).
+- **Schema** — the shape of a database: which tables exist and what columns each holds.
+- **Query cookbook** — this project's growing file of tested, explained SQL recipes ([`QUERY_COOKBOOK.md`](QUERY_COOKBOOK.md)).

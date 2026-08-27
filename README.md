@@ -195,8 +195,9 @@ build log below. Nothing is shown before it exists.*
   ![The ingestion framework](figures/ingestion_framework.png)
 
   These real tables *complement* the synthetic library (no public source offers matched multi-omics with an outcome); the KEGG links become the knowledge graph's first real edges. Offline tests (`pytest`) verify all parsing without touching the live APIs.
-- **Phase 2 — Harmonization & QC:** *(pending)* before/after cleaning ledger —
-  rows in, rows out, what each check caught.
+- **Phase 2 — Cleaning & the database:** ✅ a six-rule cleaning pipeline with a full **ledger** (8 duplicate strains removed per table, 657 text cells harmonised, 3 impossible scores clipped, 41 provably-absurd outlier cells capped, batch drift removed by median-scaling, 1,052 missing cells counted and kept as honest NULLs) — and the clean tables plus the real Phase 1b tables loaded into one **DuckDB** database, queryable with SQL (see the [Query Cookbook](docs/QUERY_COOKBOOK.md)). The ledger earned its keep immediately: it caught a textbook outlier rule silently flattening real biology (bimodal data breaks one-humped fences — kept as a lesson in the doc).
+
+  ![Batch effect before and after](figures/batch_before_after.png)
 - **Phase 3 — Integration:** *(pending)* the cross-layer signature (which genes
   and metabolites, together, separate performers from non-performers).
 - **Phase 4 — Machine learning:** *(pending)* model comparison with honest
@@ -216,7 +217,8 @@ build log below. Nothing is shown before it exists.*
 | 0 | [Environment setup from a blank laptop](docs/01-setup.md) | ✅ |
 | 1 | [Data generation: a realistic synthetic library](docs/02-data-generation.md) | ✅ |
 | 1b | [Real data lands: BacDive · PubChem · KEGG](docs/02b-real-data-ingestion.md) | ✅ |
-| 2 | [Harmonization & quality control](docs/03-harmonization-qc.md) | ⬜ planned |
+| 1c | More real sources: NCBI Datasets · Metabolomics Workbench (+ the API-key/secrets lesson) | ⬜ planned |
+| 2 | [Harmonization & quality control → DuckDB + SQL](docs/03-harmonization-qc.md) | ✅ |
 | 3 | [Multi-omics integration (DIABLO + Python)](docs/04-integration.md) | ⬜ planned |
 | 4 | [Machine learning & honest evaluation](docs/05-machine-learning.md) | ⬜ planned |
 | 5 | [Knowledge graph (core AI feature)](docs/06-knowledge-graph.md) | ⬜ planned |
@@ -239,7 +241,8 @@ Read in order:
 | 01 | [Setup](docs/01-setup.md) | Blank laptop → working workshop (Python, R, Git, `.venv`, `renv`, the `master`/`beta`/`develop` model) |
 | 02 | [Data generation](docs/02-data-generation.md) | Random seeds & reproducibility; designing realistic synthetic multi-omics data |
 | 02b | [Real-data ingestion](docs/02b-real-data-ingestion.md) | APIs, JSON, rate limits & politeness; the evidence locker and provenance log; one socket, many source plugs |
-| 03 | [Harmonization & QC](docs/03-harmonization-qc.md) | Aligning tables; missingness, duplicates, outliers, batch effects; the cleaning ledger |
+| 03 | [Harmonization & QC](docs/03-harmonization-qc.md) | The cleaning ledger; duplicates, text, outliers (and why the textbook rule fails on bimodal data), batch correction; DuckDB + first SQL |
+| — | [Query Cookbook](docs/QUERY_COOKBOOK.md) | Tested, explained SQL recipes against the project database — grows every phase |
 | 04 | [Integration](docs/04-integration.md) | What multi-omics integration *is*; DIABLO in R and a Python counterpart; the same task in two languages |
 | 05 | [Machine learning](docs/05-machine-learning.md) | Train/test splits, cross-validation, class imbalance, metrics, error analysis |
 | 06 | [Knowledge graph](docs/06-knowledge-graph.md) | Ontologies & graphs (a "family tree for concepts"); building and querying one with NetworkX |
@@ -330,7 +333,8 @@ strainscope/
 │   ├── 01-setup.md                ← blank laptop → working workshop              ✅
 │   ├── 02-data-generation.md      ← the synthetic library                        ✅
 │   ├── 02b-real-data-ingestion.md ← real data: BacDive · PubChem · KEGG          ✅
-│   ├── 03-harmonization-qc.md     ← cleaning & quality control                   ⬜
+│   ├── 03-harmonization-qc.md     ← cleaning, the ledger, DuckDB + SQL           ✅
+│   ├── QUERY_COOKBOOK.md          ← tested SQL recipes (grows every phase)       ✅
 │   ├── 04-integration.md          ← multi-omics integration (DIABLO + Python)    ⬜
 │   ├── 05-machine-learning.md     ← models & honest evaluation                   ⬜
 │   ├── 06-knowledge-graph.md      ← the graph (core AI feature)                  ⬜
@@ -344,6 +348,7 @@ strainscope/
 ├── figures/                       ← teaching figures, generated from the data
 │   ├── make_phase1_figures.py     ← Phase 1: regenerates every figure below      ✅
 │   ├── make_phase2b_figures.py    ← Phase 1b: framework diagram + real-data charts ✅
+│   ├── make_phase2_figures.py     ← Phase 2: before/after cleaning evidence        ✅
 │   └── *.png                      ← kingdom mix, weapons-by-kingdom, 3-layer …    ✅
 │
 ├── src/strainscope/               ← the reusable backend code (Python)
@@ -352,7 +357,8 @@ strainscope/
 │   ├── fetch_real.py              ← Phase 1b: the real-data command (probe/fetch) ✅
 │   ├── sources/                   ← Phase 1b: the source adapters (one socket,
 │   │                                 many plugs: BacDive · PubChem · KEGG)       ✅
-│   ├── harmonize.py               ← Phase 2: harmonization + QC                   ⬜
+│   ├── harmonize.py               ← Phase 2: cleaning engine + ledger + DB loader ✅
+│   ├── sql.py                     ← Phase 2: the SQL console (read-only, no setup) ✅
 │   ├── database.py                ← Phase 2: load into / query DuckDB             ⬜
 │   ├── integrate.py               ← Phase 3: Python multi-omics integration       ⬜
 │   ├── model.py                   ← Phase 4: ML training + evaluation             ⬜
@@ -372,7 +378,8 @@ strainscope/
 │   └── streamlit_app.py           ← the deployed app (Phases 6–7)                 ⬜
 │
 ├── tests/                         ← automated checks (pytest), grown each phase   ✅
-│   └── test_sources.py            ← offline tests of the ingestion parsers
+│   ├── test_sources.py            ← offline tests of the ingestion parsers
+│   └── test_harmonize.py          ← offline tests of the cleaning functions
 ├── notebooks/                     ← optional exploratory notebooks
 │
 ├── data/                          ← NOT in Git; regenerated by the generator
