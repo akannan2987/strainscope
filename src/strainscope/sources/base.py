@@ -63,6 +63,34 @@ FETCH_LOG = RAW_REAL / "fetch_log.csv"              # the provenance log
 USER_AGENT = "StrainScope/1.0 (educational multi-omics portfolio project)"
 
 
+def load_env() -> None:
+    """Read KEY=VALUE lines from the project's `.env` file into the process
+    environment (without overwriting anything already set in the shell).
+
+    THE SECRETS IDEA, plainly: a key is like a house key — code needs to USE
+    it, but it must never be PHOTOGRAPHED into the repository. So keys live in
+    the ENVIRONMENT (the process's private pockets), and there are two ways to
+    put one there:
+
+      home 1 — the shell, per session:   export NCBI_API_KEY=abc123
+      home 2 — a `.env` file, per project: one KEY=VALUE line, read by this
+               function at startup. `.env` is listed in .gitignore and guarded
+               by check-public-safe.sh, so it physically cannot be committed.
+
+    Shell wins over file (already-set variables are never overwritten), which
+    lets you temporarily override the file without editing it."""
+    import os
+    env_file = ROOT / ".env"
+    if not env_file.exists():
+        return
+    for line in env_file.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, _, value = line.partition("=")
+        os.environ.setdefault(key.strip(), value.strip())
+
+
 class Source:
     """The socket every adapter plugs into. Subclasses set `name`, `delay_s`,
     and implement probe(), fetch(), tidy()."""
@@ -77,20 +105,23 @@ class Source:
         d.mkdir(parents=True, exist_ok=True)
         return d
 
-    def get(self, url: str, *, as_json: bool = True, tries: int = 3):
+    def get(self, url: str, *, as_json: bool = True, tries: int = 3,
+            headers: dict | None = None):
         """One polite, retrying HTTP GET.
 
         * Waits `delay_s` BEFORE every request (politeness by default).
         * On failure (network hiccup, HTTP 5xx), waits longer and retries.
         * Raises a clear error after the last failed try.
+        * `headers` lets an adapter add its own (e.g. NCBI's `api-key`) on top
+          of the identifying User-Agent every request carries.
         Returns parsed JSON (as_json=True) or raw text (as_json=False).
         """
+        merged = {"User-Agent": USER_AGENT, **(headers or {})}
         last_err: Exception | None = None
         for attempt in range(1, tries + 1):
             time.sleep(self.delay_s)                       # be polite, always
             try:
-                resp = requests.get(url, headers={"User-Agent": USER_AGENT},
-                                    timeout=30)
+                resp = requests.get(url, headers=merged, timeout=30)
                 if resp.status_code in (400, 404):
                     # 404 = "not found"; 400 = "I reject that question" (e.g.
                     # a character the server won't accept). Both are

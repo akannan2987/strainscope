@@ -129,3 +129,21 @@ first appears. If a term is missing, that's a documentation bug worth fixing.
 - **`NULL`** — SQL's honest "no value here." Special grammar: `IS NULL`, never `= NULL` (which silently matches nothing).
 - **Schema** — the shape of a database: which tables exist and what columns each holds.
 - **Query cookbook** — this project's growing file of tested, explained SQL recipes ([`QUERY_COOKBOOK.md`](QUERY_COOKBOOK.md)).
+
+## Phase 1c — more real sources & secrets (doc 02c)
+
+- **API key** — a personal access code for a service; a "membership card". NCBI's is free and optional (it doubles the rate limit) — the perfect low-stakes place to learn the handling discipline.
+- **Secret** — any value that must never be public: keys, passwords, tokens. The iron rule: a secret never enters the repository — history, forks, and caches remember forever, and scrapers harvest leaked keys within minutes.
+- **Environment (variables)** — the private named values a running program carries "in its pockets"; where secrets live. Set per session (`export KEY=…`) or per project (`.env`).
+- **`.env` file** — one `KEY=VALUE` per line at the project root, read at startup by `load_env()`; git-ignored **and** watched by the safety gate. The shell wins if both define a key.
+- **`.env.example`** — the committed *template*: variable names, empty values, instructions. Template public, values private — how projects document their secrets without leaking them.
+- **Rate-limit tiers** — some services serve keyholders faster (NCBI: 5 req/s anonymous → 10 with a key). A key here is a courtesy upgrade, not a lock.
+- **Genome assembly** — the reconstructed sequence of an organism's genome, with a quality level (contig → scaffold → chromosome → complete).
+- **Accession** — a database's permanent ID for one assembly (e.g. `GCF_000009045.1`); IDs beat names, as ever.
+- **GC content (GC %)** — the fraction of a genome's letters that are G or C; a stable fingerprint that differs between organisms.
+- **Genome size (bp / Mb)** — length in base pairs; bacterial genomes run ~4–8 million letters, fungal ones ~10× that — visible in this project's own fetched data.
+- **RefMet** — Metabolomics Workbench's curated "official names register" for metabolites, each entry carrying a classification ladder (super-class → main class → sub-class): chemistry's shelving system, and knowledge-graph fodder.
+- **Metabolomics Workbench** — the NIH's open archive of real metabolomics studies + RefMet.
+- **NCBI Datasets** — the NIH's API over the world's genome-assembly catalogue; source of our multi-kingdom `real_genomes` table.
+- **`curl`** — the universal command-line tool that speaks raw HTTP; handy for poking any API from any terminal (with headers attached by hand).
+- **Header (HTTP)** — a labelled note sent alongside a request (our `User-Agent`; NCBI's `api-key`). Data about the request, not part of the URL.
