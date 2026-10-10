@@ -1,0 +1,4 @@
+method,n_selected,n_signal_selected,n_decoys_selected,precision,recall,decoys_selected
+"DIABLO comp. 1, everything selected",32,29,3,0.906,0.906,"bg_metabolite_2, bg_metabolite_3, iaaM"
+"DIABLO comp. 1, robust (picked in >= 80 % of re-fits)",29,29,0,1.0,0.906,none
+"Python (lasso, picked in >= 80 % of folds)",17,17,0,1.0,0.531,none

@@ -1,6 +1,6 @@
 # 02b · Phase 1b — Real data lands in the project (BacDive · PubChem · KEGG)
 
-[← Phase 1: the synthetic library](02-data-generation.md) · [All docs in order](../README.md#the-tutorial-in-order) · [Glossary](GLOSSARY.md)
+[← Phase 1: the synthetic library](02-data-generation.md) · [Handbook](HANDBOOK.md) · [All docs in order](../README.md#the-tutorial-in-order) · [Glossary](GLOSSARY.md)
 
 **Prerequisites:** Phase 1 complete — the synthetic library generates and its checkpoint passed. You'll also need an internet connection for the fetch steps (the tidy and test steps work offline).
 **Learning goal:** after this phase you will understand what an **API** is by having used three, what **JSON** is by having read some, why **rate limits** and **politeness** exist, what a **provenance log** is and why regulated industries treat it as sacred, and how one small "contract" lets a project support many data sources without turning into spaghetti. You'll fetch *real* strains, *real* chemistry, and *real* pathway links from three of the world's reference databases.
@@ -95,16 +95,16 @@ Before any script runs, see the thing itself — this makes everything after con
 
 ## 4. Get the Phase 1b files into your repo
 
-| File | Goes in | Its job |
-|---|---|---|
-| `base.py` | `src/strainscope/sources/` | the **socket**: the contract + politeness + evidence locker + provenance log |
-| `bacdive.py` | `src/strainscope/sources/` | plug: real strains |
-| `pubchem.py` | `src/strainscope/sources/` | plug: real chemistry |
-| `kegg.py` | `src/strainscope/sources/` | plug: real pathway links |
-| `__init__.py` | `src/strainscope/sources/` | the registry — one line per plug |
-| `fetch_real.py` | `src/strainscope/` | the one command that drives it all |
-| `test_sources.py` | `tests/` | offline tests of the parsing, on tiny canned responses |
-| `make_phase2b_figures.py` | `figures/` | the framework illustration + data figures after your fetch |
+| Path (from the project folder) | Its job |
+|---|---|
+| `src/strainscope/sources/base.py` | the **socket**: the contract + politeness + evidence locker + provenance log |
+| `src/strainscope/sources/bacdive.py` | plug: real strains |
+| `src/strainscope/sources/pubchem.py` | plug: real chemistry |
+| `src/strainscope/sources/kegg.py` | plug: real pathway links |
+| `src/strainscope/sources/__init__.py` | the registry — one line per plug |
+| `src/strainscope/fetch_real.py` | the one command that drives it all |
+| `tests/test_sources.py` | offline tests of the parsing, on tiny canned responses |
+| `figures/make_phase2b_figures.py` | the framework illustration + data figures after your fetch |
 
 Also add `requests` to `requirements.txt` (the standard Python library for talking to the web) and install it:
 
@@ -188,7 +188,7 @@ Every row of that log is an answer to "where did this come from?". *(These raw f
 
 ## 7. The tidy tables — real data, ready to use
 
-`fetch_real.py` already ran `tidy()` for you; the clean tables are in `data/processed/real/`:
+`src/strainscope/fetch_real.py` already ran `tidy()` for you; the clean tables are in `data/processed/real/`:
 
 ```bash
 ls data/processed/real/
@@ -246,11 +246,11 @@ pytest -q          # expected: 6 passed
 
 | Capability | Manual path (now) | Automatic path (later) |
 |---|---|---|
-| Generate synthetic data | `python src/strainscope/generate_data.py` | the one-command pipeline (Phase 7) |
+| Generate synthetic data | `python src/strainscope/generate_data.py` | the one-command pipeline (Phase 8) |
 | **Probe real sources** | `python src/strainscope/fetch_real.py --probe` | the app's data page shows source status |
 | **Fetch + tidy real data** | `python src/strainscope/fetch_real.py [--source …]` | the app's **Upload · Synthetic · Fetch-real** picker |
 | Make the figures | `python figures/make_phase1_figures.py` / `…phase2b…` | regenerated on demand; interactive in the app |
-| Inspect the data | `head`, the ledger, `fetch_log.csv` | the app's data explorer |
+| Inspect the data | `head`, the ledger, `data/raw/real/fetch_log.csv` | the app's data explorer |
 
 ## 13. What could go wrong (mini-FAQ)
 
@@ -318,4 +318,4 @@ git switch master && git pull --ff-only origin master && git switch develop
 - Add a metabolite of your own to `NAME_MAP` in `pubchem.py` (say, `"penicillin G"`), refetch just PubChem, and see it appear in the table and figures.
 - Open one raw BacDive record in `data/raw/real/bacdive/` and find a field `tidy()` doesn't extract yet — then add it. (That's real ingestion work, end to end.)
 
-**Next:** two queued items — **Tier 2** (`02c`: NCBI Datasets + Metabolomics Workbench, introducing API keys and the secrets lesson) later, and first **Phase 2** ([`03-harmonization-qc.md`](03-harmonization-qc.md)): cleaning the synthetic mess *and* loading both the synthetic and these real tables into one **DuckDB** database you'll question with SQL.
+**Next:** two queued items — **Tier 2** (`02c`: NCBI Datasets + Metabolomics Workbench, introducing API keys and the secrets lesson) later, and first **Phase 2** ([`docs/03-harmonization-qc.md`](03-harmonization-qc.md)): cleaning the synthetic mess *and* loading both the synthetic and these real tables into one **DuckDB** database you'll question with SQL.

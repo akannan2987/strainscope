@@ -67,11 +67,15 @@ fi
 # ── 3. Credential-shaped strings in tracked content ────────────────────────
 # Real API keys and private keys have recognisable formats. We match the
 # FORMATS (not the word "api_key"), so ordinary docs that merely mention keys
-# don't trip the alarm. The script excludes itself from the scan.
+# don't trip the alarm. A key must START a token — the character before it may
+# not be a letter, digit, "_" or "-" — so words that merely contain the letters
+# (the link anchor "#ask-strainscope-…", "task-…", "risk-…") are not mistaken
+# for an "sk-…" key. The script excludes itself from the scan.
 echo ""
 echo "3. Credential-shaped strings in tracked content"
+B='(^|[^A-Za-z0-9_-])'   # "start of a token"
 creds=$(git grep -inE \
-  'sk-[A-Za-z0-9_-]{20,}|ghp_[A-Za-z0-9]{20,}|gho_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|AKIA[0-9A-Z]{16}|-----BEGIN [A-Z ]*PRIVATE KEY-----' \
+  "${B}sk-[A-Za-z0-9_-]{20,}|${B}ghp_[A-Za-z0-9]{20,}|${B}gho_[A-Za-z0-9]{20,}|${B}github_pat_[A-Za-z0-9_]{20,}|${B}AKIA[0-9A-Z]{16}|-----BEGIN [A-Z ]*PRIVATE KEY-----" \
   -- ':!check-public-safe.sh' 2>/dev/null)
 if [ -n "$creds" ]; then
   echo -e "   ${RED}✗ found something that looks like a real credential — redact before pushing:${NC}"

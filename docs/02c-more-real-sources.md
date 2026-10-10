@@ -1,6 +1,6 @@
 # 02c · Phase 1c — More real sources, and the secrets lesson (NCBI · Metabolomics Workbench)
 
-[← Phase 2: cleaning & the database](03-harmonization-qc.md) · [All docs in order](../README.md#the-tutorial-in-order) · [Glossary](GLOSSARY.md)
+[← Phase 2: cleaning & the database](03-harmonization-qc.md) · [Handbook](HANDBOOK.md) · [All docs in order](../README.md#the-tutorial-in-order) · [Glossary](GLOSSARY.md)
 
 **Prerequisites:** Phase 1b done (the ingestion framework exists and you've fetched with it once). Internet for the fetch steps; everything else works offline.
 **Learning goal:** after this phase you will know how professionals handle **API keys and secrets** — the environment, the `.env` file, the `.env.example` pattern, and why a key can never reach Git; you'll have fetched **real genomes for all four kingdoms** (and seen with your own data that a fungal genome dwarfs a bacterial one); and you'll have pulled our metabolites' **official classifications** plus real studies from the NIH's metabolomics archive. Two new plugs go into the existing socket — and you'll watch the framework absorb them without touching anything else.
@@ -37,7 +37,7 @@ If both homes define the key, **the shell wins** (already-set values are never o
 | Key needed | **Optional** — free key doubles the rate limit (the lesson) | No |
 | The honest boundary | genome *metadata*, not matched multi-omics | classification + study catalogues, not matched outcomes |
 
-**Why NCBI is the multi-kingdom win:** BacDive (Phase 1b) is bacteria-only by scope. NCBI covers all life — so `real_genomes.csv` will hold *Bacillus* **and** *Trichoderma* **and** *Pythium*, finally backing the whole multi-kingdom story with real records. And the genome lengths alone teach real biology: bacterial genomes run ~4–8 million letters; fungal ones ~30–40 million. You'll *see* that in your own fetched data.
+**Why NCBI is the multi-kingdom win:** BacDive (Phase 1b) is bacteria-only by scope. NCBI covers all life — so `data/processed/real/real_genomes.csv` will hold *Bacillus* **and** *Trichoderma* **and** *Pythium*, finally backing the whole multi-kingdom story with real records. And the genome lengths alone teach real biology: bacterial genomes run ~4–8 million letters; fungal ones ~30–40 million. You'll *see* that in your own fetched data.
 
 **Why RefMet matters beyond names:** every entry carries a classification ladder (super-class → main class → sub-class) — chemistry's shelving system. "Beauvericin and destruxin sit on the same shelf" is exactly the kind of real relationship the knowledge-graph phase will draw edges from.
 
@@ -77,7 +77,7 @@ flowchart TD
     class KEY store
 ```
 
-Note what *isn't* in this diagram: any change to Phase 2. The database loader was built to load "whatever is in `data/processed/real/`" — so the two new tables join it automatically the next time `harmonize.py` runs. Designing that in advance is why Tier 2 costs two files, not a refactor.
+Note what *isn't* in this diagram: any change to Phase 2. The database loader was built to load "whatever is in `data/processed/real/`" — so the two new tables join it automatically the next time `src/strainscope/harmonize.py` runs. Designing that in advance is why Tier 2 costs two files, not a refactor.
 
 ## 4. Touch the APIs with your bare hands (browser, no code)
 
@@ -95,15 +95,15 @@ Note what *isn't* in this diagram: any change to Phase 2. The database loader wa
 
 ## 5. Get the Phase 1c files into your repo
 
-| File | Goes in | Its job |
-|---|---|---|
-| `base.py` | `src/strainscope/sources/` | **replace** — gains `load_env()` (the `.env` reader) and a `headers` hook on `get()` |
-| `ncbi_datasets.py` | `src/strainscope/sources/` | plug: real genomes, four kingdoms, optional key |
-| `metabolomics_wb.py` | `src/strainscope/sources/` | plug: RefMet classes + real studies |
-| `__init__.py` | `src/strainscope/sources/` | **replace** — the registry now lists five plugs |
-| `.env.example` | project root | the committed template for optional secrets |
-| `test_sources.py` | `tests/` | **replace** — three new tests (both tidies + the env loader) |
-| `make_phase2c_figures.py` | `figures/` | the secrets illustration + post-fetch data figures |
+| Path (from the project folder) | Its job |
+|---|---|
+| `src/strainscope/sources/base.py` | **replace** — gains `load_env()` (the `.env` reader) and a `headers` hook on `get()` |
+| `src/strainscope/sources/ncbi_datasets.py` | plug: real genomes, four kingdoms, optional key |
+| `src/strainscope/sources/metabolomics_wb.py` | plug: RefMet classes + real studies |
+| `src/strainscope/sources/__init__.py` | **replace** — the registry now lists five plugs |
+| `.env.example` | the committed template for optional secrets |
+| `tests/test_sources.py` | **replace** — three new tests (both tidies + the env loader) |
+| `figures/make_phase2c_figures.py` | the secrets illustration + post-fetch data figures |
 
 Then:
 
@@ -164,7 +164,7 @@ python src/strainscope/fetch_real.py --source ncbi_datasets
 python src/strainscope/fetch_real.py --source metabolomics_wb
 ```
 
-Per source, expect: NCBI saving up to 25 genome reports per genus → `real_genomes.csv` (with a `kingdom` column — the tidy summary should say **4 kingdoms**); Metabolomics WB resolving most metabolites to RefMet entries (a `no RefMet entry (recorded)` or two is honest, not broken) → `real_refmet.csv` + `real_mw_studies.csv`. The provenance log grows as always:
+Per source, expect: NCBI saving up to 25 genome reports per genus → `data/processed/real/real_genomes.csv` (with a `kingdom` column — the tidy summary should say **4 kingdoms**); Metabolomics WB resolving most metabolites to RefMet entries (a `no RefMet entry (recorded)` or two is honest, not broken) → `data/processed/real/real_refmet.csv` + `data/processed/real/real_mw_studies.csv`. The provenance log grows as always:
 
 ```bash
 tail -8 data/raw/real/fetch_log.csv
@@ -199,8 +199,8 @@ python figures/make_phase2c_figures.py
 
 1. Files landed (§5's `ls`), and `pytest -q` → **17 passed** *before* any fetching.
 2. Both probes reach their APIs (with or without a key).
-3. `real_genomes.csv` exists **and its tidy summary reports all four kingdoms**; `real_refmet.csv` has mostly `found` rows; `real_mw_studies.csv` is non-empty.
-4. `harmonize.py` reports **7 real tables** loaded, untouched-code.
+3. `data/processed/real/real_genomes.csv` exists **and its tidy summary reports all four kingdoms**; `data/processed/real/real_refmet.csv` has mostly `found` rows; `data/processed/real/real_mw_studies.csv` is non-empty.
+4. `src/strainscope/harmonize.py` reports **7 real tables** loaded, untouched-code.
 5. If you made a key: `git status` never shows `.env`, and the gate still passes.
 
 ## 10. What could go wrong (mini-FAQ)
@@ -218,18 +218,18 @@ python figures/make_phase2c_figures.py
 
 - **The documentation spoke camelCase; the live API answers snake_case.** The first probe returned **0 genomes for every genus** — while the very same URL in a browser showed `"total_count": 277` for *Trichoderma*. The two views disagreeing is the diagnostic gold: the connection was fine, so the *parsing* had to be wrong. NCBI's docs render field names as `totalCount`/`assemblyInfo`; the API itself sends `total_count`/`assembly_info` (and genome lengths as *strings*). RefMet pulled the same trick in miniature: docs suggest `refmet_name`, the live entry says `name`. Both adapters now accept either form, and the canned tests mirror the live shapes. **Lessons:** (1) documentation describes, the live response decides — the BacDive lesson, now a pattern; (2) when a probe returns implausible zeros, compare it against the same URL in a browser: identical-URL-different-answer isolates a parsing bug from a connectivity one in thirty seconds.
 - **The tidy summary said "3 kingdoms" — and thereby confessed a missing one.** The first genome fetch printed `200 real genome records, 3 kingdoms`: no Yeast, because the genus list simply lacked yeast genera — quietly contradicting this doc's own "all four kingdoms" promise. The fix added *Saccharomyces*, *Metschnikowia* and *Aureobasidium* (the latter two are real commercial biocontrol yeasts). **Lesson:** put small self-describing summaries ("N rows, K kingdoms") on every output — they cost one line and catch incompleteness that no error message ever would, because *nothing was wrong*, something was merely absent.
-- **Three genomes for the most-sequenced genus on Earth — the sniff test, then the stick insects.** The first live probe reported `Bacillus: 3`, an absurdity that demanded investigation rather than acceptance. The cause: NCBI's taxonomy contains *two* genera named "Bacillus" — the famous bacteria, and a genus of **stick insects** — and queried by bare name, the API resolved to the insects. Left unfixed, three stick-insect genomes would have entered `real_genomes.csv` labelled "Bacteria." The fix is the glossary's own rule made real — **IDs beat names**: ambiguous genera now query by permanent taxonomy ID (Bacillus → taxid 1386), with the readable name kept for display. **Lessons:** (1) implausible numbers are invitations, not answers — a probe exists precisely so absurdities surface before data lands; (2) names are for humans, IDs are for queries, and biology's naming collisions (bacteria vs stick insects!) are exactly why.
+- **Three genomes for the most-sequenced genus on Earth — the sniff test, then the stick insects.** The first live probe reported `Bacillus: 3`, an absurdity that demanded investigation rather than acceptance. The cause: NCBI's taxonomy contains *two* genera named "Bacillus" — the famous bacteria, and a genus of **stick insects** — and queried by bare name, the API resolved to the insects. Left unfixed, three stick-insect genomes would have entered `data/processed/real/real_genomes.csv` labelled "Bacteria." The fix is the glossary's own rule made real — **IDs beat names**: ambiguous genera now query by permanent taxonomy ID (Bacillus → taxid 1386), with the readable name kept for display. **Lessons:** (1) implausible numbers are invitations, not answers — a probe exists precisely so absurdities surface before data lands; (2) names are for humans, IDs are for queries, and biology's naming collisions (bacteria vs stick insects!) are exactly why.
 - **The key travels through one narrow door.** Rather than sprinkling key-handling through the code, the environment is read in exactly one place (`load_env()` + `_headers()`), and the socket's `get()` gained a single optional `headers` hook. **Lesson:** secrets should have the smallest possible surface area — one reader, one attach point, everything else ignorant of them.
-- **The framework absorbed two sources without a single change elsewhere.** No edits to `fetch_real.py`, the provenance log, the database loader, or Phase 2 — two new files plus two registry lines. **Lesson:** the "one socket, many plugs" investment pays off precisely here; good architecture is measured by what you *don't* have to touch.
+- **The framework absorbed two sources without a single change elsewhere.** No edits to `src/strainscope/fetch_real.py`, the provenance log, the database loader, or Phase 2 — two new files plus two registry lines. **Lesson:** the "one socket, many plugs" investment pays off precisely here; good architecture is measured by what you *don't* have to touch.
 - **The live APIs couldn't be pre-tested from the build environment** — same constraint as Phase 1b, same response: defensive parsing, raw responses always saved, canned-response tests offline, and the expected outputs written as *shapes* ("your numbers WILL differ"). The first live run on your machine is part of the process — and after Phase 1b's three bumps, both of us know how that goes and why it's fine.
 
 ## 12. Two ways to run everything (running tally)
 
 | Capability | Manual path (now) | Automatic path (later) |
 |---|---|---|
-| Generate synthetic data | `python src/strainscope/generate_data.py` | the one-command pipeline (Phase 7) |
+| Generate synthetic data | `python src/strainscope/generate_data.py` | the one-command pipeline (Phase 8) |
 | Probe / fetch real data — **now five sources** | `python src/strainscope/fetch_real.py [--probe] [--source …]` | the app's **Upload · Synthetic · Fetch-real** picker, per source |
-| Manage an API key | `.env` (from `.env.example`) or `export` | the deployed app's secrets console (Phase 8 — same idea, hosted) |
+| Manage an API key | `.env` (from `.env.example`) or `export` | the deployed app's secrets console (Phase 7 — same idea, hosted) |
 | Clean + build the database | `python src/strainscope/harmonize.py` | runs automatically inside the pipeline |
 | Question the data | `python src/strainscope/sql.py` + the [Cookbook](QUERY_COOKBOOK.md) | the app's SQL console, cookbook built in |
 
@@ -264,4 +264,4 @@ git switch master && git pull --ff-only origin master && git switch develop
 
 **Tier 3, honestly scoped:** MGnify (environmental microbiomes) and ENA (raw sequence archives) remain roadmap — both are heavyweights (nested pagination; large files) that deserve proper treatment when the app and deployment phases can use them, not a rushed adapter now.
 
-**Next:** [`04-integration.md`](04-integration.md) — **Phase 3**, the specialised heart: multi-omics **integration** (DIABLO in R via mixOmics — what setup installed it for — plus a Python companion), finding the cross-layer signatures that separate the winners from the rest.
+**Next:** [`docs/04-integration.md`](04-integration.md) — **Phase 3**, the specialised heart: multi-omics **integration** (DIABLO in R via mixOmics, installed into the project's own R library at the start of that phase — plus a Python companion), finding the cross-layer signatures that separate the winners from the rest.

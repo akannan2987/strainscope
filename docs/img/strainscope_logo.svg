@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="200" viewBox="0 0 720 200" role="img" aria-label="StrainScope logo">
+  <title>StrainScope</title>
+  <rect width="720" height="200" rx="18" fill="#F5F9FF"/>
+  <!-- petri dish -->
+  <circle cx="110" cy="100" r="72" fill="#FFFFFF" stroke="#5B8DEF" stroke-width="5"/>
+  <circle cx="110" cy="100" r="62" fill="none" stroke="#B9D2FF" stroke-width="2"/>
+  <!-- colonies: bacteria, fungi, yeast, oomycete -->
+  <circle cx="80" cy="78" r="14" fill="#5B8DEF"/>
+  <circle cx="132" cy="70" r="10" fill="#4CAF7D"/>
+  <circle cx="92" cy="128" r="9" fill="#C9A227"/>
+  <circle cx="140" cy="118" r="12" fill="#9C6ADE"/>
+  <!-- the integration network linking the colonies -->
+  <g stroke="#1F2933" stroke-width="2" opacity="0.55">
+    <line x1="80" y1="78" x2="132" y2="70"/><line x1="132" y1="70" x2="140" y2="118"/>
+    <line x1="80" y1="78" x2="92" y2="128"/><line x1="92" y1="128" x2="140" y2="118"/>
+  </g>
+  <!-- magnifying lens -->
+  <circle cx="150" cy="118" r="30" fill="none" stroke="#1F2933" stroke-width="6"/>
+  <line x1="172" y1="140" x2="200" y2="168" stroke="#1F2933" stroke-width="10" stroke-linecap="round"/>
+  <!-- wordmark -->
+  <text x="235" y="105" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="58" font-weight="700" fill="#1F2933">Strain<tspan fill="#4CAF7D">Scope</tspan></text>
+  <text x="238" y="142" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="19" fill="#5f6b7a">multi-omics · machine learning · beneficial microbes</text>
+</svg>

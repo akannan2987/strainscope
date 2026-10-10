@@ -1,6 +1,6 @@
 # 01 · Setup Runbook — From a Blank Laptop to a Real Repository
 
-[← Architecture](00-architecture.md) · [All docs in order](../README.md#the-tutorial-in-order) · [Glossary](GLOSSARY.md)
+[← Architecture](00-architecture.md) · [Handbook](HANDBOOK.md) · [All docs in order](../README.md#the-tutorial-in-order) · [Glossary](GLOSSARY.md)
 
 **Prerequisites:** a computer (Windows, macOS, or Linux), an internet connection, and about 60–90 minutes. No prior programming setup is assumed. If you have *nothing* installed, you are in exactly the right place.
 **Learning goal:** by the end you will have every tool StrainScope needs, you'll understand *why* each one exists, and you'll have a real, version-controlled project pushed to GitHub with a `master` / `beta` / `develop` branch structure — ready to start building.
@@ -258,7 +258,7 @@ Now we create the project's skeleton and link it to the empty GitHub repo.
 1. Make sure you're in the project folder with the environment active (`(.venv)` prefix, prompt in `~/projects/strainscope`).
 2. Create the standard folders. This layout has a place for everything, which we'll explain in step 3:
    ```bash
-   mkdir -p src/strainscope R artifacts app data/raw data/processed tests notebooks docs .streamlit
+   mkdir -p src/strainscope R artifacts app data/raw data/processed tests docs .streamlit
    ```
 3. **Why this structure?** Each folder has one clear job, so a stranger (and future-you) can find anything instantly:
    - `src/strainscope/` — the reusable backend code (data generation, cleaning, models, graph).
@@ -267,9 +267,8 @@ Now we create the project's skeleton and link it to the empty GitHub repo.
    - `app/` — the Streamlit app (the frontend/website).
    - `data/raw/` and `data/processed/` — generated data before and after cleaning.
    - `tests/` — automated checks that prove the code works.
-   - `notebooks/` — optional exploratory notebooks.
    - `docs/` — this tutorial (the docs you're reading).
-   - `.streamlit/` — configuration for the app when deployed.
+   - `.streamlit/` — configuration for the app when deployed (empty until Phase 6; Git ignores empty folders, so it appears on GitHub only once it holds a file).
 4. Add a few starter files. **The three files below — `.gitignore`, `requirements.txt`, and the placeholder `README.md` — are provided with this project as ready-made files. Save each one into the project root (the folder with `docs/` in it) rather than typing them out.** Saving the files avoids copy-paste mistakes that can scramble a multi-line file in some terminals.
 
    - **`.gitignore`** — the list of files Git should never save. Save the provided `.gitignore` into the project root.
@@ -375,7 +374,7 @@ Whenever you finish a piece of work, you'll be on `develop`, and you'll run thes
 
 ```bash
 # 0. Safety first — run the checks BEFORE staging anything.
-pytest -q                     # once tests exist (from Phase 4 on); skip earlier
+pytest -q                     # tests exist from Phase 1b on; before that there is nothing to run
 ./check-public-safe.sh        # must print "SAFE TO PUSH" before you continue
 
 # 1. Then the commit + push ritual:
@@ -384,13 +383,16 @@ git add -A
 git commit -m "a short message describing what you did"
 git push origin develop develop:beta develop:master
 
+## --tags is optional, only when a release tag was created in this phase
+## then switch back to local master and pull in the remote changes
+
 # 2. Bring your LOCAL master in step with the remote master you just updated:
 git switch master
 git pull --ff-only origin master
 git switch develop
 ```
 
-The two safety commands come **first**, on purpose: there's no point staging or committing anything until you know the tests pass and nothing sensitive is about to be published. If `./check-public-safe.sh` prints **NOT SAFE TO PUSH**, stop and fix the flagged items before going any further. (`pytest -q` has nothing to run until Phase 4 adds the first tests, so you can omit it before then — it does no harm either way.)
+The two safety commands come **first**, on purpose: there's no point staging or committing anything until you know the tests pass and nothing sensitive is about to be published. If `./check-public-safe.sh` prints **NOT SAFE TO PUSH**, stop and fix the flagged items before going any further. (`pytest -q` has nothing to run until Phase 1b adds the first tests, so you can omit it before then — it does no harm either way.)
 
 **What each line does, in plain terms:**
 
@@ -400,7 +402,12 @@ The two safety commands come **first**, on purpose: there's no point staging or 
 - `git push origin develop develop:beta develop:master` — send your local `develop` up to the remote `develop`, and *also* fast-forward remote `beta` and `master` to match it — all in one command. Read `develop:beta` as "send my local develop to the remote branch called beta." One line keeps all three copies on GitHub in step with your latest work.
 - `git switch master` → `git pull --ff-only origin master` → `git switch develop` — because the push just moved remote `master` forward, your *local* `master` is now behind. This trio hops onto local `master`, pulls the update, and hops back to `develop` so you're ready to keep working. `--ff-only` means "only update if it can be done cleanly, with no messy merge — otherwise stop and tell me." (Everyday analogy: after mailing three copies of a document, you update the copy in your own drawer so it matches what you sent.)
 
-> **Optional — tags.** When you finish something worth marking as a version (like `v0.1.0`), you create a tag and push it with `--tags`: `git tag v0.1.0` then `git push origin develop develop:beta develop:master --tags`. You only add `--tags` when you've actually created a new tag; day-to-day commits don't need it.
+> **Optional — tags.** A **tag** is a bookmark on one exact commit, named with a version number, so anyone can return to exactly that state later (everyday analogy: a dated, labelled photograph of the workshop). When a phase earns a version — the list is in [`docs/ROADMAP.md`](ROADMAP.md#version-tags) — create the tag right after the commit and add `--tags` to the push:
+> ```bash
+> git tag -a v0.1.0 -m "v0.1.0 — data foundation and multi-omics integration"
+> git push origin develop develop:beta develop:master --tags
+> ```
+> `-a` makes an *annotated* tag (it records who tagged, when, and the message); `--tags` sends tags along with the branches. You only add `--tags` when you have actually created a new tag; day-to-day commits don't need it. `git tag` on its own lists the tags you have.
 
 > **Make sure you're on `develop` before working.** Check with `git branch --show-current`. If it doesn't say `develop`, switch with `git switch develop`.
 
@@ -460,13 +467,15 @@ It prints **`✓ SAFE TO PUSH`** (and exits cleanly) or **`✗ NOT SAFE TO PUSH`
 
 > **Tip:** make the script *yours* — near the bottom it lists your GitHub handle so it can tell "intended attribution" apart from a real leak. If you fork or rename, update that one line to your own details.
 
-**If it goes wrong:** if the gate flags something you believe is safe, read the flagged line first — most "false alarms" are real (a placeholder key that looks too much like a real one, or an example path that shouldn't ship). If it's genuinely intended, the honest fix is to make the content unmistakably non-secret (use an obvious placeholder like `sk-REPLACE_ME`) rather than to weaken the check.
+**If it goes wrong:** if the gate flags something you believe is safe, read the flagged line first — most "false alarms" are real (a placeholder key that looks too much like a real one, or an example path that shouldn't ship). If it's genuinely intended, the honest fix is to make the content unmistakably non-secret (use an obvious placeholder like `sk-REPLACE_ME`) rather than to weaken the check. (One genuine false alarm has happened in this project — a link anchor containing the letters `sk-` — and the fix was to make the *pattern* more precise, not weaker; the story is in [`docs/04-integration.md` §12](04-integration.md#12-notes-from-the-build-kept-on-purpose).)
 
 ---
 
 ## Part I — Install R (needed at the integration phase)
 
-You can do this now, or skip it and come back when you reach the integration doc — I'll remind you there. R is a second language used for one specialised, high-value step (the DIABLO multi-omics integration).
+You can do this now, or skip it and come back when you reach the integration guide ([`docs/04-integration.md`](04-integration.md)) — it reminds you. R is a second language used for one specialised, high-value step (the DIABLO multi-omics integration). Everything else in the project runs without it.
+
+> **One habit for every R command in this project: `Rscript -e '…'`.** `Rscript` means "start R, run this, quit" and behaves the same on Windows, macOS and Linux. Avoid a bare `R` in Windows PowerShell: PowerShell already uses `r` as a shortcut for *repeat the last command*, so `R --version` or `R -e …` silently does something else. In **PowerShell**, also swap the quote marks — outer double, inner single: `Rscript -e "renv::status()"` — because PowerShell can strip double quotes nested inside single ones.
 
 1. Install R:
    - **Windows/macOS:** download the installer from `https://cran.r-project.org/` and run it with defaults. (On macOS you can instead run `brew install r`.)
@@ -486,30 +495,15 @@ You can do this now, or skip it and come back when you reach the integration doc
      sudo dnf install -y R
      ```
      > **What just happened, plainly:** enterprise Linux keeps "extra" software in optional add-on catalogues you switch on when needed. Step 1 unlocks a catalogue of building-block libraries R relies on; step 2 adds the catalogue that actually contains R; step 3 installs it. Everyday analogy: to buy a specialist ingredient you first get a membership to two extra stores, then do the shopping. You only do this once.
-2. Verify:
+2. Verify (open a **new** terminal first, so it sees the freshly installed program):
    ```bash
-   R --version
+   Rscript --version
    ```
-   **Expected output:** a few lines starting with `R version 4.x.x`.
-3. Install the mixOmics package (this is what provides DIABLO). First **start R** by typing `R` in your terminal and pressing Enter — your prompt changes from `$` to `>`. Then, **at the `>` prompt**, paste:
-   ```r
-   install.packages("BiocManager")
-   BiocManager::install("mixOmics")
-   ```
-   When it asks whether to update other packages, typing `n` (no) is usually fine for a first install. This download is sizeable; let it finish.
+   **Expected output:** one line like `Rscript (R) version 4.x.x`.
 
-   > **Common trip-up:** these are **R** commands, so they only work **inside R** (after the `>` prompt). If you paste `BiocManager::install("mixOmics")` at the plain shell prompt (`$`) you'll get `bash: syntax error near unexpected token '"mixOmics"'` — that just means "you're talking R to the shell." Start R first (`R`), then paste. The rule of thumb: lines with `::`, `install.packages(...)`, or `library(...)` belong after `>`; lines starting with `R -e '...'` (which start *and* run R in one go) belong at `$`.
-4. Confirm it loaded, still inside R:
-   ```r
-   library(mixOmics)
-   ```
-   **Expected result:** some startup messages and no red `Error`. Then type `q()` and press Enter, and `n` when asked to save the workspace, to leave R.
+   **Windows — `Rscript` "is not recognized"?** R's installer does not add itself to PATH. Add it once: Start → *Edit environment variables for your account* → `Path` → *Edit* → *New* → `C:\Program Files\R\R-4.x.x\bin` (use the version folder you actually have) → OK; then open a fresh PowerShell. Until then you can call it by its full path: `& "C:\Program Files\R\R-4.x.x\bin\Rscript.exe" --version`.
 
-**If it goes wrong:** mixOmics has many dependencies; if one fails, R usually names it — re-running `BiocManager::install("mixOmics")` often completes the rest. If R names a missing *system* library, install the development version of it:
-- **Debian/Ubuntu:** `sudo apt install -y libcurl4-openssl-dev libssl-dev libxml2-dev`
-- **RHEL 8 / Rocky / Alma:** `sudo dnf install -y libcurl-devel openssl-devel libxml2-devel`
-
-then retry. (These are common building blocks R packages compile against — think of them as the power tools mixOmics borrows while assembling itself.) Because R is only needed for one offline step whose results we save as a small file, a temporary R hiccup never blocks the rest of the project.
+3. **Do not install mixOmics yet.** mixOmics (the package that provides DIABLO) is installed **into the project's own R library** in Phase 3 — [`docs/04-integration.md` §6](04-integration.md#6-step-2--install-mixomics-into-the-projects-r-library-once-per-machine) — one command, after `renv` (below) is switched on. Installing it globally now is harmless but does not help: once `renv` is active, R inside this project sees only the project's own library — "installed, but invisible", a trap described in that section.
 
 ### Lock the R toolbox with `renv` (R's virtual environment)
 
@@ -517,22 +511,25 @@ Just as Python has a virtual environment (`.venv`) plus a `requirements.txt` sho
 
 **Everyday analogy:** `renv` is the R-language twin of `.venv` + `requirements.txt` — a labelled box of exactly the right R ingredients that ships with the project, plus a receipt (`renv.lock`) listing every version so anyone can recreate the identical box.
 
-Do this once, from your project folder (the one with the `(.venv)` prefix is fine — `renv` is about R, and lives happily alongside the Python environment):
+Do this once, from your project folder (the `(.venv)` prefix is fine — `renv` is about R, and lives happily alongside the Python environment). Each command shows the macOS/Linux form; the PowerShell form follows it.
 
-1. Still needing R, install `renv` (from your terminal, launching R non-interactively):
+1. Install `renv`:
    ```bash
-   R -e 'install.packages("renv", repos="https://cloud.r-project.org")'
+   Rscript -e 'install.packages("renv", repos = "https://cloud.r-project.org")'
    ```
-   **Expected output:** download messages ending with `* DONE (renv)`.
-2. Initialise `renv` for this project. We pass `bare = TRUE`, which sets up renv's scaffolding **without** trying to auto-discover and reinstall packages — that keeps this step fast and avoids rebuilding the big mixOmics install you just did:
+   PowerShell: `Rscript -e "install.packages('renv', repos = 'https://cloud.r-project.org')"`
+   **Expected output:** download messages ending with `* DONE (renv)` (Windows and macOS print `package 'renv' successfully unpacked` instead).
+2. Initialise `renv` for this project. `bare = TRUE` sets up renv's scaffolding **without** trying to auto-discover and install packages — fast, and nothing to discover yet:
    ```bash
-   R -e 'renv::init(bare = TRUE)'
+   Rscript -e 'renv::init(bare = TRUE)'
    ```
-   **Expected output:** a line like `- Project '.../strainscope' loaded. [renv 1.2.4]`. This creates three things in your project: an `renv/` folder (the sealed R library), an `.Rprofile` file (which auto-activates renv whenever R starts here), and — after the next step — a `renv.lock` file (the receipt of versions).
-3. Take the first snapshot — write the lockfile (the receipt). We also switch on renv's **Bioconductor** support here, because mixOmics comes from Bioconductor (a specialist package shop for biology), not from the ordinary CRAN shop that renv checks by default:
+   PowerShell: `Rscript -e "renv::init(bare = TRUE)"`
+   **Expected output:** a line like `- Project '.../strainscope' loaded. [renv 1.2.4]`. This creates an `renv/` folder (the sealed R library), an `.Rprofile` file (which auto-activates renv whenever R starts in this folder), and `renv/activate.R` (the script `.Rprofile` calls).
+3. Switch on renv's **Bioconductor** support (mixOmics comes from Bioconductor, a specialist biology package shop, not the ordinary CRAN shop) and write the first receipt:
    ```bash
-   R -e 'options(renv.config.bioconductor.enabled = TRUE); renv::snapshot()'
+   Rscript -e 'options(renv.config.bioconductor.enabled = TRUE); renv::snapshot()'
    ```
+   PowerShell: `Rscript -e "options(renv.config.bioconductor.enabled = TRUE); renv::snapshot()"`
    If it asks you to confirm, answer `y`. **Expected output** ends with:
    ```
    - Lockfile written to ".../strainscope/renv.lock".
@@ -544,23 +541,26 @@ Do this once, from your project folder (the one with the `(.venv)` prefix is fin
    **Expected output:** `renv.lock`
 5. Sanity-check that renv is happy:
    ```bash
-   R -e 'renv::status()'
+   Rscript -e 'renv::status()'
    ```
+   PowerShell: `Rscript -e "renv::status()"`
    **Expected output:** `No issues found -- the project is in a consistent state.`
 
-> **Wait — why isn't mixOmics in the lockfile yet?** If you open `renv.lock` now, you'll see `renv` (and maybe `BiocManager`) but **not** mixOmics. That is correct, not a bug. `renv::snapshot()` only records a package once your **project code actually uses it** — it works by scanning your R scripts for `library(...)` calls. There are no R scripts yet, so renv has no reason to record mixOmics. When we write the integration script later (it begins with `library(mixOmics)`) and run `renv::snapshot()` again, mixOmics and all its versions join the lockfile then. mixOmics is installed and loads fine today; it simply gets *recorded* at the phase that uses it. Nothing to do about it now.
+> **Why is the lockfile almost empty?** `renv::snapshot()` records a package only once the project's **code uses it** — it scans the R scripts for `library(...)` calls. There are no R scripts yet. In Phase 3, `R/diablo_integration.R` arrives with `library(mixOmics)`; you install mixOmics into the project and snapshot again, and it joins the receipt with its exact version ([`docs/04-integration.md` §6](04-integration.md#6-step-2--install-mixomics-into-the-projects-r-library-once-per-machine)).
 
 > **What each new file is for:**
 > - `renv.lock` — the receipt of exact R package versions (this **is** committed to Git; it's how others rebuild your R toolbox).
-> - `renv/` — the sealed R library itself (mostly **not** committed — like `.venv`, it's rebuildable from the lockfile; renv adds its own `.gitignore` inside this folder automatically).
-> - `.Rprofile` — a small file that switches renv on automatically every time R runs in this project.
+> - `renv/` — the sealed R library itself (mostly **not** committed — like `.venv`, it's rebuildable from the lockfile; renv adds its own `.gitignore` inside this folder automatically). `renv/activate.R` and `renv/settings.json` *are* committed: they are the switch, not the toolbox.
+> - `.Rprofile` — a one-line file that switches renv on automatically every time R runs in this project.
 >
-> **Later, on any machine**, a person restores your exact R setup with one command from inside the project: `R -e 'renv::restore()'`. That's the R equivalent of `pip install -r requirements.txt`.
+> **Later, on any machine**, a person restores your exact R setup with one command from inside the project: `Rscript -e 'renv::restore()'` (PowerShell: `Rscript -e "renv::restore()"`). That's the R equivalent of `pip install -r requirements.txt`.
 
 **If it goes wrong:**
-- **`failed to resolve remote 'mixOmics' -- package 'mixOmics' is not available`** — this appears if you try to name mixOmics directly (e.g. an older `renv::record("mixOmics")` step). The cause is that renv looked for it in the ordinary CRAN shop, but mixOmics lives in **Bioconductor**. The fix is the command in step 3 above — `renv::snapshot()` with `renv.config.bioconductor.enabled = TRUE` — which records what's installed without you naming the package, and understands Bioconductor sources. You do **not** need `renv::record()` at all.
-- **renv says it "found no packages to record"** — fine at this stage; you'll snapshot again once the integration phase adds real R code.
-- **Behind a corporate proxy** — `renv` respects the same proxy settings as base R; setting the `https_proxy` environment variable before launching R usually resolves it.
+- **`failed to resolve remote 'mixOmics' -- package 'mixOmics' is not available`** — renv looked for it in CRAN; mixOmics lives in Bioconductor. Use the `bioc::mixOmics` form shown in [`docs/04-integration.md` §6](04-integration.md#6-step-2--install-mixomics-into-the-projects-r-library-once-per-machine). You do **not** need `renv::record()`.
+- **renv says it "found no packages to record"** — correct at this stage; the integration phase adds the first R script.
+- **`Error: object 'renv' not found` on Windows** — PowerShell stripped the inner double quotes; use the PowerShell form with the quote marks swapped.
+- **A package fails to compile on Linux, naming a missing system library** — install its development version, then retry. Debian/Ubuntu: `sudo apt install -y libcurl4-openssl-dev libssl-dev libxml2-dev`; RHEL 8 / Rocky / Alma: `sudo dnf install -y libcurl-devel openssl-devel libxml2-devel`. (For mixOmics on RHEL 8, [`docs/04-integration.md` §6](04-integration.md#6-step-2--install-mixomics-into-the-projects-r-library-once-per-machine) shows how to use ready-made binaries and skip compiling.)
+- **Behind a corporate proxy** — `renv` respects the same proxy settings as base R; setting the `https_proxy` environment variable before running `Rscript` usually resolves it.
 
 ### Optional: open the project in RStudio (`strainscope.Rproj`)
 
@@ -613,11 +613,12 @@ Run these four checks. All four passing means your environment is fully ready.
    ```
    → `env OK`
 4. GitHub has your three branches: refresh the repo page and see **master / beta / develop** in the branch dropdown.
-5. *(If you did Part I)* the R toolbox is locked:
+5. *(If you did Part I)* R runs and the R toolbox is locked:
    ```bash
+   Rscript --version
    ls renv.lock
    ```
-   → `renv.lock`
+   → `Rscript (R) version 4.x.x`, then `renv.lock`
 
 If all four (or five) pass — congratulations, the hardest part for most beginners (setup) is behind you. You have a real, reproducible, version-controlled project on the internet, with nothing built yet but every foundation in place.
 
@@ -646,4 +647,4 @@ If all four (or five) pass — congratulations, the hardest part for most beginn
 
 ## What's next
 
-Next is **`02-data-generation.md`** — Box 1 of the architecture. You'll write the generator that invents a realistic, biologically-grounded library of microbial strains with three omics layers and a performance score, learn what a "random seed" is and why reproducibility depends on it, and end the phase with real data on disk and your first meaningful commit pushed to all three branches.
+Next is **`docs/02-data-generation.md`** — Box 1 of the architecture. You'll write the generator that invents a realistic, biologically-grounded library of microbial strains with three omics layers and a performance score, learn what a "random seed" is and why reproducibility depends on it, and end the phase with real data on disk and your first meaningful commit pushed to all three branches.

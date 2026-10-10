@@ -1,6 +1,6 @@
 # The Query Cookbook — ready-to-run SQL for the StrainScope database
 
-[← README](../README.md) · [All docs in order](../README.md#the-tutorial-in-order) · [Glossary](GLOSSARY.md)
+[← README](../README.md) · [Handbook](HANDBOOK.md) · [All docs in order](../README.md#the-tutorial-in-order) · [Glossary](GLOSSARY.md)
 
 Every query below is **tested** and runs against `data/processed/strainscope.duckdb`
 (built in [Phase 2](03-harmonization-qc.md)). Run them with the project's own
@@ -137,8 +137,133 @@ WHERE rc.metabolite = 'iturin' AND rc.status = 'found'
 GROUP BY rc.metabolite, rc.molecular_formula;
 ```
 A taste of what's coming: synthetic measurements and real reference data,
-answering one question together. (The integration and knowledge-graph phases
-make this systematic.)
+answering one question together. (Section 8 does this systematically with the
+integration results; the knowledge-graph phase goes further.)
+
+## 8. Integration results (Phase 3)
+
+These tables exist once you have run `python src/strainscope/integrate.py publish`
+(or `integrate.py all`) — see [`docs/04-integration.md` §9](04-integration.md#9-step-5--publish-to-the-database-and-ask-it-questions).
+Every Phase 3 table starts with `int_`; `.tables` lists them. *(The data is
+simulated: these numbers prove the workflow, not real-world accuracy.)*
+
+> **If a table is missing:** `src/strainscope/harmonize.py` rebuilds the database from scratch,
+> which removes the `int_*` tables on purpose. Re-run `integrate.py publish`.
+
+**"How did every Python approach score, best first?"**
+```sql
+SELECT approach,
+       ROUND(ber_mean, 3) AS ber, ROUND(ber_sd, 3) AS sd,
+       ROUND(auc_mean, 3) AS auc
+FROM int_python_scoreboard
+ORDER BY ber_mean;
+```
+→ late integration on top (BER 0.123), then early integration (0.134) and
+PLS-DA (0.137), genomics alone (0.148), and the two controls at the bottom near
+0.5 — exactly where a coin sits. *Lower BER is better; higher AUC is better.*
+
+**"DIABLO's headline numbers."** (DIABLO keeps its results as key/value pairs.)
+```sql
+SELECT key, value
+FROM int_diablo_summary
+WHERE key IN ('mixomics_version', 'ncomp_fitted', 'keepX_genomics',
+              'keepX_metabolomics', 'cv_ber_final', 'cv_ber_final_sd',
+              'cv_ber_all_features', 'block_agreement_comp1');
+```
+→ 2 components, keepX `16;16` and `16;4`, cross-validated BER ≈ 0.155 ± 0.011,
+0.145 with every feature, blocks agreeing at r ≈ 0.77. (Expect ±0.01 with other
+mixOmics versions.)
+
+**"How much did centring within kingdom help?"** — one row per component, the
+two versions side by side. `FILTER (WHERE …)` picks which rows each column
+summarises; `MAX` just collects the single value.
+```sql
+SELECT component,
+       ROUND(MAX(ber) FILTER (WHERE version = 'as_measured'), 3) AS as_measured,
+       ROUND(MAX(ber) FILTER (WHERE version = 'centred'), 3)     AS centred
+FROM int_diablo_error_by_component
+GROUP BY component
+ORDER BY component;
+```
+→ the error falls from about 0.22 to about 0.145 from component 2 on. (R prints
+the component-1 centred value as 0.154 and DuckDB as 0.155 — the true value is
+0.1545, and the two round halves differently.)
+
+**"Grade every signature against the planted truth."**
+```sql
+SELECT method, n_selected,
+       n_signal_selected AS true_drivers,
+       ROUND(precision, 2) AS precision, ROUND(recall, 2) AS recall,
+       decoys_selected
+FROM int_signature_report_card;
+```
+→ DIABLO's robust list: 29 picks, 29 true drivers, no decoys. The lasso: 17
+picks, 17 true drivers — perfect precision, lower recall (it keeps fewer).
+
+**"Which features do R and Python both trust?"** — DIABLO's robust picks that the
+lasso also picked in at least 80 % of folds.
+```sql
+SELECT d.feature, d.block,
+       ROUND(d.stability, 2)           AS diablo_stability,
+       ROUND(p.selection_frequency, 2) AS lasso_frequency
+FROM int_diablo_signature d
+JOIN int_python_selection p USING (feature)
+WHERE d.component = 1 AND d.stability >= 0.8
+  AND p.selection_frequency >= 0.8
+ORDER BY d.block, d.feature;
+```
+→ 17 features — the "in both" number of `int_language_agreement`. Two
+languages, two methods, one core answer.
+
+**"Do genes and their own products rise together?"**
+```sql
+SELECT gene, metabolite, ROUND(spearman_rho, 2) AS rho
+FROM int_cross_block_correlation
+WHERE is_producer_pair
+ORDER BY rho DESC;
+```
+→ 14 producer pairs, from `prnD`/pyrrolnitrin and `pvdA`/pyoverdine (0.76) down
+to `olpA`/oligandrin (0.22, the rarest kingdom, so the noisiest estimate).
+
+**"Per kingdom, how well do the gene score and the chemistry score agree?"** —
+a table joined to *itself*: each strain appears twice (one row per block), and
+the join lines its two rows up side by side.
+```sql
+SELECT g.kingdom, COUNT(*) AS strains,
+       ROUND(corr(g.comp1, m.comp1), 2) AS agreement
+FROM int_diablo_sample_scores g
+JOIN int_diablo_sample_scores m USING (strain_id)
+WHERE g.block = 'genomics' AND m.block = 'metabolomics'
+GROUP BY g.kingdom
+ORDER BY agreement DESC;
+```
+→ Bacteria 0.81, Fungi 0.74, Yeast 0.69, Oomycete 0.50 — agreement is strongest
+where there are the most strains and weapons to learn from.
+
+**"What did preparing the blocks change?"** — the Phase 3 ledger.
+```sql
+SELECT step, block, cells, note FROM int_prepare_ledger;
+```
+→ 338 gene calls and 714 metabolite readings filled within kingdom; `ef1a`,
+`rpb1` and `ssu_rRNA` dropped as near-constant.
+
+**Try it yourself:** per kingdom, how many of its weapons made DIABLO's robust
+signature? (Hint: join `int_diablo_signature` with `int_feature_annotations`
+and `GROUP BY arsenal`.)
+
+<details>
+<summary>One answer</summary>
+
+```sql
+SELECT a.arsenal, COUNT(*) AS weapons_in_signature
+FROM int_diablo_signature s
+JOIN int_feature_annotations a USING (feature)
+WHERE s.component = 1 AND s.stability >= 0.8
+GROUP BY a.arsenal
+ORDER BY weapons_in_signature DESC;
+```
+→ Bacteria 16, Fungi 6, Yeast 4, Cross-kingdom 2, Oomycete 1 (29 in total).
+</details>
 
 ---
 

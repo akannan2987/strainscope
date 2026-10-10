@@ -1,0 +1,52 @@
+feature,block,role,arsenal,description,producer_gene
+phlD,genomics,signal,Bacteria,DAPG antifungal antibiotic biosynthesis,
+prnD,genomics,signal,Bacteria,pyrrolnitrin antifungal antibiotic biosynthesis,
+phzE,genomics,signal,Bacteria,phenazine antibiotic biosynthesis,
+hcnA,genomics,signal,Bacteria,hydrogen cyanide (HCN) production,
+srfAA,genomics,signal,Bacteria,surfactin lipopeptide synthetase,
+ituA,genomics,signal,Bacteria,iturin antifungal lipopeptide synthetase,
+fenA,genomics,signal,Bacteria,fengycin antifungal lipopeptide synthetase,
+pvdA,genomics,signal,Bacteria,pyoverdine siderophore (iron competition),
+chiA,genomics,signal,Cross-kingdom,chitinase — digests fungal cell walls,
+glcA,genomics,signal,Cross-kingdom,"beta-1,3-glucanase — degrades fungal walls",
+ech42,genomics,signal,Fungi,endochitinase (Trichoderma mycoparasitism),
+prb1,genomics,signal,Cross-kingdom,mycoparasitic protease,
+sixPP,genomics,signal,Fungi,6-pentyl-alpha-pyrone antifungal volatile,
+dtxS,genomics,signal,Fungi,destruxin insecticidal toxin synthetase,
+beaS,genomics,signal,Fungi,beauvericin insecticidal toxin synthetase,
+olpA,genomics,signal,Oomycete,oligandrin elicitor (Pythium oligandrum),
+kilT,genomics,signal,Yeast,killer toxin (yeast antagonism),
+sidA,genomics,signal,Yeast,yeast siderophore (iron competition),
+acdS,genomics,decoy,Plant-growth (other trait),ACC deaminase — relieves plant stress,
+nifH,genomics,decoy,Plant-growth (other trait),nitrogen fixation,
+gcd,genomics,decoy,Plant-growth (other trait),phosphate solubilisation,
+iaaM,genomics,decoy,Plant-growth (other trait),auxin (IAA) production — boosts growth,
+ssu_rRNA,genomics,housekeeping,Housekeeping,small-subunit ribosomal RNA gene — a universal marker,
+ef1a,genomics,housekeeping,Housekeeping,translation elongation factor — broadly conserved,
+rpb1,genomics,housekeeping,Housekeeping,largest RNA-polymerase subunit — broadly conserved,
+accA,genomics,decoy,Accessory noise,accessory gene with no link to performance,
+accB,genomics,decoy,Accessory noise,accessory gene with no link to performance,
+accC,genomics,decoy,Accessory noise,accessory gene with no link to performance,
+accD,genomics,decoy,Accessory noise,accessory gene with no link to performance,
+accE,genomics,decoy,Accessory noise,accessory gene with no link to performance,
+accF,genomics,decoy,Accessory noise,accessory gene with no link to performance,
+DAPG,metabolomics,signal,Bacteria,product of phlD (DAPG antifungal antibiotic biosynthesis),phlD
+pyrrolnitrin,metabolomics,signal,Bacteria,product of prnD (pyrrolnitrin antifungal antibiotic biosynthesis),prnD
+phenazine,metabolomics,signal,Bacteria,product of phzE (phenazine antibiotic biosynthesis),phzE
+HCN,metabolomics,signal,Bacteria,product of hcnA (hydrogen cyanide (HCN) production),hcnA
+surfactin,metabolomics,signal,Bacteria,product of srfAA (surfactin lipopeptide synthetase),srfAA
+iturin,metabolomics,signal,Bacteria,product of ituA (iturin antifungal lipopeptide synthetase),ituA
+fengycin,metabolomics,signal,Bacteria,product of fenA (fengycin antifungal lipopeptide synthetase),fenA
+pyoverdine,metabolomics,signal,Bacteria,product of pvdA (pyoverdine siderophore (iron competition)),pvdA
+six_PP,metabolomics,signal,Fungi,product of sixPP (6-pentyl-alpha-pyrone antifungal volatile),sixPP
+destruxin,metabolomics,signal,Fungi,product of dtxS (destruxin insecticidal toxin synthetase),dtxS
+beauvericin,metabolomics,signal,Fungi,product of beaS (beauvericin insecticidal toxin synthetase),beaS
+oligandrin,metabolomics,signal,Oomycete,product of olpA (oligandrin elicitor (Pythium oligandrum)),olpA
+killer_toxin,metabolomics,signal,Yeast,product of kilT (killer toxin (yeast antagonism)),kilT
+yeast_siderophore,metabolomics,signal,Yeast,product of sidA (yeast siderophore (iron competition)),sidA
+bg_metabolite_1,metabolomics,decoy,Background chemistry,background compound with no link to performance,
+bg_metabolite_2,metabolomics,decoy,Background chemistry,background compound with no link to performance,
+bg_metabolite_3,metabolomics,decoy,Background chemistry,background compound with no link to performance,
+bg_metabolite_4,metabolomics,decoy,Background chemistry,background compound with no link to performance,
+bg_metabolite_5,metabolomics,decoy,Background chemistry,background compound with no link to performance,
+bg_metabolite_6,metabolomics,decoy,Background chemistry,background compound with no link to performance,

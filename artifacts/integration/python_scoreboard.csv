@@ -1,0 +1,9 @@
+approach,ber_mean,ber_sd,auc_mean,auc_sd,n_folds_scored
+Genomics only,0.1481,0.0083,0.9365,0.0039,50
+Metabolomics only,0.2034,0.0106,0.8828,0.0052,50
+"Early integration (concatenate, logistic)",0.1338,0.0102,0.9479,0.0043,50
+"Early integration, sparse (lasso logistic)",0.1661,0.01,0.9211,0.0047,50
+"Early integration (PLS-DA, 2 components)",0.1365,0.0108,0.9468,0.0029,50
+Late integration (average of per-block models),0.1234,0.0103,0.9477,0.0034,50
+Control: kingdom label only,0.4639,0.0054,0.533,0.0105,50
+Control: shuffled labels,0.4896,0.0161,0.5214,0.0309,50

@@ -1,0 +1,49 @@
+feature,selection_frequency,block,role,arsenal
+prnD,1.0,genomics,signal,Bacteria
+phzE,1.0,genomics,signal,Bacteria
+hcnA,1.0,genomics,signal,Bacteria
+srfAA,1.0,genomics,signal,Bacteria
+pvdA,1.0,genomics,signal,Bacteria
+fenA,1.0,genomics,signal,Bacteria
+dtxS,1.0,genomics,signal,Fungi
+kilT,1.0,genomics,signal,Yeast
+pyoverdine,1.0,metabolomics,signal,Bacteria
+six_PP,1.0,metabolomics,signal,Fungi
+sidA,1.0,genomics,signal,Yeast
+beauvericin,1.0,metabolomics,signal,Fungi
+phlD,0.98,genomics,signal,Bacteria
+chiA,0.96,genomics,signal,Cross-kingdom
+iturin,0.96,metabolomics,signal,Bacteria
+oligandrin,0.94,metabolomics,signal,Oomycete
+glcA,0.86,genomics,signal,Cross-kingdom
+DAPG,0.78,metabolomics,signal,Bacteria
+ituA,0.7,genomics,signal,Bacteria
+destruxin,0.64,metabolomics,signal,Fungi
+yeast_siderophore,0.54,metabolomics,signal,Yeast
+sixPP,0.44,genomics,signal,Fungi
+phenazine,0.18,metabolomics,signal,Bacteria
+accE,0.16,genomics,decoy,Accessory noise
+fengycin,0.1,metabolomics,signal,Bacteria
+killer_toxin,0.1,metabolomics,signal,Yeast
+beaS,0.08,genomics,signal,Fungi
+olpA,0.04,genomics,signal,Oomycete
+surfactin,0.04,metabolomics,signal,Bacteria
+iaaM,0.02,genomics,decoy,Plant-growth (other trait)
+bg_metabolite_2,0.02,metabolomics,decoy,Background chemistry
+prb1,0.0,genomics,signal,Cross-kingdom
+ech42,0.0,genomics,signal,Fungi
+pyrrolnitrin,0.0,metabolomics,signal,Bacteria
+HCN,0.0,metabolomics,signal,Bacteria
+accF,0.0,genomics,decoy,Accessory noise
+accC,0.0,genomics,decoy,Accessory noise
+gcd,0.0,genomics,decoy,Plant-growth (other trait)
+accA,0.0,genomics,decoy,Accessory noise
+accB,0.0,genomics,decoy,Accessory noise
+acdS,0.0,genomics,decoy,Plant-growth (other trait)
+nifH,0.0,genomics,decoy,Plant-growth (other trait)
+accD,0.0,genomics,decoy,Accessory noise
+bg_metabolite_1,0.0,metabolomics,decoy,Background chemistry
+bg_metabolite_3,0.0,metabolomics,decoy,Background chemistry
+bg_metabolite_4,0.0,metabolomics,decoy,Background chemistry
+bg_metabolite_5,0.0,metabolomics,decoy,Background chemistry
+bg_metabolite_6,0.0,metabolomics,decoy,Background chemistry

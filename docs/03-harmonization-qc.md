@@ -1,6 +1,6 @@
 # 03 · Phase 2 — Cleaning the mess & building the database (DuckDB + SQL)
 
-[← Phase 1b: real data](02b-real-data-ingestion.md) · [All docs in order](../README.md#the-tutorial-in-order) · [Glossary](GLOSSARY.md) · [Query Cookbook](QUERY_COOKBOOK.md)
+[← Phase 1b: real data](02b-real-data-ingestion.md) · [Handbook](HANDBOOK.md) · [All docs in order](../README.md#the-tutorial-in-order) · [Glossary](GLOSSARY.md) · [Query Cookbook](QUERY_COOKBOOK.md)
 
 **Prerequisites:** Phase 1 complete (the raw synthetic tables exist — rerun `python src/strainscope/generate_data.py` if `data/raw/` is empty). Phase 1b is a bonus, not a requirement: if you fetched real data, it joins the database automatically; if not, everything here still works.
 **Learning goal:** after this phase you will understand why raw data is *evidence* that must never be edited; how professionals clean data — rules written in English first, every change counted in a **ledger**, decisions justified; what a **database** is and why analysts keep one next to their dataframes; and enough **SQL** to question 600 strains in one line. You'll also watch a textbook cleaning rule *fail* on our data — and learn the deeper lesson that failure teaches.
@@ -81,13 +81,13 @@ Six rules, in a deliberate order. Each exists because Phase 1 planted a specific
 
 ## 4. Get the Phase 2 files into your repo
 
-| File | Goes in | Its job |
-|---|---|---|
-| `harmonize.py` | `src/strainscope/` | the cleaning engine: six documented functions + the ledger + the DuckDB loader |
-| `test_harmonize.py` | `tests/` | seven offline tests — one per cleaning behaviour, ledger included |
-| `make_phase2_figures.py` | `figures/` | before/after evidence figures + the interactive comparison |
-| `QUERY_COOKBOOK.md` | `docs/` | tested, ready-to-run SQL recipes (grows every phase) |
-| `sql.py` | `src/strainscope/` | the project's **SQL console** — run any query, read-only, no installation |
+| Path (from the project folder) | Its job |
+|---|---|
+| `src/strainscope/harmonize.py` | the cleaning engine: six documented functions + the ledger + the DuckDB loader |
+| `tests/test_harmonize.py` | seven offline tests — one per cleaning behaviour, ledger included |
+| `figures/make_phase2_figures.py` | before/after evidence figures + the interactive comparison |
+| `docs/QUERY_COOKBOOK.md` | tested, ready-to-run SQL recipes (grows every phase) |
+| `src/strainscope/sql.py` | the project's **SQL console** — run any query, read-only, no installation |
 
 **Files-landed check:**
 
@@ -247,7 +247,7 @@ pytest -q
 
 | Capability | Manual path (now) | Automatic path (later) |
 |---|---|---|
-| Generate synthetic data | `python src/strainscope/generate_data.py` | the one-command pipeline (Phase 7) |
+| Generate synthetic data | `python src/strainscope/generate_data.py` | the one-command pipeline (Phase 8) |
 | Probe / fetch real data | `python src/strainscope/fetch_real.py [--probe]` | the app's **Upload · Synthetic · Fetch-real** picker |
 | **Clean + build the database** | `python src/strainscope/harmonize.py` | runs automatically inside the pipeline |
 | **Question the data** | the SQL console: `python src/strainscope/sql.py` + the [Cookbook](QUERY_COOKBOOK.md) | the app's SQL console (Phase 6), cookbook built in |
@@ -279,10 +279,10 @@ Same answer both ways. The honest trade-off: pandas shines for *transforming* (o
 
 - **`FileNotFoundError: data/raw/genomics.csv`** — Phase 1's data isn't there (fresh clone, or you cleaned up). Regenerate: `python src/strainscope/generate_data.py` — same seed, identical data.
 - **`ModuleNotFoundError: No module named 'duckdb'`** — venv not active, or requirements not installed: `pip install -r requirements.txt`.
-- **My ledger numbers differ from §5's.** Almost always the raw data was generated with a modified seed or an older generator. Regenerate with the committed `generate_data.py` (SEED = 42) and re-run — cleaning is idempotent, so this is free.
-- **`0 real table(s)` loaded** — Phase 1b hasn't been fetched on this machine. Optional; run `python src/strainscope/fetch_real.py` whenever, then re-run `harmonize.py` and the tables appear.
-- **`database is locked` or similar when re-running `harmonize.py`** — some session holds the file open for *writing*. (The SQL console can't be the culprit — it opens read-only.) Close stray Python sessions and re-run.
-- **I pasted a multi-line query and got several strange errors, one per line** — you're on an old copy of `sql.py` (the first version executed line-by-line). Update to the current console: it buffers until a `;` or an empty line completes the statement.
+- **My ledger numbers differ from §5's.** Almost always the raw data was generated with a modified seed or an older generator. Regenerate with the committed `src/strainscope/generate_data.py` (SEED = 42) and re-run — cleaning is idempotent, so this is free.
+- **`0 real table(s)` loaded** — Phase 1b hasn't been fetched on this machine. Optional; run `python src/strainscope/fetch_real.py` whenever, then re-run `src/strainscope/harmonize.py` and the tables appear.
+- **`database is locked` or similar when re-running `src/strainscope/harmonize.py`** — some session holds the file open for *writing*. (The SQL console can't be the culprit — it opens read-only.) Close stray Python sessions and re-run.
+- **I pasted a multi-line query and got several strange errors, one per line** — you're on an old copy of `src/strainscope/sql.py` (the first version executed line-by-line). Update to the current console: it buffers until a `;` or an empty line completes the statement.
 - **`No files found that match the pattern "data/raw/…"`** — the query reads a CSV by *relative* path, so start the console from the project root (the folder with `docs/` in it).
 - **`Connection Error: Connection already closed!`** — you ran `con.close()` (perhaps as the last line of a pasted snippet) and then queried the same `con`. Closed connections can't be revived; make a new one: rerun the `duckdb.connect(...)` line, then your query. The SQL console avoids this entirely.
 - **The interactive HTML shows only one view** — you're looking at the static PNG; the buttons live in `docs/interactive/batch_before_after.html` (double-click to open in a browser).
@@ -305,7 +305,7 @@ git switch master && git pull --ff-only origin master && git switch develop
 
 **Try it yourself (extensions):**
 - In §7's session, find the *worst* effective strain (`ORDER BY … ASC LIMIT 1`) and look at its genes — what's it winning with?
-- Change the outlier `mult` from 3.0 to 1.5 in `harmonize.py`, re-run, and watch the ledger count jump — then look at `outliers_capped.png` to see *what* you'd be flattening. (Put it back.)
-- Write one cookbook query of your own — e.g. effective rate per `collection_site` — and add it to `QUERY_COOKBOOK.md`. It's your cookbook now.
+- Change the outlier `mult` from 3.0 to 1.5 in `src/strainscope/harmonize.py`, re-run, and watch the ledger count jump — then look at `outliers_capped.png` to see *what* you'd be flattening. (Put it back.)
+- Write one cookbook query of your own — e.g. effective rate per `collection_site` — and add it to `docs/QUERY_COOKBOOK.md`. It's your cookbook now.
 
-**Next:** [`04-integration.md`](04-integration.md) — **Phase 3**, where the layers stop being separate tables: multi-omics **integration** (DIABLO in R, with a Python companion) finds the cross-layer signatures that separate winners from the rest — the specialised heart of the project.
+**Next:** [`docs/04-integration.md`](04-integration.md) — **Phase 3**, where the layers stop being separate tables: multi-omics **integration** (DIABLO in R, with a Python companion) finds the cross-layer signatures that separate winners from the rest — the specialised heart of the project.

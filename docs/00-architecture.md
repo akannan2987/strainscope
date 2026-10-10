@@ -1,8 +1,8 @@
 # 00 · Architecture, Explained From Scratch
 
-[← README](../README.md) · [All docs in order](../README.md#the-tutorial-in-order) · [Glossary](GLOSSARY.md)
+[← README](../README.md) · [Handbook](HANDBOOK.md) · [All docs in order](../README.md#the-tutorial-in-order) · [Glossary](GLOSSARY.md) · [Roadmap](ROADMAP.md)
 
-**Prerequisites:** none. This is the first thing to read.
+**Prerequisites:** none. If you have not yet, skim the [Handbook](HANDBOOK.md) first — it is the map of the whole journey, and this page is its Stage 0.
 **Learning goal:** after this page you will understand what every part of StrainScope does, why it exists, and how data flows from a blank folder all the way to a public website that anyone in the world can use — even if you have never built software before.
 **Checkpoint:** you can explain, in your own words, the difference between a *backend*, a *frontend*, and a *database*, and you can name the ten boxes in the StrainScope diagram and say what each one is for.
 
@@ -57,7 +57,7 @@ In StrainScope, the database is a single file called a **DuckDB** database. It l
 
 ---
 
-## 4. The ten boxes, and why each one exists
+## 4. The boxes, and why each one exists
 
 Here is the whole system as a diagram, and then a plain-language tour of every box. GitHub renders the diagram below automatically. Read it slowly the first time; you will refer back to it constantly.
 
@@ -65,7 +65,7 @@ Here is the whole system as a diagram, and then a plain-language tour of every b
 flowchart TD
     subgraph LAPTOP["🖥️  YOUR LAPTOP — where the build and heavy compute happen"]
         A["1 · Data generator (Python)<br/>simulate strains × 3 omics layers,<br/>grounded in real biocontrol biology"]
-        R["1b · Real-data ingestion (Python)<br/>BacDive · PubChem · KEGG →<br/>evidence locker + provenance log"]
+        R["1b · Real-data ingestion (Python)<br/>BacDive · PubChem · KEGG · NCBI ·<br/>Metabolomics Workbench →<br/>evidence locker + provenance log"]
         B["2 · Harmonise + quality control (Python)<br/>align the tables, clean the mess"]
         C[("3 · DuckDB database<br/>one queryable store · SQL")]
         D["4 · Integrate — DIABLO (R, offline)<br/>+ a Python twin<br/>the cross-layer signature"]
@@ -75,9 +75,11 @@ flowchart TD
     end
     subgraph CLOUD["☁️  THE CLOUD — free, always-on, anyone can use it"]
         H["8 · Streamlit app<br/>explore · rank · SQL console · graph view"]
-        I["9–10 · AI layer  (optional)<br/>plain-language explanations ·<br/>RAG / GraphRAG chatbot"]
+        I["9–10 · AI layer  (optional)<br/>plain-language explanations ·<br/>data assistant · GraphRAG"]
+        Q["11 · Ask StrainScope<br/>answers from the project's own docs,<br/>with links · refuses off-topic questions"]
     end
-    M["(roadmap) MCP server<br/>lets an AI assistant operate the model"]
+    M["12 · MCP server (Phase 7b)<br/>read-only tools an AI assistant can call"]
+    DOCS[/"docs/ — the guides,<br/>Handbook, glossary, cookbook"/]
 
     A -->|writes 3 raw tables| B
     R -->|tidy real tables| C
@@ -89,8 +91,10 @@ flowchart TD
     E --> G
     F --> G
     G -->|committed to Git, then deployed| H
-    H -.->|only when an API key<br/>is present, stored as a secret| I
-    M -.-> H
+    H -.->|AI wording only when a model<br/>is configured; key kept as a secret| I
+    DOCS --> Q
+    Q --> H
+    M -.->|read-only tools| C
 
     classDef laptop fill:#E8F0FE,stroke:#5B8DEF,color:#0B2545;
     classDef store fill:#FFF3CD,stroke:#C9A227,color:#4A3B00;
@@ -102,7 +106,8 @@ flowchart TD
     class C store
     class G artifact
     class H cloud
-    class I ai
+    class I,Q ai
+    class DOCS artifact
     class M roadmap
     style LAPTOP fill:#F5F9FF,stroke:#B9D2FF,color:#0B2545
     style CLOUD fill:#F2FBF5,stroke:#B7E4C7,color:#0B3D2E
@@ -113,7 +118,9 @@ doesn't render diagrams — picture it top-to-bottom: the generator feeds the
 cleaner, which fills the database; the database feeds integration, machine
 learning, and the graph; those write small artifact files; the artifacts are
 deployed into the public app; and the AI layer switches on only when a key is
-present. The box-by-box tour below says the same thing in words.)*
+present. Ask StrainScope reads the project's own documentation and answers
+inside the app; the MCP server, last, offers the same functions to AI
+assistants. The box-by-box tour below says the same thing in words.)*
 
 ### Box 1 — Data Generator (Python) · *backend*
 **What it does:** creates our dataset from scratch, in code. It invents a realistic library of microbial strains and, for each one, three tables of measurements plus a performance score.
@@ -138,7 +145,8 @@ present. The box-by-box tour below says the same thing in words.)*
 ### Box 4 — Integrate (DIABLO in R, plus a Python version) · *backend, the specialised heart*
 **What it does:** this is the multi-omics **integration** — the part that finds the *combination* of genes and chemicals that, taken together across all layers at once, best separates high-performing strains from low-performing ones.
 **Why it exists:** this is the headline skill of the whole project. Anyone can analyse one table. Integrating several, properly, is the hard and valuable thing. We use **DIABLO**, a well-established method from a free R package called **mixOmics** that specialists trust for exactly this job — and we *also* provide a plain-Python version so the project can run without R if you prefer. Using the recognised specialist tool is a real signal of competence; providing the Python twin keeps it approachable.
-**Why R runs offline (important design choice):** R is a little awkward to run on the free hosting we'll use. So DIABLO runs on your laptop, and we *save its results as a small CSV* (an artifact). The website reads that CSV instantly. This "compute once, serve many times" pattern is normal, professional engineering — not a shortcut.
+**Why R runs offline (important design choice):** R is a little awkward to run on the free hosting we'll use. So DIABLO runs on your laptop, and we *save its results as small CSV files* (artifacts, in `artifacts/integration/`, also published as `int_*` tables in the database). The website reads those files instantly. This "compute once, serve many times" pattern is normal, professional engineering — not a shortcut.
+**How R and Python stay honest with each other:** they never call each other. Python prepares the blocks and writes them as plain CSV files; R reads them and writes its results as plain CSV files; Python reads those back, compares, grades and publishes. A test checks that both sides agree on every file name — a *contract*. ✅ Built in Phase 3: [`docs/04-integration.md`](04-integration.md).
 
 ### Box 5 — ML Models (Python) · *backend*
 **What it does:** trains machine-learning models (random forest, elastic-net, gradient boosting) to predict a strain's performance score, and — this is the part most beginner projects skip — *evaluates them honestly* using cross-validation, sensible metrics, and an error analysis that admits what the model gets wrong.
@@ -159,23 +167,27 @@ present. The box-by-box tour below says the same thing in words.)*
 
 ### Box 9 — AI Explanation Layer · *frontend feature (staged)*
 **What it does:** turns a model's terse output ("top features: phlD gene, surfactin, siderophore") into a plain sentence a non-specialist can read.
-**Why it exists:** communicating findings to non-technical audiences is a real, valued skill, and this is the cheapest way to demonstrate it. It needs access to a language model (an API key, stored safely as a secret). The app is built so that if there's no key, this feature simply switches off and everything else still works.
+**Why it exists:** communicating findings to non-technical audiences is a real, valued skill, and this is the cheapest way to demonstrate it. Without any language model it still works, writing template sentences filled with the computed facts; when a model is configured — a hosted one (API key stored safely as a secret) or a local one on your own computer — the model only rephrases those facts. If nothing is configured, nothing breaks.
 
-### Box 10 — RAG / GraphRAG Chatbot · *frontend feature (staged)*
-**What it does:** a chat box where someone asks a question in ordinary language ("which chemicals are most linked to high performance?") and gets an answer grounded in *your* project's data and docs — the GraphRAG version answers by tracing the knowledge graph.
-**Why it exists:** it's the most natural way for a non-expert to interrogate the project, and it's a strong, modern capability. Staged as a later feature because it builds on Boxes 7 and 9.
+### Box 10 — Data assistant and GraphRAG · *frontend feature (Phase 7)*
+**What it does:** someone asks a question about the *data* in ordinary language ("which chemicals are most linked to high performance?"). The **data assistant** turns it into a SQL query on the read-only database and shows the query beside the answer; the **GraphRAG** version answers by tracing the knowledge graph and citing the path it walked.
+**Why it exists:** it's the most natural way for a non-expert to interrogate the project's results. Staged as a later feature because it builds on Boxes 3, 7 and 9.
 
-### (Roadmap) MCP Server
-**What it does:** exposes a few of the project's functions so an AI assistant can call them directly and operate the model live.
-**Why it exists:** it turns your repo from "code someone reads" into "a tool an AI can use" — an unusual, forward-looking capability. Documented as roadmap, honestly labelled as not-yet-built until you build it.
+### Box 11 — Ask StrainScope · *documentation assistant (Phase 6b)*
+**What it does:** answers questions about the *project itself* — "how do I install mixOmics on Windows?", "what is a balanced error rate?" — from the project's own documents, quoting the matching passages with links to the exact sections. Questions that are not about StrainScope are refused politely instead of being guessed at. Optionally, a language model writes a short answer from those passages only.
+**Why it exists:** the documentation is large by design; a newcomer's most frequent question is "where is that explained?". Everyday analogy: a librarian who lends only from this library — and says so when you ask for a book it does not have. Full design: [`docs/ROADMAP.md`](ROADMAP.md#ask-strainscope--the-documentation-assistant-in-detail).
+
+### Box 12 — MCP Server · *a door for AI assistants (Phase 7b)*
+**What it does:** exposes a few of the project's functions — search the docs, run a read-only query, fetch the signature, rank a strain — through the **Model Context Protocol**, a standard "USB port" that lets AI assistants call tools directly. Every call is validated and logged.
+**Why it exists:** it turns your repo from "code someone reads" into "a tool an AI can use". Built last, because it reuses functions the app and Ask StrainScope already provide — it adds a door, not new machinery.
 
 ---
 
 ## 5. How data flows, start to finish (the one-paragraph story)
 
-You run the **generator** (Box 1), which writes three raw tables. You run **harmonise + QC** (Box 2), which turns them into clean, aligned tables. Those load into **DuckDB** (Box 3). From the database, the **integration** step (Box 4) finds the cross-layer signature and saves it as an artifact; the **ML models** (Box 5) train and save predictions and a trained model as artifacts (Box 6); the **knowledge graph** (Box 7) is built from the same clean data. You commit everything to **GitHub**. **Streamlit Community Cloud** notices the new commit and (re)builds your **app** (Box 8), which reads the small artifacts and serves them fast to anyone on the internet — with the optional **AI features** (Boxes 9–10) switching on when an API key is present.
+You run the **generator** (Box 1), which writes three raw tables. You run **harmonise + QC** (Box 2), which turns them into clean, aligned tables. Those load into **DuckDB** (Box 3). From the database, the **integration** step (Box 4) finds the cross-layer signature and saves it as an artifact; the **ML models** (Box 5) train and save predictions and a trained model as artifacts (Box 6); the **knowledge graph** (Box 7) is built from the same clean data. You commit everything to **GitHub**. **Streamlit Community Cloud** notices the new commit and (re)builds your **app** (Box 8), which reads the small artifacts and serves them fast to anyone on the internet — with **Ask StrainScope** (Box 11) answering questions about the project from its own docs, the optional **AI features** (Boxes 9–10) switching on when a language model is configured, and the **MCP server** (Box 12) offering the same functions to AI assistants.
 
-That is the whole system. Ten boxes, one straight line with a couple of branches, no magic anywhere.
+That is the whole system. A dozen boxes, one straight line with a couple of branches, no magic anywhere.
 
 ---
 
@@ -206,7 +218,7 @@ Neither is an afterthought. If a feature only worked one way, the docs would be 
 
 ## 7. Why this shape, and not something fancier?
 
-You might wonder why there's no Docker, no Airflow, no cloud warehouse, no separate database server. The answer is a principle worth internalising: **match the tool to the job, and no more.** Every extra tool is another thing to install, break, and explain. StrainScope's job is to demonstrate multi-omics integration, honest machine learning, a knowledge graph, and a usable deployed product — and it does all of that with a handful of free, well-chosen tools a beginner can actually install in an afternoon. The README lists the "level-up" tools (Docker, a graph database, a cloud warehouse, a React frontend) as a visible roadmap, so the ambition is on record without drowning the build.
+You might wonder why there's no Docker, no Airflow, no cloud warehouse, no separate database server. The answer is a principle worth internalising: **match the tool to the job, and no more.** Every extra tool is another thing to install, break, and explain. StrainScope's job is to demonstrate multi-omics integration, honest machine learning, a knowledge graph, and a usable deployed product — and it does all of that with a handful of free, well-chosen tools a beginner can actually install in an afternoon. The [product roadmap](PRODUCT_ROADMAP.md) lists the "level-up" tools (Docker, a graph database, a cloud warehouse, a React frontend, PostgreSQL, an orchestrator) with a verdict and a trigger for each, so the ambition is on record without drowning the build.
 
 Simplicity that works and is fully explained beats complexity that impresses nobody because it never ran.
 
@@ -218,7 +230,7 @@ StrainScope is built to behave identically on **Windows**, **macOS**, and **Linu
 - **File paths are written the neutral way.** Windows separates folders with backslashes (`data\raw`) and everyone else with forward slashes (`data/raw`). Our Python code never hard-codes either — it builds paths with Python's `pathlib`, which quietly does the right thing on whatever machine it runs on. Everyday analogy: it's like writing an address in a format the postal service of every country understands, so the letter arrives no matter where you mail it.
 - **Heavy setup happens once; daily work is identical.** Installing the tools differs slightly per OS (a different "app store" command on each), but that's a one-time step. Once set up, generating data, running the app, committing, and redeploying are the *same* commands on every platform.
 
-The practical payoff: you can develop on a Windows or Mac laptop and deploy to a Linux VM without rewriting anything, and a collaborator on a different OS can clone the repo and get an identical result. The setup guide (`01-setup.md`) gives the per-OS install commands side by side so nobody is left guessing.
+The practical payoff: you can develop on a Windows or Mac laptop and deploy to a Linux VM without rewriting anything, and a collaborator on a different OS can clone the repo and get an identical result. The setup guide (`docs/01-setup.md`) gives the per-OS install commands side by side so nobody is left guessing.
 
 ---
 
@@ -226,22 +238,27 @@ The practical payoff: you can develop on a Windows or Mac laptop and deploy to a
 
 Every box in the diagram is built and explained by one numbered document in `docs/`. This table is your map from "the picture" to "the guide that builds that part" — so at any point you know which doc owns which piece.
 
-| Phase | Guide | Which box(es) of the diagram it builds |
-| --- | --- | --- |
-| 1 | `02-data-generation.md` | Box 1 — the synthetic data generator → `data/raw/` |
-| 1b | `02b-real-data-ingestion.md` | Box 1b — real data from BacDive · PubChem · KEGG → tidy real tables (join the database in Phase 2) |
-| 2 | `03-harmonization-qc.md` | Boxes 2–3 — harmonisation + QC → the DuckDB database |
-| 3 | `04-integration.md` | Box 4 — multi-omics integration (DIABLO in R + a Python twin) → an artifact |
-| 4 | `05-machine-learning.md` | Boxes 5–6 — ML models + honest evaluation → prediction & model artifacts |
-| 5 | `06-knowledge-graph.md` | Box 7 — the knowledge graph (core AI feature) |
-| 6 | `07-app.md` | Box 8 — the Streamlit app (local first) |
-| 7 | `08-deployment-ai.md` | Box 8 online + Boxes 9–10 — free public deployment + the AI explanation/chat layer |
-| 8 | `09-packaging.md` | The whole picture — release notes, roadmap, license, the 1.0 tag |
+| Phase | Guide | Which box(es) of the diagram it builds | Status |
+| --- | --- | --- | --- |
+| — | [`docs/HANDBOOK.md`](HANDBOOK.md) | the whole journey, day 0 to the finished product — read it first | living |
+| 0 | [`docs/00-architecture.md`](00-architecture.md), [`docs/01-setup.md`](01-setup.md) | this map; the workshop (Python, R, Git, the safety gate) | ✅ |
+| 1 | [`docs/02-data-generation.md`](02-data-generation.md) | Box 1 — the synthetic data generator → `data/raw/` | ✅ |
+| 1b | [`docs/02b-real-data-ingestion.md`](02b-real-data-ingestion.md) | Box 1b — real data from BacDive · PubChem · KEGG | ✅ |
+| 1c | [`docs/02c-more-real-sources.md`](02c-more-real-sources.md) | Box 1b grows — NCBI Datasets · Metabolomics Workbench; API keys done right | ✅ |
+| 2 | [`docs/03-harmonization-qc.md`](03-harmonization-qc.md) | Boxes 2–3 — harmonisation + QC → the DuckDB database | ✅ |
+| 3 | [`docs/04-integration.md`](04-integration.md) | Box 4 — multi-omics integration (DIABLO in R + a Python twin) → `artifacts/integration/` | ✅ |
+| 4 | `docs/05-machine-learning.md` | Boxes 5–6 — ML models + honest evaluation → prediction & model artifacts | ⏳ next |
+| 5 | `docs/06-knowledge-graph.md` | Box 7 — the knowledge graph | ⏳ |
+| 6 | `docs/07-app.md` | Box 8 — the Streamlit app (local first) | ⏳ |
+| 6b | `docs/07b-docs-assistant.md` | Box 11 — Ask StrainScope, the documentation assistant | ⏳ |
+| 7 | `docs/08-deployment-ai.md` | Box 8 online + Boxes 9–10 — free public deployment, explanations, data assistant, GraphRAG | ⏳ |
+| 7b | `docs/08b-mcp-server.md` | Box 12 — the MCP server | ⏳ |
+| 8 | `docs/09-packaging.md` | the whole picture — one-command pipeline, cross-platform CI, LICENSE, CHANGELOG, the 1.0 tag | ⏳ |
 
-The roadmap items (the RAG/GraphRAG chatbot's fuller form, the MCP server, and a read-only agent) are documented in the README's roadmap and become their own guides if and when they're built — honestly labelled as not-yet-built until then.
+Guides without links arrive with their phase. The order, the reasons for it and the deferred items (with the event that would schedule each) are in [`docs/ROADMAP.md`](ROADMAP.md); what an industrial version would add is in [`docs/PRODUCT_ROADMAP.md`](PRODUCT_ROADMAP.md).
 
 ---
 
 ## 8. What's next
 
-Go to **`01-setup.md`**. It assumes a completely blank laptop and walks you, one command at a time, through installing everything and creating your repository — with the exact output you should see after each step, and fixes for the errors people most commonly hit. By the end of it you'll have an empty-but-real project, version-controlled and pushed to GitHub, ready for Box 1.
+Go to **[`docs/01-setup.md`](01-setup.md)** (Stages 1–2 of the [Handbook](HANDBOOK.md)). It assumes a completely blank laptop and walks you, one command at a time, through installing everything and creating your repository — with the exact output you should see after each step, and fixes for the errors people most commonly hit. By the end of it you'll have an empty-but-real project, version-controlled and pushed to GitHub, ready for Box 1.

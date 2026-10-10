@@ -1,6 +1,6 @@
 # Glossary — every term, in plain language
 
-[← README](../README.md) · [All docs in order](../README.md#the-tutorial-in-order)
+[← README](../README.md) · [Handbook](HANDBOOK.md) · [All docs in order](../README.md#the-tutorial-in-order)
 
 This is a living document. Every technical or biological term used anywhere in
 StrainScope is defined here in everyday language, grouped by the phase where it
@@ -93,7 +93,7 @@ first appears. If a term is missing, that's a documentation bug worth fixing.
 - **Rate limit** — the maximum request speed a service allows (e.g. KEGG's 3/second). Exceed it and you're blocked. Our adapters pause between calls on purpose.
 - **User-Agent** — the "who's calling" label sent with every request. Ours identifies the project politely.
 - **HTTP status codes** — the numeric verdict on every web request: `200` OK, `404` not found (often an honest "no such entry", not an outage), `403` forbidden, `5xx` server trouble.
-- **Provenance / provenance log** — the paper trail of where data came from. Our `fetch_log.csv` records when, which source, what was asked, which URL, and how much came back — the permanent answer to "where did this number come from?"
+- **Provenance / provenance log** — the paper trail of where data came from. Our `data/raw/real/fetch_log.csv` records when, which source, what was asked, which URL, and how much came back — the permanent answer to "where did this number come from?"
 - **Evidence locker** — `data/raw/real/<source>/`: every API response saved exactly as received, never edited. If parsing ever needs fixing, nothing was lost.
 - **Adapter (the socket-and-plugs pattern)** — one shared contract (`probe → fetch → tidy`) that every data source implements. One socket, many plugs: adding a source is one new file.
 - **Probe** — a cheap "what's out there?" call that counts what a fetch would bring back, before downloading anything. Measure twice, cut once.
@@ -118,7 +118,7 @@ first appears. If a term is missing, that's a documentation bug worth fixing.
 - **Quartile / IQR** — Q1/Q3 are the 25 %/75 % marks; IQR is the spread between them. The textbook outlier fence (Q3 + k·IQR) assumes one-humped data — and fails on two-humped data like ours.
 - **Bimodal** — a distribution with two humps. Ours: a *trace* hump (gene absent) and a *producer* hump (gene present). Many textbook rules silently assume one hump.
 - **Batch-effect correction (median-scaling)** — per batch and metabolite, divide by (batch median ÷ overall median), cooling a hot batch by exactly its drift. Medians, so leftover extremes can't drag the factor.
-- **Imputation** — filling missing values. Deliberately *not* done in cleaning: the right strategy depends on the downstream method, so it's a modelling decision made openly later.
+- **Imputation** — filling missing values. Deliberately *not* done in cleaning: the right strategy depends on the downstream method, so it's a modelling decision made openly later — Phase 3 fills gaps *within each kingdom* without looking at the outcome (see *kingdom-wise imputation* below).
 - **Idempotent (cleaning)** — run it twice, get the identical result. What makes re-running safe and casual.
 - **Database** — the "filing cabinet": organised, permanent storage you question with SQL — versus the pandas "desk" (fast, in-memory, gone when you stand up).
 - **DuckDB** — a full SQL analytics database living in one ordinary file (`strainscope.duckdb`). No server, no setup drama. "A filing cabinet you can zip up and email."
@@ -128,7 +128,7 @@ first appears. If a term is missing, that's a documentation bug worth fixing.
 - **`JOIN`** — line tables up on a shared key (`strain_id`) so one question can span genomics, metabolomics, and phenotype at once.
 - **`NULL`** — SQL's honest "no value here." Special grammar: `IS NULL`, never `= NULL` (which silently matches nothing).
 - **Schema** — the shape of a database: which tables exist and what columns each holds.
-- **Query cookbook** — this project's growing file of tested, explained SQL recipes ([`QUERY_COOKBOOK.md`](QUERY_COOKBOOK.md)).
+- **Query cookbook** — this project's growing file of tested, explained SQL recipes ([`docs/QUERY_COOKBOOK.md`](QUERY_COOKBOOK.md)).
 
 ## Phase 1c — more real sources & secrets (doc 02c)
 
@@ -147,3 +147,70 @@ first appears. If a term is missing, that's a documentation bug worth fixing.
 - **NCBI Datasets** — the NIH's API over the world's genome-assembly catalogue; source of our multi-kingdom `real_genomes` table.
 - **`curl`** — the universal command-line tool that speaks raw HTTP; handy for poking any API from any terminal (with headers attached by hand).
 - **Header (HTTP)** — a labelled note sent alongside a request (our `User-Agent`; NCBI's `api-key`). Data about the request, not part of the URL.
+
+## Phase 3 — multi-omics integration (doc 04)
+
+- **Block** — one kind of measurement for the same samples, kept as its own table: the *genomics block* (genes) and the *metabolomics block* (metabolites). "Two witnesses describing the same strains."
+- **Integration** — analysing several blocks *together* so that what they agree on stands out. "Two witnesses whose stories match are more convincing than either alone."
+- **Early / intermediate / late integration** — three ways to combine blocks. *Early*: glue the tables side by side and fit one model. *Intermediate*: give each block its own summary, but make the summaries agree (DIABLO). *Late*: fit one model per block and average their votes.
+- **Block scaling** — before gluing blocks together (early integration), divide each block by the square root of its number of columns, so a block with many columns cannot drown out a smaller one just by being bigger.
+- **Alignment** — putting every block in the same strain order, keeping only strains present in all of them; the shared key is `strain_id`.
+- **Kingdom-wise imputation** — filling a gap with the typical value *of that strain's kingdom* (the most common call for a gene, the median for a metabolite), never using the outcome. A missing bacterial reading is filled with a bacterial value, not a fungal one.
+- **Near-constant feature** — a column where almost every sample has the same value (here: ≥ 95 %), like the housekeeping genes. It carries no information and breaks some methods, so it is dropped — and the drop is written in the ledger.
+- **Centring (within kingdom)** — subtracting each kingdom's own average from its strains, so every feature reads "more or less than is typical *for this kind of microbe*". The outcome is judged within kind too, so the yardsticks match — this cut DIABLO's error by about a third.
+- **`log(1 + x)` transform** — squashes right-skewed chemical abundances so a few huge readings don't dominate; the `1 +` keeps zero at zero.
+- **DIABLO** — *Data Integration Analysis for Biomarker discovery using Latent cOmponents*: the supervised integration method of the R package **mixOmics**. It builds a few summary scores per block that must agree with each other *and* separate the outcome groups, keeping only a short list of features.
+- **mixOmics** — the free Bioconductor R package that provides DIABLO and its standard plots.
+- **Component** — one summary score DIABLO builds per block: a weighted sum of features. Component 1 is the strongest shared story; component 2 the next one, independent of the first.
+- **Loading** — the weight a feature gets in a component; its sign says in which direction it pushes and its size how much.
+- **Sparse / sparsity** — keeping most weights at exactly zero so only a short, readable list of features remains.
+- **`keepX`** — DIABLO's setting for how many features to keep per block and per component; *tuned* by cross-validation rather than guessed.
+- **Design matrix** — DIABLO's setting for how strongly blocks must agree with each other (0 = not at all, 1 = as much as possible). We use 0.1: some agreement, prediction first.
+- **Tuning** — trying several values of a setting and keeping the one that scores best under cross-validation.
+- **PLS-DA** — *partial least squares discriminant analysis*: the single-table ancestor of DIABLO; builds components from all features at once to separate groups.
+- **Lasso (L1) logistic regression** — a prediction model that pushes most feature weights to exactly zero, so it selects features as it learns.
+- **Cross-validation** — honest scoring by rotation: split the strains into 5 parts, train on 4, test on the unseen 5th, rotate until every part has been the test once. "Never mark your own homework with the answer sheet open."
+- **Repeated (stratified) cross-validation** — doing the 5-part rotation 10 times with different random splits, each keeping the effective/not-effective proportions; averages out the luck of one particular split and gives an uncertainty (±).
+- **Balanced error rate (BER)** — the average of the error on each outcome group. Unlike plain accuracy it cannot be gamed by always guessing the common group: that lazy strategy scores 0.50, exactly like a coin.
+- **AUC (area under the ROC curve)** — the chance that a randomly chosen effective strain gets a higher score than a randomly chosen non-effective one; 0.5 = coin, 1.0 = perfect ranking.
+- **Negative control** — a deliberately useless input that *must* fail (score like a coin). If it does not, something is leaking. Ours: the kingdom label alone, and shuffled labels.
+- **Y-scrambling (label shuffling)** — randomly re-dealing the outcome labels so any real link is destroyed, then re-running the whole procedure; the score must collapse to chance.
+- **Leakage** — information from the test strains sneaking into training, making scores look better than they are. Phase 3 documents a small, label-free one (gap filling and centring use all strains); Phase 4 removes it by moving them inside the cross-validation loop.
+- **One-standard-deviation rule** — among settings whose score is within one ± of the best, choose the simplest. Prefers fewer components when more do not clearly help.
+- **Cost of sparsity** — how much error a short feature list costs compared with using every feature, expressed in standard deviations so "small" has a meaning.
+- **Stability (selection)** — the share of cross-validation re-fits in which a feature is picked again. ≥ 80 % = *robust*; a feature picked only occasionally is quota-filling, not a finding.
+- **Signature** — the short list of features a method selects as the explanation of the outcome.
+- **Grading against planted truth** — because the data is simulated, we *know* which features truly drive the outcome, so every signature can be marked: how many picks are true drivers (precision) and how many true drivers were found (recall). One of synthetic data's quiet superpowers.
+- **Decoy** — a feature planted to *look* plausible but carry no signal; a good signature avoids it.
+- **Spearman correlation (rho)** — how consistently two columns rise and fall together, using ranks rather than raw values (robust to skew and outliers); −1 to +1.
+- **Producer pair** — a gene and the compound it helps make (e.g. `ituA` → iturin); in real biology these should correlate, and in our data they do (median rho 0.72).
+- **Contract (R ↔ Python)** — the agreed list of hand-off file names and columns two programs exchange; a test checks both sides use the same names, so one cannot silently drift.
+- **Hand-off file** — a plain CSV one step writes and another reads; the only way R and Python talk in this project.
+- **`Rscript`** — the command that runs an R script (or one line, with `-e`) and quits; works the same on every operating system.
+- **Installed but invisible** — a package installed on your computer that R *inside this project* cannot see, because renv shows only the project's own library. The fix is to install it into the project (`renv::install`).
+- **Plotly** — a charting library that makes interactive web charts (hover, zoom). Our interactive pages share one copy of its code, `docs/interactive/plotly.min.js`.
+
+## The Handbook, releases and the planned phases (docs HANDBOOK, ROADMAP, PRODUCT_ROADMAP)
+
+- **Handbook** — [`docs/HANDBOOK.md`](HANDBOOK.md): the one living document that walks the whole journey from a blank laptop to the finished product and links every specialised guide. Read first; updated in the same commit as every change.
+- **Roadmap** — the ordered plan of what gets built next and why ([`docs/ROADMAP.md`](ROADMAP.md)); the **product roadmap** looks beyond this repository ([`docs/PRODUCT_ROADMAP.md`](PRODUCT_ROADMAP.md)).
+- **Verdict / trigger** — in the product roadmap, every technology gets a verdict (*required now · recommended later · optional · not needed*) and a trigger: the observable event that would change it. "Justify, don't accumulate."
+- **Tag (Git)** — a bookmark on one exact commit, named with a version number (`v0.1.0`), so anyone can return to that state. *Annotated* tags (`git tag -a`) also record who, when and why.
+- **Semantic versioning** — version numbers as `MAJOR.MINOR.PATCH`: MINOR for a new usable level, PATCH for fixes, MAJOR 1 for the first complete release.
+- **Changelog** — [`CHANGELOG.md`](../CHANGELOG.md): the human-readable list of what changed in each version.
+- **Calibration** *(Phase 4)* — whether predicted probabilities mean what they say: of all strains given "80 %", about 80 % should really be effective.
+- **Ontology** *(Phase 5)* — the agreed rules of what kinds of things exist in a domain and how they may connect (a strain *carries* a gene, a gene *helps make* a compound). "A family tree for concepts."
+- **Knowledge graph** *(Phase 5)* — the filled-in family tree: actual strains, genes, compounds and pathways as dots (nodes) joined by labelled lines (edges) you can walk.
+- **Hub** — a node with unusually many connections; often a key gene or compound.
+- **RAG (retrieval-augmented generation)** *(Phase 6b–7)* — find the relevant passages first, then let a language model write an answer *only from them*, citing them. "An open-book exam, with the page numbers written down."
+- **Ask StrainScope** *(Phase 6b)* — the project's documentation assistant: answers from the project's own documents with links, and refuses questions that are not about StrainScope.
+- **Out-of-scope refusal** — the assistant's polite "that isn't about this project" when even the best-matching passage matches weakly; it happens *before* any language model is called, so nothing can be invented.
+- **Golden question set** — a fixed list of questions with known right answers (and off-topic questions that must be refused), run with the tests on every change.
+- **Language model (LLM)** — a program trained on large amounts of text that writes fluent text. Here it is optional and only ever rephrases supplied facts or passages.
+- **Ollama** — free software that runs open language models on your own computer (Windows, macOS, Linux), so nothing leaves the laptop.
+- **Text-to-SQL / data assistant** *(Phase 7)* — turning a question in plain words into a SQL query, run read-only, with the query shown so it can be checked.
+- **GraphRAG** *(Phase 7)* — RAG where the "passages" are paths walked through the knowledge graph, cited as the route taken.
+- **MCP (Model Context Protocol)** *(Phase 7b)* — an open standard that lets AI assistants call a program's tools in a uniform way. "A USB port for AI assistants."
+- **Continuous integration (CI)** *(Phase 8)* — a service (here GitHub Actions) that runs the tests automatically on fresh Windows, macOS and Linux machines at every push.
+- **Container** *(Phase 8, optional)* — a sealed, portable box holding a program plus everything it needs to run (Python, R, packages), so it runs the same anywhere.
+
