@@ -248,7 +248,7 @@ pytest -q          # expected: 6 passed
 |---|---|---|
 | Generate synthetic data | `python src/strainscope/generate_data.py` | the one-command pipeline (Phase 8) |
 | **Probe real sources** | `python src/strainscope/fetch_real.py --probe` | the app's data page shows source status |
-| **Fetch + tidy real data** | `python src/strainscope/fetch_real.py [--source …]` | the app's **Upload · Synthetic · Fetch-real** picker |
+| **Fetch + tidy real data** | `python src/strainscope/fetch_real.py [--source ...]` | the app's **Upload · Synthetic · Fetch-real** picker |
 | Make the figures | `python figures/make_phase1_figures.py` / `…phase2b…` | regenerated on demand; interactive in the app |
 | Inspect the data | `head`, the ledger, `data/raw/real/fetch_log.csv` | the app's data explorer |
 
@@ -298,8 +298,8 @@ Same API, same JSON, different language — and the same CID as `real_compounds.
 ## 15. Save your work (commit ritual + safety gate)
 
 ```bash
-pytest -q                     # 6 passed — the offline parsing tests
-./check-public-safe.sh        # must print: ✓ SAFE TO PUSH
+pytest -q                     # 6 passed - the offline parsing tests
+./check-public-safe.sh        # must print: SAFE TO PUSH
 git switch develop
 git add -A
 git commit -m "feat: add real-data ingestion framework with BacDive, PubChem, and KEGG adapters"

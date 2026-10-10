@@ -291,7 +291,7 @@ Same answer both ways. The honest trade-off: pandas shines for *transforming* (o
 
 ```bash
 pytest -q                     # 14 passed
-./check-public-safe.sh        # ✓ SAFE TO PUSH  (the .duckdb file is gitignored — data is regenerated, never committed)
+./check-public-safe.sh        # SAFE TO PUSH  (the .duckdb file is gitignored - data is regenerated, never committed)
 git switch develop
 git add -A
 git commit -m "feat: add cleaning pipeline with ledger and DuckDB database; seed the SQL cookbook"

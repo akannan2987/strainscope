@@ -247,7 +247,7 @@ For orientation only; there is no product to sell.
 | **Predict** | calibrated predictions with uncertainty | — | Phase 4 |
 | **Explain** | knowledge graph, explanations, GraphRAG | real KEGG/RefMet edges; Phase 3 correlations | Phases 5, 7; C5 later |
 | **Serve** | app, docs assistant, data assistant, MCP server | — | Phases 6, 6b, 7, 7b; A1/A2 later |
-| **Operate** | one-command pipeline, CI, releases; later scheduling and monitoring | tests (32), safety gate, three-branch workflow | Phase 8; B5, D4, D7 later |
+| **Operate** | one-command pipeline, CI, releases; later scheduling and monitoring | tests (37), a tested safety gate, three-branch workflow | Phase 8; B5, D4, D7 later |
 
 ## Sequencing summary
 

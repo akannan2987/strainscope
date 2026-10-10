@@ -458,8 +458,8 @@ You've added real code and figures — time to snapshot it. Run the **safety che
 
 ```bash
 # 0. Safety first
-pytest -q                     # no tests yet this phase — harmless, prints "no tests ran"
-./check-public-safe.sh        # must print: ✓ SAFE TO PUSH
+pytest -q                     # no tests yet this phase - harmless, prints "no tests ran"
+./check-public-safe.sh        # must print: SAFE TO PUSH
 
 # 1. Commit + push
 git switch develop

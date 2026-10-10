@@ -10,7 +10,7 @@ Every query below is **tested** and runs against `data/processed/strainscope.duc
 # one query, straight from the shell:
 python src/strainscope/sql.py "SELECT COUNT(*) FROM phenotype"
 
-# or an interactive session — paste recipes one after another:
+# or an interactive session - paste recipes one after another:
 python src/strainscope/sql.py
 sql> .tables                  -- list every table  (recipes below are multi-line:
 sql> .schema phenotype        --  paste them whole; ';' ends a statement)

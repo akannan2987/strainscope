@@ -373,7 +373,7 @@ The daily rhythm is: **work on `develop`, then push `develop` up to all three re
 Whenever you finish a piece of work, you'll be on `develop`, and you'll run these three commands:
 
 ```bash
-# 0. Safety first — run the checks BEFORE staging anything.
+# 0. Safety first - run the checks BEFORE staging anything.
 pytest -q                     # tests exist from Phase 1b on; before that there is nothing to run
 ./check-public-safe.sh        # must print "SAFE TO PUSH" before you continue
 
@@ -404,7 +404,7 @@ The two safety commands come **first**, on purpose: there's no point staging or 
 
 > **Optional — tags.** A **tag** is a bookmark on one exact commit, named with a version number, so anyone can return to exactly that state later (everyday analogy: a dated, labelled photograph of the workshop). When a phase earns a version — the list is in [`docs/ROADMAP.md`](ROADMAP.md#version-tags) — create the tag right after the commit and add `--tags` to the push:
 > ```bash
-> git tag -a v0.1.0 -m "v0.1.0 — data foundation and multi-omics integration"
+> git tag -a v0.1.0 -m "v0.1.0: data foundation and multi-omics integration"
 > git push origin develop develop:beta develop:master --tags
 > ```
 > `-a` makes an *annotated* tag (it records who tagged, when, and the message); `--tags` sends tags along with the branches. You only add `--tags` when you have actually created a new tag; day-to-day commits don't need it. `git tag` on its own lists the tags you have.
@@ -435,19 +435,48 @@ The two safety commands come **first**, on purpose: there's no point staging or 
 
 ### The pre-push safety gate: `check-public-safe.sh`
 
-Because this repository is **public**, a single leaked secret — most likely an API key once we add the AI features — would be visible to the whole world the moment you push. `.gitignore` prevents *accidental* staging, but it can't catch a file you force-add, or a key you paste into a script or a doc by mistake. So the project ships a small script, `check-public-safe.sh`, that you run **before every push**. It inspects what Git actually tracks and refuses to give the all-clear if anything sensitive would be published.
+Because this repository is **public**, a single leaked secret — most likely an API key once we add the AI features — would be visible to the whole world the moment you push. `.gitignore` prevents *accidental* staging, but it can't catch a file you force-add, or a key you paste into a script or a doc by mistake. So the project ships a small script, `check-public-safe.sh` (in the project folder), that you run **before every push**. It looks at everything your next commit could publish and refuses to give the all-clear if anything sensitive is among it.
 
 > **Everyday analogy:** `.gitignore` is the lock on your front door; `check-public-safe.sh` is the guard who checks your bag on the way out. The lock stops the obvious mistakes; the guard catches the one that slipped through. You want both.
 
-What it checks, in plain terms:
-1. **Secret / environment / data paths** aren't tracked (`.venv`, `.streamlit/secrets.toml`, `.env`, `.Renviron`, real data under `data/`, …).
-2. **Sensitive file types** aren't tracked anywhere (`.key`, `.pem`, `.env`, database files like `.duckdb`/`.sqlite`, …). It deliberately allows the small `.csv` and `.pkl` files we *do* publish as artifacts.
-3. **Credential-shaped strings** in any tracked file — it matches the actual *formats* of real keys (OpenAI `sk-…`, GitHub `ghp_…`, AWS `AKIA…`, private-key blocks), so ordinary docs that merely mention "API key" don't trip it.
-4. **Hard-coded local machine paths** (like a real home-directory path under `/Users/…`, `/home/…`, or `C:\Users\…`) that would both leak your machine and break reproducibility for anyone who clones the repo. Use `~` or a relative path instead.
-5. **Large tracked files** (over 5 MB) — a warning, since data and models are meant to stay small or be regenerated.
+**Which files does it look at?** Every file in your project folder is one of three kinds, and the gate checks the two kinds that can become public:
+
+```mermaid
+flowchart LR
+    subgraph FOLDER["Your project folder"]
+        T["Tracked files<br/>already saved in Git<br/>e.g. README.md, src/strainscope/harmonize.py"]
+        N["New files<br/>not in Git yet, not ignored<br/>e.g. a script you just wrote"]
+        I["Ignored files<br/>listed in .gitignore<br/>e.g. .env, .venv/, data/"]
+    end
+    G{{"check-public-safe.sh<br/>scans tracked + new"}}
+    C["git add -A, commit, push<br/>= what becomes public"]
+    T --> G
+    N --> G
+    G -->|"SAFE TO PUSH"| C
+    I -. "never added by git add -A;<br/>if forced with git add -f it becomes<br/>tracked, so the gate checks it" .-> G
+
+    classDef laptop fill:#E8F0FE,stroke:#5B8DEF,color:#0B2545;
+    classDef store fill:#FFF3CD,stroke:#C9A227,color:#4A3B00;
+    classDef cloud fill:#E6F4EA,stroke:#4CAF7D,color:#0B3D2E;
+    classDef roadmap fill:#F5F5F5,stroke:#B0B0B0,color:#555555,stroke-dasharray:4 3;
+    class T laptop
+    class N store
+    class I roadmap
+    class G,C cloud
+    style FOLDER fill:#F5F9FF,stroke:#B9D2FF,color:#0B2545
+```
+
+*Everyday example:* you are posting a parcel. The tracked files are the items already in the box; the new files are the ones lying next to it that `git add -A` is about to drop in; the ignored files are on a shelf marked "never send". The guard inspects the box **and** the pile next to it — because the pile goes in too.
+
+What it checks, in plain terms — always for tracked files **and** new files:
+1. **Secret / environment / data paths** would not be published (`.venv`, `.streamlit/secrets.toml`, `.env`, `.Renviron`, real data under `data/`, ...).
+2. **Sensitive file types** would not be published anywhere (`.key`, `.pem`, database files like `.duckdb`/`.sqlite`, ...). It deliberately allows the small `.csv` and `.pkl` files we *do* publish as artifacts.
+3. **Credential-shaped strings** in any of those files — it matches the actual *formats* of real keys (OpenAI `sk-...`, GitHub `ghp_...`, AWS `AKIA...`, private-key blocks), and a key must *start a word*, so ordinary text that merely contains those letters (a link such as `#ask-strainscope-...`) does not trip it.
+4. **Hard-coded local machine paths** (like a real home-directory path under `/Users/...`, `/home/...`, or `C:\Users\...`) that would both leak your machine and break reproducibility for anyone who clones the repo. Use `~` or a relative path instead.
+5. **Large files** (over 5 MB) — a warning, since data and models are meant to stay small or be regenerated.
 6. **Personal attribution** — lists where your name/handle appears (README, LICENSE) so you can confirm it's the intended public credit, not a new leak.
 
-It prints **`✓ SAFE TO PUSH`** (and exits cleanly) or **`✗ NOT SAFE TO PUSH`** with the exact lines to fix.
+It prints **`✓ SAFE TO PUSH`** (and exits cleanly) or **`✗ NOT SAFE TO PUSH`** with the exact lines to fix. Its own regression tests live in `tests/test_safety_gate.py` and run with every `pytest -q` on macOS and Linux.
 
 **Set it up once:**
 
@@ -456,18 +485,52 @@ It prints **`✓ SAFE TO PUSH`** (and exits cleanly) or **`✗ NOT SAFE TO PUSH`
    ```bash
    chmod +x check-public-safe.sh
    ```
-   (`chmod +x` means "mark this file as a program I'm allowed to run" — you only do it once.)
+   (`chmod +x` means "mark this file as a program I'm allowed to run". You do it once — and again whenever you replace the file with a downloaded copy, because a download does not keep that mark.)
 3. Run it any time to check:
    ```bash
    ./check-public-safe.sh
    ```
-   **Expected output on a clean project:** a list of ✓ ticks ending in `✓ SAFE TO PUSH to the public repository`.
+   **Expected output on a clean project:**
+   ```
+   Checking whether this checkout is safe to publish...
+   Scanning 107 tracked file(s) + 0 new file(s) that 'git add -A' would add.
+
+   1. Secret / environment / data paths
+      ✓ none
+   ...
+   ✓ SAFE TO PUSH to the public repository
+   ```
+   (Your counts differ; the second line tells you how many files it actually read.)
 
 > **On Windows**, run it through **Git Bash** (the terminal that installs alongside Git for Windows — you already have it from Part D). Open Git Bash in the project folder and run `bash check-public-safe.sh` (no `chmod` needed there). It works the same way; only the launch command differs.
 
 > **Tip:** make the script *yours* — near the bottom it lists your GitHub handle so it can tell "intended attribution" apart from a real leak. If you fork or rename, update that one line to your own details.
 
-**If it goes wrong:** if the gate flags something you believe is safe, read the flagged line first — most "false alarms" are real (a placeholder key that looks too much like a real one, or an example path that shouldn't ship). If it's genuinely intended, the honest fix is to make the content unmistakably non-secret (use an obvious placeholder like `sk-REPLACE_ME`) rather than to weaken the check. (One genuine false alarm has happened in this project — a link anchor containing the letters `sk-` — and the fix was to make the *pattern* more precise, not weaker; the story is in [`docs/04-integration.md` §12](04-integration.md#12-notes-from-the-build-kept-on-purpose).)
+**If it goes wrong:** if the gate flags something you believe is safe, read the flagged line first — most "false alarms" are real (a placeholder key that looks too much like a real one, or an example path that shouldn't ship). If it's genuinely intended, the honest fix is to make the content unmistakably non-secret (use an obvious placeholder like `sk-REPLACE_ME`) rather than to weaken the check. If it flags a file you have **not added yet** — that is the gate working: the file would be added by `git add -A`, so it is checked now, before it can be published.
+
+**Notes from the build (kept on purpose):**
+- **A false alarm made the pattern more precise (v0.1.0).** A link anchor in the documentation, `#ask-strainscope-...`, contains `sk-` followed by twenty-plus letters — exactly the shape of a key. The fix made a key *start a word*; the full story is in [`docs/04-integration.md` §12](04-integration.md#12-notes-from-the-build-kept-on-purpose).
+- **The guard that never saw the new files (v0.1.1).** The gate originally read only the files Git already tracked. But the routine runs the gate *before* `git add -A` — so a brand-new file was never checked on its first commit. Nothing leaked (a check that staged first found the Phase 3 files clean), but the hole was real. The gate now also reads every new, not-ignored file — exactly what `git add -A` is about to add — so it is correct whatever order you run things in.
+- **The fix had a hole of its own — and a test found it.** The first version of that fix searched new files with `git grep --untracked`, which turns out to skip *every* file listed in `.gitignore`, even one someone force-added with `git add -f`. A test with a force-added `.env` caught it before release; the gate now runs two searches (tracked files, then new files) and merges them. Five tests in `tests/test_safety_gate.py` keep all of these cases honest, and one of them fails on the old gate — proof that it guards the fix. **Lesson:** a safety check needs tests of its own, including the unusual cases.
+
+### Copy commands safely: plain keyboard characters only
+
+Every command, commit message and tag message in this project's documentation uses **only characters you can type on a plain keyboard** (letters, digits and the usual punctuation — technically *ASCII*). That is deliberate.
+
+**Why.** Text written in documents and chat often contains *look-alike* characters: a long dash instead of a hyphen, curly quotes instead of straight ones, a single "..." character instead of three dots. They look harmless, but when pasted into a terminal they can be mangled — the terminal may misread a multi-byte character and shift or drop the letters around it. *Everyday example:* a word processor quietly turning your `"` into `“` — a person reads it the same, but a machine does not.
+
+It happened in this project: a tag message containing a long dash was pasted as `-m "v0.1.0 — data foundation…"` and arrived in Git as `v0.1. data foundation and multi-omics integration0`. The tag was correct; its description was garbled. The fix (a new tag message, re-pushed) is in [`docs/04-integration.md` §17](04-integration.md#17-save-your-work-safety-gate-then-the-commit-ritual).
+
+| Looks like | Typed character to use instead | Name |
+|---|---|---|
+| `—` or `–` | `-` | long dash / en dash → hyphen |
+| `“ ”` | `"` | curly double quotes → straight quotes |
+| `‘ ’` | `'` | curly single quotes → apostrophe |
+| `…` | `...` | ellipsis character → three dots |
+| `→` | `->` | arrow → hyphen + greater-than |
+| `✓` | `OK` | tick mark → plain word |
+
+**The rule for your own commands, commit messages and tag messages:** type them, or copy them only from code blocks in this repository's documentation (which follow the rule). In *expected output* blocks the program's own ticks and arrows (`✓`, `→`) are fine — you read those, you never paste them.
 
 ---
 
@@ -475,7 +538,7 @@ It prints **`✓ SAFE TO PUSH`** (and exits cleanly) or **`✗ NOT SAFE TO PUSH`
 
 You can do this now, or skip it and come back when you reach the integration guide ([`docs/04-integration.md`](04-integration.md)) — it reminds you. R is a second language used for one specialised, high-value step (the DIABLO multi-omics integration). Everything else in the project runs without it.
 
-> **One habit for every R command in this project: `Rscript -e '…'`.** `Rscript` means "start R, run this, quit" and behaves the same on Windows, macOS and Linux. Avoid a bare `R` in Windows PowerShell: PowerShell already uses `r` as a shortcut for *repeat the last command*, so `R --version` or `R -e …` silently does something else. In **PowerShell**, also swap the quote marks — outer double, inner single: `Rscript -e "renv::status()"` — because PowerShell can strip double quotes nested inside single ones.
+> **One habit for every R command in this project: `Rscript -e '...'`.** `Rscript` means "start R, run this, quit" and behaves the same on Windows, macOS and Linux. Avoid a bare `R` in Windows PowerShell: PowerShell already uses `r` as a shortcut for *repeat the last command*, so `R --version` or `R -e ...` silently does something else. In **PowerShell**, also swap the quote marks — outer double, inner single: `Rscript -e "renv::status()"` — because PowerShell can strip double quotes nested inside single ones.
 
 1. Install R:
    - **Windows/macOS:** download the installer from `https://cran.r-project.org/` and run it with defaults. (On macOS you can instead run `brew install r`.)

@@ -110,7 +110,7 @@ Then:
 ```bash
 ls src/strainscope/sources/ncbi_datasets.py src/strainscope/sources/metabolomics_wb.py \
    .env.example figures/make_phase2c_figures.py
-pytest -q          # expected: 17 passed — before touching any network
+pytest -q          # expected: 17 passed - before touching any network
 ```
 
 **Read `ncbi_datasets.py` first** — it's the one that carries the key lesson, and its `_headers()` method is the entire secrets mechanism in six lines.
@@ -124,8 +124,8 @@ Everything works without this; do it for the habit (and the doubled rate limit).
 3. In the project root: `cp .env.example .env`, then open `.env` and paste the key after `NCBI_API_KEY=`. Save.
 4. **Prove the guards work** (the satisfying part):
    ```bash
-   git status                    # .env must NOT appear — .gitignore at work
-   ./check-public-safe.sh        # still ✓ — the gate confirms no secret is tracked
+   git status                    # .env must NOT appear - .gitignore at work
+   ./check-public-safe.sh        # still OK - the gate confirms no secret is tracked
    ```
 5. The next probe will greet you with `API key: found, 10 req/s allowed`.
 
@@ -228,7 +228,7 @@ python figures/make_phase2c_figures.py
 | Capability | Manual path (now) | Automatic path (later) |
 |---|---|---|
 | Generate synthetic data | `python src/strainscope/generate_data.py` | the one-command pipeline (Phase 8) |
-| Probe / fetch real data — **now five sources** | `python src/strainscope/fetch_real.py [--probe] [--source …]` | the app's **Upload · Synthetic · Fetch-real** picker, per source |
+| Probe / fetch real data — **now five sources** | `python src/strainscope/fetch_real.py [--probe] [--source ...]` | the app's **Upload · Synthetic · Fetch-real** picker, per source |
 | Manage an API key | `.env` (from `.env.example`) or `export` | the deployed app's secrets console (Phase 7 — same idea, hosted) |
 | Clean + build the database | `python src/strainscope/harmonize.py` | runs automatically inside the pipeline |
 | Question the data | `python src/strainscope/sql.py` + the [Cookbook](QUERY_COOKBOOK.md) | the app's SQL console, cookbook built in |
@@ -248,7 +248,7 @@ curl -s "https://api.ncbi.nlm.nih.gov/datasets/v2/genome/taxon/Bacillus/dataset_
 
 ```bash
 pytest -q                     # 17 passed
-./check-public-safe.sh        # ✓ — and now you know two of the things it's guarding
+./check-public-safe.sh        # OK - and now you know two of the things it's guarding
 git switch develop
 git add -A
 git commit -m "feat: add NCBI Datasets and Metabolomics Workbench adapters with API-key handling"

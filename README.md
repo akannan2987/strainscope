@@ -2,7 +2,7 @@
 
 ![StrainScope — multi-omics · machine learning · beneficial microbes](docs/img/strainscope_logo.svg)
 
-**▶ Live app — coming with the deployment phase (Phase 7)** · **v0.1.0 — data foundation and integration**
+**▶ Live app — coming with the deployment phase (Phase 7)** · **v0.1.1 — data foundation and integration**
 · ![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
 ![R](https://img.shields.io/badge/R-4.x-276DC3?logo=r)
 ![Streamlit](https://img.shields.io/badge/Streamlit-app-FF4B4B?logo=streamlit&logoColor=white)
@@ -251,6 +251,7 @@ build log below. Nothing is shown before it exists.*
 | 1c | [More real sources: NCBI Datasets · Metabolomics Workbench + the secrets lesson](docs/02c-more-real-sources.md) | ✅ |
 | 2 | [Harmonization & quality control → DuckDB + SQL](docs/03-harmonization-qc.md) | ✅ |
 | 3 | [Multi-omics integration (DIABLO in R + a Python twin)](docs/04-integration.md) | ✅ **v0.1.0** |
+| 3.1 | [Fix release: a safety gate that also checks new files, copy-safe commands](docs/HANDBOOK.md#stage-71--fix-release-v011-a-safer-safety-gate-and-copy-safe-commands) | ✅ **v0.1.1** |
 | 4 | Machine learning & honest evaluation — `docs/05-machine-learning.md` | ⏳ next |
 | 5 | Knowledge graph — `docs/06-knowledge-graph.md` | ⬜ planned (**v0.2.0**) |
 | 6 | The Streamlit app — `docs/07-app.md` | ⬜ planned |
@@ -428,10 +429,11 @@ strainscope/
 ├── app/
 │   └── streamlit_app.py           ← the app (Phases 6–7)                            ⬜
 │
-├── tests/                         ← automated checks (pytest) — 32 today           ✅
+├── tests/                         ← automated checks (pytest) — 37 today           ✅
 │   ├── test_sources.py            ← ingestion parsers, offline
 │   ├── test_harmonize.py          ← cleaning rules and the database loader
-│   └── test_integrate.py          ← integration, grading, the R ↔ Python contract
+│   ├── test_integrate.py          ← integration, grading, the R ↔ Python contract
+│   └── test_safety_gate.py        ← the pre-push safety gate, in throw-away repos
 │
 ├── data/                          ← NOT in Git; regenerated on demand
 │   ├── raw/                       ← raw synthetic tables + real-data evidence locker
@@ -471,21 +473,21 @@ python -m venv .venv                      # RHEL 8: python3.12 -m venv .venv
 source .venv/bin/activate                 # Windows PowerShell: .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 
-# R toolbox (only for the DIABLO step) — rebuilds the exact R packages from renv.lock
+# R toolbox (only for the DIABLO step) - rebuilds the exact R packages from renv.lock
 Rscript -e 'renv::restore()'              # Windows PowerShell: Rscript -e "renv::restore()"
 
 # Build, phase by phase
-python src/strainscope/generate_data.py   # Phase 1  — the synthetic library
-python src/strainscope/fetch_real.py      # Phase 1b/1c — real data (optional, needs internet)
-python src/strainscope/harmonize.py       # Phase 2  — clean + build the database
-python src/strainscope/integrate.py all   # Phase 3  — prepare, DIABLO (if R is present), Python twin, publish
+python src/strainscope/generate_data.py   # Phase 1  - the synthetic library
+python src/strainscope/fetch_real.py      # Phase 1b/1c - real data (optional, needs internet)
+python src/strainscope/harmonize.py       # Phase 2  - clean + build the database
+python src/strainscope/integrate.py all   # Phase 3  - prepare, DIABLO (if R is present), Python twin, publish
 
 # Look at the results
 python src/strainscope/sql.py             # the read-only SQL console (see docs/QUERY_COOKBOOK.md)
 python figures/make_phase3_figures.py     # redraw the Phase 3 figures + interactive explorer
 
 # Check everything
-pytest -q                                 # 32 passed
+pytest -q                                 # 37 passed
 ```
 
 Coming with later phases: `python src/strainscope/model.py` (4),
@@ -528,9 +530,13 @@ git switch develop
 ```
 
 Every push is gated by `./check-public-safe.sh`, which inspects what Git tracks
-and refuses the all-clear if a secret (an API key, a `.env`, a database file) or
-a hard-coded local path would be published — `.gitignore` is the lock on the
-door, this is the guard checking the bag on the way out.
+**and** the new files `git add -A` is about to add, and refuses the all-clear if a
+secret (an API key, a `.env`, a database file) or a hard-coded local path would be
+published — `.gitignore` is the lock on the
+door, this is the guard checking the bag on the way out. Every command, commit
+message and tag message in this repository uses plain keyboard characters only —
+look-alike characters such as a long dash can be garbled when pasted into a
+terminal ([why](docs/01-setup.md#copy-commands-safely-plain-keyboard-characters-only)).
 
 The push line sends local `develop` to remote `develop` and fast-forwards remote
 `beta` and `master` to match — three branches kept in lock-step with one command.

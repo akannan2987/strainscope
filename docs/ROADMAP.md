@@ -31,13 +31,14 @@ This document is about **this repository**: everything needed for a complete, us
 | 1c | More real sources | [`docs/02c-more-real-sources.md`](02c-more-real-sources.md) | NCBI Datasets (genomes, four kingdoms) + Metabolomics Workbench (RefMet); API keys done right | ✅ | — |
 | 2 | Cleaning & database | [`docs/03-harmonization-qc.md`](03-harmonization-qc.md) | six-rule cleaning with a ledger; DuckDB; the read-only SQL console; the [Query Cookbook](QUERY_COOKBOOK.md) | ✅ | — |
 | 3 | **Multi-omics integration** | [`docs/04-integration.md`](04-integration.md) | block preparation; DIABLO (R/mixOmics) with tuning and cross-validation; the Python twin (early, late, PLS-DA, lasso) with controls; graded signatures; R↔Python agreement; results in the database; the [Handbook](HANDBOOK.md) and both roadmaps | ✅ | **v0.1.0** |
+| 3.1 | Fix release | [`CHANGELOG.md`](../CHANGELOG.md), [`docs/01-setup.md` Part H](01-setup.md#the-pre-push-safety-gate-check-public-safesh) | the safety gate also checks new files (and force-added ignored ones), with its own tests (`tests/test_safety_gate.py`); every documented command, commit and tag message in plain keyboard characters | ✅ | **v0.1.1** |
 | 4 | Machine learning | `docs/05-machine-learning.md` | leak-proof pipelines (gap filling and centring inside cross-validation); random forest, elastic net, gradient boosting; class imbalance; calibration; feature importance; per-strain error analysis; saved model + predictions in `artifacts/` | ⏳ next | — |
 | 5 | Knowledge graph & networks | `docs/06-knowledge-graph.md` | the domain model (an ontology written in English first); a NetworkX graph strain → gene → metabolite → pathway → outcome, seeded with real KEGG/RefMet edges and Phase 3's gene ↔ product correlations; hubs, communities, paths | ⏳ | **v0.2.0** |
 | 6 | The app | `docs/07-app.md` | the Streamlit app: data picker (**Upload · Synthetic · Fetch-real**), integration and ranking views, the graph view, the SQL console with the cookbook built in | ⏳ | — |
 | 6b | **Ask StrainScope** — the documentation assistant | `docs/07b-docs-assistant.md` | `python src/strainscope/ask.py "question"` and an app tab: answers from the project's own documents with links to the exact section; refuses questions outside the project; starter questions and "you might also ask"; a golden question set in the tests (details below) | ⏳ | **v0.3.0** |
 | 7 | Deployment + AI layer | `docs/08-deployment-ai.md` | free public deployment (Streamlit Community Cloud), secrets on the host; plain-language explanations of results; grounded answers in Ask StrainScope; a read-only **data assistant** (question → SQL → answer, with guardrails); **GraphRAG** (answers by walking the graph) | ⏳ | — |
 | 7b | MCP server | `docs/08b-mcp-server.md` | a small Model Context Protocol server exposing read-only tools — `ask_docs`, `query_database`, `get_signature`, `rank_strain` — so AI assistants can use StrainScope directly, every call validated and logged | ⏳ | — |
-| 8 | Packaging & release | `docs/09-packaging.md` | the one-command pipeline (`python src/strainscope/pipeline.py`); tests on Windows, macOS and Linux at every push (continuous integration); LICENSE (MIT), CHANGELOG, uninstall guide; an optional container; the 1.0 tag | ⏳ | **v1.0.0** |
+| 8 | Packaging & release | `docs/09-packaging.md` | the one-command pipeline (`python src/strainscope/pipeline.py`); tests on Windows, macOS and Linux at every push (continuous integration); LICENSE (MIT), CHANGELOG, uninstall guide; an optional container; an optional Git *pre-push hook* that runs the safety gate by itself, so it can never be forgotten; the 1.0 tag | ⏳ | **v1.0.0** |
 
 Guides without links do not exist yet; they appear when their phase is built.
 
@@ -88,6 +89,12 @@ A **tag** is a bookmark on one exact commit, named with a version number, so any
 - **v0.2.0** — the analysis is complete (Phases 4–5): predictions and the knowledge graph.
 - **v0.3.0** — usable by anyone (Phases 6–6b): the app and Ask StrainScope.
 - **v1.0.0** — released (Phases 7–8): online, AI layer, MCP server, one-command pipeline, cross-platform CI.
+
+Between those, **patch releases** (the third number: v0.1.1, v0.1.2, ...) ship fixes found through real use — tested, documented in [`CHANGELOG.md`](../CHANGELOG.md) and the [Handbook](HANDBOOK.md), and tagged like any version. So far:
+
+- **v0.1.1** — the safety gate also checks new, not-yet-added files; every documented command, commit and tag message uses plain keyboard characters ([Handbook Stage 7.1](HANDBOOK.md#stage-71--fix-release-v011-a-safer-safety-gate-and-copy-safe-commands)).
+
+Tag messages, like commit messages, use plain keyboard characters only — see [`docs/01-setup.md` Part H](01-setup.md#copy-commands-safely-plain-keyboard-characters-only).
 
 How to create and push a tag is in the commit ritual of the phase that earns it (and in [`docs/01-setup.md` Part H](01-setup.md#part-h--initialise-git-and-push-with-the-master--beta--develop-workflow)).
 

@@ -8,6 +8,25 @@ Where a step is explained: [`docs/HANDBOOK.md`](docs/HANDBOOK.md) — the day-0-
 
 Next up: Phase 4 — machine learning, honestly evaluated (`docs/05-machine-learning.md`). See [`docs/ROADMAP.md`](docs/ROADMAP.md).
 
+## [0.1.1] — 2026-10-10 — a safer safety gate, copy-safe commands
+
+A fix release: two problems found while releasing v0.1.0, fixed, tested and documented ([Handbook Stage 7.1](docs/HANDBOOK.md#stage-71--fix-release-v011-a-safer-safety-gate-and-copy-safe-commands)).
+
+### Fixed
+- `check-public-safe.sh` now checks every file a commit could publish: the files Git already tracks **and** the new, not-ignored files that `git add -A` is about to add. The documented routine runs the gate before `git add -A`, so the old gate never checked a brand-new file on its first commit. A first attempt (`git grep --untracked`) turned out to skip force-added ignored files; the gate now runs two searches and merges them. It also prints how many tracked and new files it read.
+- Every command, commit message and tag message in the documentation uses plain keyboard characters only. A tag message pasted with a long dash (`—`) had arrived in Git garbled; the documented `v0.1.0` tag message now matches the corrected one (`v0.1.0: data foundation and multi-omics integration`).
+
+### Added
+- `tests/test_safety_gate.py`: five tests that run the gate in throw-away Git repositories (clean; new file with a key; ignored `.env`; force-added ignored file; link anchor without false alarm). One fails on the old gate. 37 tests in total; the gate tests are skipped on Windows, where the gate runs from Git Bash.
+- `docs/01-setup.md` Part H: a diagram of the three kinds of files (tracked, new, ignored) and which ones the gate reads; *Notes from the build* for the gate; a new section *Copy commands safely: plain keyboard characters only*, with a table of look-alike characters.
+- `docs/04-integration.md` §17: how to check a tag message (`git tag -n1`) and replace a garbled one.
+- `docs/HANDBOOK.md`: Stage 7.1 (this release, with a before/after diagram), a copy-safety note in Stage 2, and three new rows in *When something goes wrong*.
+- `docs/GLOSSARY.md`: tracked / new (untracked) / ignored file, staging, force-add, plain keyboard characters (ASCII), regression test, patch release.
+
+### Changed
+- `docs/ROADMAP.md`: the fix release in the phase plan; patch releases explained under *Version tags*; Phase 8 gains an optional pre-push hook so the gate runs by itself.
+- `README.md`, `docs/PRODUCT_ROADMAP.md`: version and test counts.
+
 ## [0.1.0] — 2026-10-09 — data foundation and integration
 
 From a blank laptop to a graded multi-omics signature (Phases 0–3).

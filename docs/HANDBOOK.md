@@ -2,7 +2,7 @@
 
 # The StrainScope Handbook — from day 0 to the finished product
 
-**Handbook version:** 1.1 · **Last updated:** 2026-10-10 · **Repository state it describes:** Phases 0 → 3 built and tested (data, real sources, cleaning, database, multi-omics integration); Phase 4 (machine learning) next. 32 automated tests.
+**Handbook version:** 1.2 · **Last updated:** 2026-10-10 · **Repository state it describes:** version **v0.1.1** — Phases 0 → 3 built and tested (data, real sources, cleaning, database, multi-omics integration) plus the v0.1.1 fix release (a safety gate that also checks new files, copy-safe commands); Phase 4 (machine learning) next. 37 automated tests.
 
 **This is the one document to read first, and the one to come back to.** It walks the whole journey — understanding the project, preparing a blank computer, building every phase, releasing, and what lies beyond — in order, explaining *why* at every step and linking to the specialised guide that holds the detail. You should never have to hunt through the repository to find out what to do next; if you ever do, that is a defect in this Handbook.
 
@@ -62,6 +62,7 @@ flowchart TB
 | 5 | 🔑 | Phase 1c — more sources, and secrets done right | [`docs/02c-more-real-sources.md`](02c-more-real-sources.md) | 2 h | ✅ |
 | 6 | 🧹 | Phase 2 — cleaning, the database, SQL | [`docs/03-harmonization-qc.md`](03-harmonization-qc.md), [Cookbook](QUERY_COOKBOOK.md) | 2–3 h | ✅ |
 | 7 | 🔗 | Phase 3 — multi-omics integration | [`docs/04-integration.md`](04-integration.md) | ~4 h (3 sittings) | ✅ |
+| 7.1 | 🩹 | Fix release v0.1.1 — a safer safety gate, copy-safe commands | [`docs/01-setup.md` Part H](01-setup.md#the-pre-push-safety-gate-check-public-safesh), [`CHANGELOG.md`](../CHANGELOG.md) | ~20 min | ✅ |
 | 8 | 🎯 | Phase 4 — machine learning, honestly evaluated | `docs/05-machine-learning.md` | 3–4 h | ⏳ next |
 | 9 | 🕸️ | Phase 5 — the knowledge graph | `docs/06-knowledge-graph.md` | 3 h | ⏳ |
 | 10 | 🖥️ | Phase 6 — the app | `docs/07-app.md` | 3–4 h | ⏳ |
@@ -122,7 +123,9 @@ gitGraph
     merge develop id: "published"
 ```
 
-(The picture draws the updates as merges; in practice the push simply moves `beta` and `master` forward to the very same commit — a *fast-forward*.) You work only on **`develop`**; one push line moves **`beta`** and **`master`** forward to the same commit; then local `master` is brought in step. The safety gate runs first, every time: it refuses to give the all-clear if a secret, a database file or a machine-specific path is about to become public.
+(The picture draws the updates as merges; in practice the push simply moves `beta` and `master` forward to the very same commit — a *fast-forward*.) You work only on **`develop`**; one push line moves **`beta`** and **`master`** forward to the same commit; then local `master` is brought in step. The safety gate runs first, every time: it refuses to give the all-clear if a secret, a database file or a machine-specific path is about to become public. It reads both the files Git already tracks **and** the new files `git add -A` is about to add, so running it before staging is safe (since v0.1.1 — see Stage 7.1).
+
+> **Copy commands safely.** Every command, commit message and tag message in this repository uses plain keyboard characters only. Look-alike characters from documents and chat — a long dash `—`, curly quotes `“ ”`, an ellipsis `…` — can be mangled when pasted into a terminal. Type your own messages with plain characters; the look-alike table is in [`docs/01-setup.md` Part H](01-setup.md#copy-commands-safely-plain-keyboard-characters-only).
 
 **The end-of-phase ritual** — used at the end of every stage from here on (each stage names its own commit message):
 
@@ -205,6 +208,66 @@ git switch develop
 
 ---
 
+## Stage 7.1 — Fix release v0.1.1: a safer safety gate and copy-safe commands
+
+**What.** A small release between phases, made of two fixes that real use uncovered — and the habit of shipping fixes properly: tested, documented, versioned.
+1. **The safety gate now checks new files too.** Save the updated `check-public-safe.sh` (project folder) and the new `tests/test_safety_gate.py`; run `chmod +x check-public-safe.sh` (macOS/Linux) because a downloaded file loses its "runnable" mark.
+2. **Every command, commit message and tag message in the documentation uses plain keyboard characters.**
+
+**Why.** *Fix 1:* the routine runs the gate *before* `git add -A`. The old gate read only files Git already tracked, so a brand-new file — say, a script with a key pasted in — was never checked on its first commit. Nothing leaked, but a guard with a blind spot is no guard. *Fix 2:* a tag message containing a long dash was pasted into a terminal and arrived garbled (`v0.1. data foundation…0`). Look-alike characters are invisible to people and poisonous to terminals.
+
+```mermaid
+flowchart TB
+    subgraph BEFORE["Before v0.1.1 — a blind spot"]
+        direction LR
+        B1["you write<br/>a new file"] --> B2["gate reads<br/>tracked files only"] --> B3["git add -A"] --> B4["commit + push:<br/>the new file was never checked"]
+    end
+    subgraph AFTER["From v0.1.1 — nothing unseen"]
+        direction LR
+        A1["you write<br/>a new file"] --> A2["gate reads tracked<br/>+ new files"] --> A3["git add -A"] --> A4["commit + push:<br/>every file was checked"]
+    end
+    BEFORE -->|"the fix"| AFTER
+
+    classDef laptop fill:#E8F0FE,stroke:#5B8DEF,color:#0B2545;
+    classDef cloud fill:#E6F4EA,stroke:#4CAF7D,color:#0B3D2E;
+    classDef roadmap fill:#F5F5F5,stroke:#B0B0B0,color:#555555,stroke-dasharray:4 3;
+    class B1,B2,B3,A1,A3 laptop
+    class B4 roadmap
+    class A2,A4 cloud
+    style BEFORE fill:#FAFAFA,stroke:#B0B0B0,color:#555555,stroke-dasharray:4 3
+    style AFTER fill:#F2FBF5,stroke:#B7E4C7,color:#0B3D2E
+```
+
+*Everyday example:* a guard who inspects the parcel but not the pile of items about to go into it. From v0.1.1 the guard inspects both — the full picture is in [`docs/01-setup.md` Part H](01-setup.md#the-pre-push-safety-gate-check-public-safesh), with the three kinds of files (tracked, new, ignored) drawn out.
+
+**How it was tested.** Five automated tests in `tests/test_safety_gate.py` build throw-away Git repositories and check the gate's verdict: a clean repository passes; a new, not-yet-added file holding a key is caught; a key in the ignored `.env` passes (Git never publishes it); a key in a *force-added* ignored file is caught; a link anchor containing `sk-` raises no false alarm. One test fails on the old gate — proof that it guards the fix — and writing them exposed a second hole (`git grep --untracked` skips force-added ignored files), fixed before release. The story is under *Notes from the build* in [`docs/01-setup.md` Part H](01-setup.md#the-pre-push-safety-gate-check-public-safesh).
+
+**Checkpoint.** `pytest -q` → **37 passed** (32 + 5; the gate tests are skipped on Windows, where the gate runs from Git Bash); `./check-public-safe.sh` prints a new line `Scanning N tracked file(s) + M new file(s) that 'git add -A' would add.` and ends with `✓ SAFE TO PUSH`.
+**Save it** — tests and gate first, then the commit ritual, then the tag:
+
+```bash
+pytest -q                     # 37 passed
+./check-public-safe.sh        # must end with: SAFE TO PUSH
+
+git switch develop
+git add -A
+git commit -m "fix: safety gate also checks new files; copy-safe commands in docs"
+git push origin develop develop:beta develop:master
+
+## --tags is optional, only when required: this release earns v0.1.1
+git tag -a v0.1.1 -m "v0.1.1: safety gate checks new files; copy-safe commands"
+git push origin develop develop:beta develop:master --tags
+
+## then switch back to local master and pull in the remote changes
+git switch master
+git pull --ff-only origin master
+git switch develop
+```
+
+Check the result with `git tag -n1`: both `v0.1.0` and `v0.1.1` are listed, each with a readable message.
+
+---
+
 ## Stage 8 — Phase 4: machine learning, honestly evaluated
 
 **What.** `docs/05-machine-learning.md` (arrives with the phase): random forest, elastic net and gradient boosting compete inside **leak-proof pipelines** — gap filling and centring move *inside* cross-validation, closing the small label-free leak Phase 3 documented — with class-imbalance handling, **calibration** ("when it says 80 %, is it right 80 % of the time?"), feature importance, and an error analysis of the strains every model gets wrong.
@@ -282,7 +345,7 @@ cd ~/projects/strainscope                 # Windows PowerShell: cd $HOME\project
 source .venv/bin/activate                 # Windows PowerShell: .\.venv\Scripts\Activate.ps1
 git switch develop && git pull --ff-only origin develop
 pytest -q                                 # everything still green?
-# … work on the current stage …
+# ... work on the current stage ...
 ```
 
 Then the end-of-phase ritual (Stage 2) when the stage is complete.
@@ -292,14 +355,17 @@ Then the end-of-phase ritual (Stage 2) when the stage is complete.
 | Symptom | Look in |
 |---|---|
 | a command "is not recognized" / "not found" | your setup guide: is `(.venv)` in your prompt? On Windows, is R on your PATH? ([`docs/01-setup.md`](01-setup.md) Part F and Part I) |
-| `R -e …` does nothing sensible on Windows | PowerShell treats `r` as "repeat last command" — use `Rscript -e …` ([`docs/04-integration.md` §16](04-integration.md#16-what-could-go-wrong-mini-faq)) |
+| `R -e ...` does nothing sensible on Windows | PowerShell treats `r` as "repeat last command" — use `Rscript -e ...` ([`docs/04-integration.md` §16](04-integration.md#16-what-could-go-wrong-mini-faq)) |
 | a test fails | the *What could go wrong* section of the phase guide you are on |
-| the database is missing or a table is gone | rebuild: `src/strainscope/generate_data.py` → `src/strainscope/harmonize.py` → `integrate.py publish` ([`docs/03-harmonization-qc.md` §11](03-harmonization-qc.md#11-what-could-go-wrong-mini-faq)) |
+| the database is missing or a table is gone | rebuild: `python src/strainscope/generate_data.py`, then `python src/strainscope/harmonize.py`, then `python src/strainscope/integrate.py publish` ([`docs/03-harmonization-qc.md` §11](03-harmonization-qc.md#11-what-could-go-wrong-mini-faq)) |
 | `mixOmics is not installed in this project's R library` | [`docs/04-integration.md` §6](04-integration.md#6-step-2--install-mixomics-into-the-projects-r-library-once-per-machine) — installed, but invisible |
 | an API call fails or returns odd numbers | the real-data guides' FAQs ([`02b`](02b-real-data-ingestion.md), [`02c`](02c-more-real-sources.md)) and their *Notes from the build* |
 | the safety gate says NOT SAFE | read the flagged line; never weaken the check ([`docs/01-setup.md`](01-setup.md) Part H) |
+| the gate flags a file you have not added yet | that is the gate working: `git add -A` would add it, so it is checked now (since v0.1.1 — Stage 7.1) |
+| a pasted command prints strange characters, or a commit/tag message arrives garbled | a look-alike character (long dash, curly quote, ellipsis) — retype it with plain keyboard characters ([`docs/01-setup.md` Part H](01-setup.md#copy-commands-safely-plain-keyboard-characters-only)); a wrong tag message is replaced as in [`docs/04-integration.md` §17](04-integration.md#17-save-your-work-safety-gate-then-the-commit-ritual) |
+| `./check-public-safe.sh: Permission denied` | the file lost its runnable mark when downloaded: `chmod +x check-public-safe.sh` (macOS/Linux) |
 | a push fails with `HTTP 400` / `RPC failed` | [`docs/01-setup.md`](01-setup.md) Part H, "If a push fails partway" |
-| a word you don't know | the [Glossary](GLOSSARY.md) — and, from Stage 11, `python src/strainscope/ask.py "what is …?"` |
+| a word you don't know | the [Glossary](GLOSSARY.md) — and, from Stage 11, `python src/strainscope/ask.py "what is ...?"` |
 | a ready-made SQL question | the [Query Cookbook](QUERY_COOKBOOK.md) |
 | a figure looks wrong or is missing | re-run the phase's figure script in `figures/` (each guide names it) |
 
@@ -324,6 +390,7 @@ Nothing in this repository is undocumented magic. Paths are relative to the proj
 | `src/strainscope/integrate.py` | integration, Python side | [`docs/04-integration.md`](04-integration.md) |
 | `R/diablo_integration.R` | integration, R side (DIABLO) | [`docs/04-integration.md`](04-integration.md) §7 |
 | `tests/test_sources.py`, `tests/test_harmonize.py`, `tests/test_integrate.py` | the automated checks | each phase guide's *tests* section |
+| `tests/test_safety_gate.py` | the safety gate's own tests | [`docs/01-setup.md`](01-setup.md) Part H, Stage 7.1 above |
 | `figures/make_phase*_figures.py`, `figures/make_illustrations.py`, `figures/*.png` | every figure and the script that draws it | each phase guide's *figures* section |
 | `artifacts/integration/*.csv` | Phase 3's small result tables (committed; the app will read them) | [`docs/04-integration.md`](04-integration.md) §2, §9 |
 | `docs/*.md` | the tutorial, glossary, cookbook, roadmaps and this Handbook | this table |

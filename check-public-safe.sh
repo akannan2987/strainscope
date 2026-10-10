@@ -6,10 +6,19 @@
 #
 # Exit 0 = safe to push.  Exit 1 = something sensitive would be published.
 #
-# It checks what git ACTUALLY tracks (not what's on disk), because that is
-# exactly what a push sends to GitHub. .gitignore stops accidents; this catches
-# the ones that slip past it (a force-added file, or a secret pasted into code
-# or a doc). Belt and suspenders.
+# It checks exactly what your next commit could publish:
+#   * every file Git already TRACKS, and
+#   * every NEW file Git would add with `git add -A` (new and not ignored).
+# Ignored files (.env, .venv/, data/ ...) are skipped: Git will never add them
+# unless someone forces it with `git add -f` -- and a forced file is tracked,
+# so it is checked. .gitignore stops accidents; this catches the ones that slip
+# past it (a force-added file, or a secret pasted into code or a doc).
+# Belt and suspenders.
+#
+# Why new files too (since v0.1.1): the gate runs BEFORE `git add -A`, so a
+# brand-new file is not tracked yet. An earlier version looked only at tracked
+# files and so never checked a new file on its first commit.
+# See docs/01-setup.md, Part H.
 #
 # Safe to run anywhere. It never changes files — it only looks and reports.
 
@@ -23,18 +32,32 @@ fi
 GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; NC='\033[0m'
 fail=0
 
+# The files a commit could publish: tracked (--cached) + new, not ignored
+# (--others --exclude-standard).
+candidates() { git ls-files --cached --others --exclude-standard "$@" 2>/dev/null; }
+# Search the CONTENT of that same set. Two searches, merged, because neither
+# covers it alone: plain `git grep` reads every tracked file (even a tracked
+# file that .gitignore lists, e.g. one force-added with `git add -f`), and
+# `git grep --untracked` adds the new files -- but skips anything .gitignore
+# lists, even when it is tracked. Together they cover exactly what a commit
+# could publish.
+gitscan() { { git grep "$@"; git grep --untracked "$@"; } 2>/dev/null | sort -u; }
+n_tracked=$(git ls-files | wc -l | tr -d ' ')
+n_new=$(git ls-files --others --exclude-standard | wc -l | tr -d ' ')
+
 echo "Checking whether this checkout is safe to publish..."
+echo "Scanning ${n_tracked} tracked file(s) + ${n_new} new file(s) that 'git add -A' would add."
 echo ""
 
-# ── 1. Paths that must never be tracked ────────────────────────────────────
+# ── 1. Paths that must never be published ──────────────────────────────────
 # Environments, real data, and secrets. (The empty data/ folders keep only a
 # .gitkeep placeholder, which is allowed — everything else under data/ is not.)
 echo "1. Secret / environment / data paths"
 step1=0
 for p in .venv renv/library .streamlit/secrets.toml .env .env.local .Renviron ; do
-  tracked=$(git ls-files -- "$p" 2>/dev/null)
+  tracked=$(candidates -- "$p")
   if [ -n "$tracked" ]; then
-    echo -e "   ${RED}✗ TRACKED: $p${NC}"
+    echo -e "   ${RED}✗ WOULD BE PUBLISHED: $p${NC}"
     echo "$tracked" | sed 's/^/     /'
     fail=1 ; step1=1
   fi
@@ -42,26 +65,26 @@ done
 # Anything tracked under data/ other than the .gitkeep placeholders is a leak
 # of (potentially large or private) data — our rule is data is regenerated,
 # never committed.
-data_tracked=$(git ls-files -- data 2>/dev/null | grep -v '/\.gitkeep$')
+data_tracked=$(candidates -- data | grep -v '/\.gitkeep$')
 if [ -n "$data_tracked" ]; then
-  echo -e "   ${RED}✗ data files tracked (data/ is regenerated, never committed):${NC}"
+  echo -e "   ${RED}✗ data files would be published (data/ is regenerated, never committed):${NC}"
   echo "$data_tracked" | sed 's/^/     /'
   fail=1 ; step1=1
 fi
-[ $step1 -eq 0 ] && echo -e "   ${GREEN}✓ none tracked${NC}"
+[ $step1 -eq 0 ] && echo -e "   ${GREEN}✓ none${NC}"
 
 # ── 2. Sensitive file extensions anywhere ──────────────────────────────────
 # Catches a secret/data file force-added (git add -f) at ANY path. We do NOT
 # flag .csv or .pkl — those are our intended, small artifacts in artifacts/.
 echo ""
 echo "2. Sensitive file extensions"
-ext=$(git ls-files | grep -iE '\.(key|pem|crt|cer|csr|p12|pfx|jks|der|db|sqlite3?|duckdb|dump|bak)$')
+ext=$(candidates | grep -iE '\.(key|pem|crt|cer|csr|p12|pfx|jks|der|db|sqlite3?|duckdb|dump|bak)$')
 if [ -n "$ext" ]; then
-  echo -e "   ${RED}✗ sensitive file extension(s) tracked:${NC}"
+  echo -e "   ${RED}✗ sensitive file extension(s) would be published:${NC}"
   echo "$ext" | sed 's/^/     /'
   fail=1
 else
-  echo -e "   ${GREEN}✓ none tracked${NC}"
+  echo -e "   ${GREEN}✓ none${NC}"
 fi
 
 # ── 3. Credential-shaped strings in tracked content ────────────────────────
@@ -72,9 +95,9 @@ fi
 # (the link anchor "#ask-strainscope-…", "task-…", "risk-…") are not mistaken
 # for an "sk-…" key. The script excludes itself from the scan.
 echo ""
-echo "3. Credential-shaped strings in tracked content"
+echo "3. Credential-shaped strings (tracked and new files)"
 B='(^|[^A-Za-z0-9_-])'   # "start of a token"
-creds=$(git grep -inE \
+creds=$(gitscan -inE \
   "${B}sk-[A-Za-z0-9_-]{20,}|${B}ghp_[A-Za-z0-9]{20,}|${B}gho_[A-Za-z0-9]{20,}|${B}github_pat_[A-Za-z0-9_]{20,}|${B}AKIA[0-9A-Z]{16}|-----BEGIN [A-Z ]*PRIVATE KEY-----" \
   -- ':!check-public-safe.sh' 2>/dev/null)
 if [ -n "$creds" ]; then
@@ -91,7 +114,7 @@ fi
 # paths instead. The script excludes itself.
 echo ""
 echo "4. Hard-coded local machine paths"
-paths=$(git grep -inE '/Users/[A-Za-z0-9._-]+/|/home/[A-Za-z0-9._-]+/|[A-Za-z]:\\\\Users\\\\' \
+paths=$(gitscan -inE '/Users/[A-Za-z0-9._-]+/|/home/[A-Za-z0-9._-]+/|[A-Za-z]:\\\\Users\\\\' \
   -- ':!check-public-safe.sh' 2>/dev/null)
 if [ -n "$paths" ]; then
   echo -e "   ${RED}✗ hard-coded local path(s) — replace with ~ or a relative path:${NC}"
@@ -101,12 +124,12 @@ else
   echo -e "   ${GREEN}✓ none found${NC}"
 fi
 
-# ── 5. Large tracked files (informational) ─────────────────────────────────
+# ── 5. Large files (informational) ─────────────────────────────────────────
 # Data and models are meant to be small or regenerated. A big tracked file is
 # usually a mistake. Warning only — review, don't necessarily block.
 echo ""
-echo "5. Large tracked files (informational)"
-big=$(git ls-files | while read -r f; do
+echo "5. Large files (informational)"
+big=$(candidates | while read -r f; do
         [ -f "$f" ] || continue
         sz=$(wc -c <"$f" 2>/dev/null)
         if [ "${sz:-0}" -gt 5242880 ]; then       # > 5 MB
@@ -114,7 +137,7 @@ big=$(git ls-files | while read -r f; do
         fi
       done)
 if [ -n "$big" ]; then
-  echo -e "   ${YELLOW}– files over 5 MB are tracked — is that intended?${NC}"
+  echo -e "   ${YELLOW}– files over 5 MB would be published — is that intended?${NC}"
   echo "$big"
 else
   echo -e "   ${GREEN}✓ nothing oversized${NC}"
@@ -126,7 +149,7 @@ fi
 # it's intended and nothing new crept in. Edit the pattern to your own details.
 echo ""
 echo "6. Personal attribution (informational — accepted where intended)"
-attr=$(git grep -inE 'akannan2987|abhilash' -- ':!check-public-safe.sh' 2>/dev/null | cut -c1-100)
+attr=$(gitscan -inE 'akannan2987|abhilash' -- ':!check-public-safe.sh' | cut -c1-100)
 if [ -n "$attr" ]; then
   echo "$attr" | sed 's/^/     /'
   echo -e "   ${YELLOW}– confirm these are intended attribution (README/LICENSE), not new leaks${NC}"

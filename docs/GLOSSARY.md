@@ -37,6 +37,12 @@ first appears. If a term is missing, that's a documentation bug worth fixing.
 - **`.gitignore`** — the list of files Git should never save (secrets, rebuildable toolboxes, regenerated data).
 - **Pre-push safety gate (`check-public-safe.sh`)** — a script that scans what Git tracks and refuses the all-clear if a secret or local path would be published. "A guard checking your bag on the way out."
 - **API key / secret** — a private credential (like a password) that must never be committed to a public repo.
+- **Tracked / new (untracked) / ignored file** — the three kinds of file in a Git project. *Tracked*: already saved in Git. *New*: in the folder but not in Git yet, and not ignored — `git add -A` will add it. *Ignored*: listed in `.gitignore`, so Git never adds it. "Items in the parcel, items next to it about to go in, and items on the shelf marked never send." The safety gate reads the first two.
+- **Staging (`git add`)** — choosing what goes into the next commit; the staging area is the parcel being packed before it is sealed (`git commit`).
+- **Force-add (`git add -f`)** — adding a file even though `.gitignore` lists it. Once added it is tracked, and the safety gate checks it like any other.
+- **Plain keyboard characters (ASCII)** — the letters, digits and punctuation on an ordinary keyboard. Commands and commit/tag messages in this project use only these; look-alikes such as a long dash `—` or curly quotes `“ ”` can be garbled when pasted into a terminal.
+- **Regression test** — a test written to catch a bug that once happened, so it can never quietly come back. It should *fail* on the old, broken code — that proves it guards the fix.
+- **Patch release** — a version that only fixes things (the third number goes up: v0.1.0 → v0.1.1).
 
 ## Phase 1 — the data (doc 02)
 
@@ -134,7 +140,7 @@ first appears. If a term is missing, that's a documentation bug worth fixing.
 
 - **API key** — a personal access code for a service; a "membership card". NCBI's is free and optional (it doubles the rate limit) — the perfect low-stakes place to learn the handling discipline.
 - **Secret** — any value that must never be public: keys, passwords, tokens. The iron rule: a secret never enters the repository — history, forks, and caches remember forever, and scrapers harvest leaked keys within minutes.
-- **Environment (variables)** — the private named values a running program carries "in its pockets"; where secrets live. Set per session (`export KEY=…`) or per project (`.env`).
+- **Environment (variables)** — the private named values a running program carries "in its pockets"; where secrets live. Set per session (`export KEY=...`) or per project (`.env`).
 - **`.env` file** — one `KEY=VALUE` per line at the project root, read at startup by `load_env()`; git-ignored **and** watched by the safety gate. The shell wins if both define a key.
 - **`.env.example`** — the committed *template*: variable names, empty values, instructions. Template public, values private — how projects document their secrets without leaking them.
 - **Rate-limit tiers** — some services serve keyholders faster (NCBI: 5 req/s anonymous → 10 with a key). A key here is a courtesy upgrade, not a lock.

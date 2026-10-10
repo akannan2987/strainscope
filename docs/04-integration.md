@@ -186,7 +186,7 @@ You'll see small positive and negative numbers: each strain's genes *relative to
 
 **Why this step exists — "installed, but invisible."** In setup you may have installed mixOmics with `BiocManager::install()` and seen `library(mixOmics)` work. Then you switched on **renv**, the project's sealed R toolbox. From that moment, R started *inside this project* only sees the project's own library — packages installed elsewhere on your machine are invisible here, by design (exactly how a Python `.venv` ignores packages installed globally). So mixOmics must be installed **into the project**, once, and recorded in `renv.lock`. Everyday analogy: you own a hammer at home, but the workshop only lends tools from its own labelled wall — so you hang a copy there, and write it on the inventory.
 
-From the project folder (the one with `renv.lock` in it). We use **`Rscript -e '…'`** — "start R, run this one line, quit" — because it behaves the same on every operating system. (On Windows PowerShell, never type a bare `R`: PowerShell already uses `r` as a shortcut for *repeat the last command*, so `R -e …` silently does something else entirely.)
+From the project folder (the one with `renv.lock` in it). We use **`Rscript -e '...'`** — "start R, run this one line, quit" — because it behaves the same on every operating system. (On Windows PowerShell, never type a bare `R`: PowerShell already uses `r` as a shortcut for *repeat the last command*, so `R -e ...` silently does something else entirely.)
 
 1. Install mixOmics into the project library. `bioc::` tells renv the package lives in **Bioconductor** (the specialist biology shop), not CRAN:
    ```bash
@@ -455,14 +455,14 @@ Open [`docs/interactive/integration_explorer.html`](interactive/integration_expl
 pytest -q
 ```
 
-**You should see:** `32 passed` — the 18 from earlier phases plus 14 new ones: alignment (and refusal of mismatched strains), kingdom-wise gap filling with its counts, the near-constant rule, centring, the balanced error rate seeing through a lazy classifier, signature grading, gene–product correlations, the planted-truth annotations, the scikit-learn version helper, the Windows-friendly Rscript finder, `prepare` end to end on a 12-strain database, `publish` (and its idempotency), and the **R ↔ Python contract**: the file names Python writes are exactly the ones R reads, and vice versa. None of them needs R or the network.
+**You should see:** `32 passed` — the 18 from earlier phases plus 14 new ones: alignment (and refusal of mismatched strains), kingdom-wise gap filling with its counts, the near-constant rule, centring, the balanced error rate seeing through a lazy classifier, signature grading, gene–product correlations, the planted-truth annotations, the scikit-learn version helper, the Windows-friendly Rscript finder, `prepare` end to end on a 12-strain database, `publish` (and its idempotency), and the **R ↔ Python contract**: the file names Python writes are exactly the ones R reads, and vice versa. None of them needs R or the network. *(From v0.1.1 on you will see `37 passed`: the safety gate gained five tests of its own in `tests/test_safety_gate.py` — [Handbook Stage 7.1](HANDBOOK.md#stage-71--fix-release-v011-a-safer-safety-gate-and-copy-safe-commands).)*
 
 ## 14. Two ways to run everything (running tally)
 
 | Capability | Manual path (now) | Automatic path |
 |---|---|---|
 | Generate synthetic data | `python src/strainscope/generate_data.py` | the one-command pipeline (Phase 8) |
-| Probe / fetch real data | `python src/strainscope/fetch_real.py [--probe] [--source …]` | the app's **Upload · Synthetic · Fetch-real** picker (Phase 6) |
+| Probe / fetch real data | `python src/strainscope/fetch_real.py [--probe] [--source ...]` | the app's **Upload · Synthetic · Fetch-real** picker (Phase 6) |
 | Clean + build the database | `python src/strainscope/harmonize.py` | the one-command pipeline (Phase 8) |
 | Question the data | `python src/strainscope/sql.py` + the [Cookbook](QUERY_COOKBOOK.md) | the app's SQL console (Phase 6) |
 | **Integrate (all four steps)** | `integrate.py prepare` → `Rscript R/diablo_integration.R` → `integrate.py twin` → `integrate.py publish` | **now:** `python src/strainscope/integrate.py all` — finds Rscript on any OS (or skips it politely) |
@@ -521,7 +521,7 @@ SQL gives `-0.454` for STRAIN_0002 instead of `-0.446` — and the difference is
 - **R runs but renv prints `The project is out-of-sync`** — the lockfile and the library disagree; run `Rscript -e 'renv::status()'` to see why, usually fixed by `Rscript -e 'renv::snapshot()'` after §6.
 - **`The following package(s) were loaded before renv activated this project: BiocManager`** — harmless; see the note at the end of §6. Check with `Rscript -e 'renv::status()'`: if it says *No issues found*, carry on.
 - **`The project is out-of-sync`** — the project library has packages the receipt does not list yet. `Rscript -e 'renv::snapshot()'` records them; `renv::status()` should then report *No issues found*.
-- **Windows: `R -e …` does nothing useful, or re-runs an old command** — in PowerShell `r` is a built-in shortcut for *repeat the last command*. Use `Rscript -e …` (or `R.exe -e …`).
+- **Windows: `R -e ...` does nothing useful, or re-runs an old command** — in PowerShell `r` is a built-in shortcut for *repeat the last command*. Use `Rscript -e ...` (or `R.exe -e …`).
 - **R: `There are features with zero variance`** — an old `src/strainscope/integrate.py` kept the housekeeping genes; update it and re-run `prepare`.
 - **My DIABLO numbers differ in the third decimal** — expected across mixOmics/R versions (they split folds differently). Differences above ~0.02, or a different chosen version (`as_measured`), mean something else changed — check the prepare ledger first.
 - **The twin prints `(DIABLO results not found yet …)`** — run the R step, then `twin` again for the agreement check.
@@ -535,8 +535,8 @@ SQL gives `-0.454` for STRAIN_0002 instead of `-0.446` — and the difference is
 The checks come first — there is no point committing until the tests pass and nothing sensitive is about to go public:
 
 ```bash
-pytest -q                     # 32 passed
-./check-public-safe.sh        # ✓ SAFE TO PUSH  (Windows: run it from Git Bash with `bash check-public-safe.sh`)
+pytest -q                     # 32 passed (37 from v0.1.1 on)
+./check-public-safe.sh        # SAFE TO PUSH  (Windows: run it from Git Bash with `bash check-public-safe.sh`)
 ```
 
 `git status` should list the new code, docs, figures, `artifacts/integration/*.csv` and the updated `renv.lock` — and **never** anything under `data/` (the prepared blocks are regenerable and gitignored).
@@ -566,11 +566,18 @@ git switch develop
 **This phase earns the first version tag, `v0.1.0`** — from a blank laptop to a graded multi-omics signature ([why these tags](ROADMAP.md#version-tags)). A **tag** is a bookmark on one exact commit, so anyone can return to precisely this state later. Create it on the commit you just pushed, then push it — this is the "`--tags` when required" case:
 
 ```bash
-git tag -a v0.1.0 -m "v0.1.0 — data foundation and multi-omics integration"
+git tag -a v0.1.0 -m "v0.1.0: data foundation and multi-omics integration"
 git push origin develop develop:beta develop:master --tags
 ```
 
 **You should see** `* [new tag]  v0.1.0 -> v0.1.0` (the branches report `Everything up-to-date`, because they were pushed a moment ago). Check with `git tag` → `v0.1.0`. On GitHub the tag appears under *Tags*; turning it into a *Release* with the `CHANGELOG.md` entry as its text is optional. (`-a` makes an *annotated* tag that records who tagged it, when, and why.)
+
+> **Type tag and commit messages with plain keyboard characters.** When this tag was first made, its message was pasted with a long dash (`—`) in it; the terminal mangled the character and the tag arrived as `v0.1. data foundation and multi-omics integration0`. The tag itself (name and commit) was right — only its description was wrong. Check yours with `git tag -n1 v0.1.0`. If it is garbled, replace the message and re-push the tag:
+> ```bash
+> git tag -a -f v0.1.0 -m "v0.1.0: data foundation and multi-omics integration"
+> git push -f origin v0.1.0
+> ```
+> **You should see** `Updated tag 'v0.1.0' (was ...)`, then a push line ending in `v0.1.0 -> v0.1.0 (forced update)`. `-f` ("force") replaces the old tag. Rewriting a tag that others may already have downloaded is normally avoided; for a tag that has been public a few minutes in a one-person repository it is the right fix. Why look-alike characters break terminals, with a table of the usual suspects: [`docs/01-setup.md` Part H](01-setup.md#copy-commands-safely-plain-keyboard-characters-only).
 
 Then update the [Handbook](HANDBOOK.md) status for Stage 7 if anything about your run differed — the Handbook is the first document a newcomer reads, so it must describe what *you* got.
 
