@@ -70,8 +70,8 @@ flowchart TD
         C[("3 · DuckDB database<br/>one queryable store · SQL")]
         D["4 · Integrate: DIABLO (R, offline)<br/>+ a Python twin<br/>the cross-layer signature"]
         E["5 · Machine-learning models (Python)<br/>predict performance · careful evaluation"]
-        F["7 · Knowledge graph (NetworkX)<br/>strain → gene → metabolite → outcome"]
-        G[/"6 · Artifacts<br/>predictions · importances ·<br/>signature · trained model"/]
+        F["7 · Knowledge graph (NetworkX)<br/>strain → gene → compound →<br/>mode of action → outcome"]
+        G[/"6 · Artifacts<br/>predictions · importances · signature ·<br/>trained model · knowledge graph"/]
     end
     subgraph CLOUD["THE CLOUD: free, always on, anyone can use it"]
         H["8 · Streamlit app<br/>explore · rank · SQL console · graph view"]
@@ -89,6 +89,8 @@ flowchart TD
     C --> F
     D --> G
     E --> G
+    D -.->|signature| F
+    E -.->|importance, ranking| F
     F --> G
     G -->|committed to Git, then deployed| H
     H -.->|AI wording only when a model<br/>is configured; key kept as a secret| I
@@ -154,13 +156,14 @@ A party is a good comparison. Three people each hand you a guest list for the sa
 **✅ Built in Phase 4:** [`docs/05-machine-learning.md`](05-machine-learning.md). The elastic net wins; of its 50 best-ranked strains, 47 are truly effective.
 
 ### Box 6: Artifacts · *the hand-off between laptop and cloud*
-**What it does:** stores the small, finished outputs: the DIABLO results (`artifacts/integration/`), the ranking, the feature-importance table, the trained model and its model card (`artifacts/model/`).
+**What it does:** stores the small, finished outputs: the DIABLO results (`artifacts/integration/`), the ranking, the feature-importance table, the trained model and its model card (`artifacts/model/`), and the knowledge graph with its explanations (`artifacts/graph/`).
 **Why it exists:** artifacts are the bridge between the slow backend on your laptop and the fast frontend on the internet. The app never re-runs the heavy work; it just reads these files. This is what keeps the free deployment fast and within its memory budget.
 
-### Box 7: Knowledge Graph (NetworkX) · *backend, our core AI feature*
-**What it does:** turns the data into a *network* of entities and relationships (strain → carries → gene → encodes → metabolite → suppresses → pathogen) that you can query and visualise.
-**Why it exists:** there are two reasons. First, "network-based methods" are a named part of this field, and a graph is the natural way to express *relationships* that a flat table hides. Second, the graph is the foundation for the smarter AI features later (a chatbot that answers by *walking* the graph). We build it with NetworkX, a free Python library that needs no database to start.
-If an ontology is a "family tree for concepts" (the rules of what connects to what), then the knowledge graph is the filled-in family tree you can actually trace.
+### Box 7: Knowledge Graph (NetworkX) · *backend, where the explanations come from*
+**What it does:** turns the data into a *network* of things and relationships (a strain *carries* a gene, the gene *makes* a compound, the compound *acts by* a mode of action, which *contributes to* disease suppression) that you can query, walk and visualise. Every connection records where it came from: the synthetic library, the domain model, KEGG, RefMet, BacDive, or the results of Boxes 4 and 5.
+**Why it exists:** there are two reasons. First, network analysis is a standard tool in microbiology and multi-omics, and a graph is the natural way to express *relationships* that a flat table hides. It's how the project explains *why* a strain ranks where it does. Second, the graph is the foundation for the smarter AI features later (GraphRAG, which answers by *walking* the graph, and the MCP server's `explain_strain` tool). We build it with NetworkX, a free Python library that needs no database to start.
+If an ontology is a "family tree for concepts" (the rules of what connects to what, written in `src/strainscope/ontology.py`), then the knowledge graph is that tree with every name written in.
+**✅ Built in Phase 5:** [`docs/06-knowledge-graph.md`](06-knowledge-graph.md). All of the top 50 strains have at least one mechanism path, and the one decoy the model leans on is flagged as "statistics only".
 
 ### Box 8: Streamlit App · *frontend, deployed to the cloud*
 **What it does:** the website. A person opens a URL and can browse strains, see predictions and the reasons behind them, run their own SQL queries in a safe read-only console, view the knowledge graph, and rank new candidate strains.
@@ -179,7 +182,7 @@ If an ontology is a "family tree for concepts" (the rules of what connects to wh
 **Why it exists:** the documentation is large by design, and a newcomer's most frequent question is "where is that explained?". It behaves like a librarian who lends only from this one library and tells you so when you ask for a book it doesn't have. Full design: [`docs/ROADMAP.md`](ROADMAP.md#ask-strainscope-the-documentation-assistant-in-detail).
 
 ### Box 12: MCP Server · *a door for AI assistants (Phase 7b)*
-**What it does:** exposes a few of the project's functions (search the docs, run a read-only query, fetch the signature, rank a strain) through the **Model Context Protocol**, a standard "USB port" that lets AI assistants call tools directly. Every call is validated and logged.
+**What it does:** exposes a few of the project's functions (search the docs, run a read-only query, fetch the signature, rank a strain, explain a strain's rank) through the **Model Context Protocol**, a standard "USB port" that lets AI assistants call tools directly. Every call is validated and logged.
 **Why it exists:** besides being code that people read, your repo becomes a tool an AI assistant can use. It's built last because it reuses functions the app and Ask StrainScope already provide; all it adds is a new door into machinery that's already there.
 
 ---
@@ -249,8 +252,8 @@ Every box in the diagram is built and explained by one numbered document in `doc
 | 2 | [`docs/03-harmonization-qc.md`](03-harmonization-qc.md) | Boxes 2-3: harmonisation + QC → the DuckDB database | ✅ |
 | 3 | [`docs/04-integration.md`](04-integration.md) | Box 4: multi-omics integration (DIABLO in R + a Python twin) → `artifacts/integration/` | ✅ |
 | 4 | [`docs/05-machine-learning.md`](05-machine-learning.md) | Boxes 5-6: ML models + careful evaluation → `artifacts/model/` (ranking, model, model card) | ✅ |
-| 5 | `docs/06-knowledge-graph.md` | Box 7: the knowledge graph | ⏳ next |
-| 6 | `docs/07-app.md` | Box 8: the Streamlit app (local first) | ⏳ |
+| 5 | [`docs/06-knowledge-graph.md`](06-knowledge-graph.md) | Box 7: the knowledge graph → `artifacts/graph/` (graph, communities, explanations) | ✅ |
+| 6 | `docs/07-app.md` | Box 8: the Streamlit app (local first) | ⏳ next |
 | 6b | `docs/07b-docs-assistant.md` | Box 11: Ask StrainScope, the documentation assistant | ⏳ |
 | 7 | `docs/08-deployment-ai.md` | Box 8 online + Boxes 9-10: free public deployment, explanations, data assistant, GraphRAG | ⏳ |
 | 7b | `docs/08b-mcp-server.md` | Box 12: the MCP server | ⏳ |

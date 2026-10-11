@@ -151,6 +151,7 @@ Everything inside the "StrainScope core" box is this repository (solid boxes are
 
 **What it is.** Short written explanations of a strain's rank, a figure or a signature, generated from the computed numbers and the knowledge graph, with nothing made up.
 **Verdict: Required now (Phase 7).** It works without any key (template text). When a language model is configured, it only rephrases the facts it's given.
+*Prepared today by:* Phase 5 already writes a template explanation for every strain (`artifacts/graph/explanations.csv`): its strongest mechanism paths, data-only flags and missing weapons, each with its sources, plus the full count of mechanism paths.
 
 ### C2. Data assistant: questions answered with SQL
 
@@ -161,17 +162,18 @@ Everything inside the "StrainScope core" box is this repository (solid boxes are
 
 **What it is.** Answers built by following edges in the graph (strain → gene → compound → pathway) and citing the path. (It's a bit like asking for directions and getting the whole route along with the destination.)
 **Verdict: Required now (Phase 7).**
+*Prepared today by:* Phase 5's `graph.py path`, `why` and `show` return routes with a source on every step, and prefer a mechanism to a statistics-only shortcut. GraphRAG adds a language model that chooses which walks to take and phrases the answer.
 
 ### C4. MCP server: StrainScope as a tool for AI assistants
 
-**What it is.** A Model Context Protocol server: a standard "USB port" through which an assistant can call `ask_docs`, `query_database`, `get_signature` and `rank_strain`. Every tool is read-only, and every call is validated and logged.
+**What it is.** A Model Context Protocol server: a standard "USB port" through which an assistant can call `ask_docs`, `query_database`, `get_signature`, `rank_strain` and `explain_strain`. Every tool is read-only, and every call is validated and logged.
 **Verdict: Required now (Phase 7b).**
 
 ### C5. Ontologies and a graph database
 
 **What they are.** Shared, published vocabularies, so that "iturin", "Iturin A" and a database identifier mean the same thing everywhere. Examples are NCBI Taxonomy for organisms, ChEBI for chemical entities, the Gene Ontology for gene functions, and KEGG and RefMet (already used) for pathways and metabolite classes. A graph database (Neo4j) stores the graph for many simultaneous users.
 **Verdict: Ontology identifiers recommended later; graph database recommended later.** **Trigger:** B1 (real data brings real names that need reconciling), or the NetworkX graph outgrowing memory.
-*Prepared today by:* the Phase 5 domain model is written in English first, with node and edge types that map onto these vocabularies.
+*Prepared today by:* the Phase 5 domain model (`src/strainscope/ontology.py`) is written in English first, with ten node types and eleven relations that could later be mapped onto these vocabularies, and every edge already records its source. The graph is saved as two plain tables and a GraphML file, which Neo4j can import (the GraphML through its APOC plugin, the tables with `LOAD CSV`).
 
 ### C6. Genome and protein foundation models
 
@@ -245,9 +247,9 @@ For orientation only; there is no product to sell.
 | **Clean** | documented rules with a ledger; a shared database | six rules + ledger; DuckDB; read-only SQL console; cookbook | Phase 2 ✅; B2 later |
 | **Integrate** | genes and chemistry read together; graded signatures | DIABLO + Python twin; controls; stability; R↔Python contract | Phase 3 ✅ |
 | **Predict** | calibrated predictions with uncertainty | four models on the same folds; leak-proof pipeline; calibrated elastic net; model card; out-of-fold ranking | Phase 4 ✅ |
-| **Explain** | knowledge graph, explanations, GraphRAG | real KEGG/RefMet edges; Phase 3 correlations; Phase 4 permutation importances | Phases 5, 7; C5 later |
+| **Explain** | knowledge graph, explanations, GraphRAG | the knowledge graph (ontology, sourced edges, real KEGG/RefMet/BacDive context, Phase 3 and 4 evidence); hubs, communities, knowledge vs data; an explanation for every strain; `why` / `path` / `show` questions | Phase 5 ✅; Phase 7; C5 later |
 | **Serve** | app, docs assistant, data assistant, MCP server | nothing yet | Phases 6, 6b, 7, 7b; A1/A2 later |
-| **Operate** | one-command pipeline, CI, releases; later scheduling and monitoring | tests (49), a tested safety gate, three-branch workflow | Phase 8; B5, D4, D7 later |
+| **Operate** | one-command pipeline, CI, releases; later scheduling and monitoring | tests (61), a tested safety gate, three-branch workflow, tagged releases (v0.1.0, v0.1.1, v0.2.0) | Phase 8; B5, D4, D7 later |
 
 ## Sequencing summary
 

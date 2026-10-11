@@ -1,0 +1,12 @@
+relation,from_types,to_types,meaning
+belongs_to,Strain or ReferenceStrain,Genus,the strain is a member of this genus
+in_kingdom,Genus,Kingdom,the genus is part of this kingdom
+carries,Strain,Gene,the strain's genome contains this gene
+produces,Strain,Compound,the lab measured this compound well above its usual background level
+makes,Gene,Compound,the gene holds the recipe for this compound
+acts_by,Gene or Compound,ModeOfAction,the weapon works through this mechanism
+contributes_to,ModeOfAction,Outcome,the mechanism helps bring about this outcome
+associated_with,Gene or Compound,Outcome,"the data says this feature goes with the outcome (statistics, no mechanism implied)"
+in_pathway,Compound,Pathway,KEGG places the compound in this pathway map
+classified_as,Compound,ChemicalClass,RefMet files the compound under this chemical class
+subclass_of,ChemicalClass,ChemicalClass,the class sits inside a broader class

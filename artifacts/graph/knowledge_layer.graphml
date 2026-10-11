@@ -1,0 +1,1614 @@
+<?xml version='1.0' encoding='utf-8'?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd">
+  <key id="d22" for="edge" attr.name="evidence" attr.type="string" />
+  <key id="d21" for="edge" attr.name="weight" attr.type="double" />
+  <key id="d20" for="edge" attr.name="provenance" attr.type="string" />
+  <key id="d19" for="edge" attr.name="relation" attr.type="string" />
+  <key id="d18" for="node" attr.name="molecular_weight" attr.type="double" />
+  <key id="d17" for="node" attr.name="formula" attr.type="string" />
+  <key id="d16" for="node" attr.name="pubchem_cid" attr.type="long" />
+  <key id="d15" for="node" attr.name="level" attr.type="string" />
+  <key id="d14" for="node" attr.name="genome_source" attr.type="string" />
+  <key id="d13" for="node" attr.name="median_genome_mb" attr.type="double" />
+  <key id="d12" for="node" attr.name="n_real_genomes" attr.type="long" />
+  <key id="d11" for="node" attr.name="chemistry_note" attr.type="string" />
+  <key id="d10" for="node" attr.name="median_level" attr.type="double" />
+  <key id="d9" for="node" attr.name="n_strains" attr.type="long" />
+  <key id="d8" for="node" attr.name="diablo_stability" attr.type="double" />
+  <key id="d7" for="node" attr.name="reliably_important" attr.type="boolean" />
+  <key id="d6" for="node" attr.name="importance" attr.type="double" />
+  <key id="d5" for="node" attr.name="arsenal" attr.type="string" />
+  <key id="d4" for="node" attr.name="role" attr.type="string" />
+  <key id="d3" for="node" attr.name="description" attr.type="string" />
+  <key id="d2" for="node" attr.name="kingdom" attr.type="string" />
+  <key id="d1" for="node" attr.name="label" attr.type="string" />
+  <key id="d0" for="node" attr.name="node_type" attr.type="string" />
+  <graph edgedefault="directed">
+    <node id="genus:Brevibacterium">
+      <data key="d0">Genus</data>
+      <data key="d1">Brevibacterium</data>
+      <data key="d2">Bacteria</data>
+    </node>
+    <node id="gene:ituA">
+      <data key="d0">Gene</data>
+      <data key="d1">ituA</data>
+      <data key="d3">iturin antifungal lipopeptide synthetase</data>
+      <data key="d4">signal</data>
+      <data key="d5">Bacteria</data>
+      <data key="d6">0.01296</data>
+      <data key="d7">True</data>
+      <data key="d8">1.0</data>
+      <data key="d9">125</data>
+    </node>
+    <node id="mode:induced plant resistance">
+      <data key="d0">ModeOfAction</data>
+      <data key="d1">induced plant resistance</data>
+      <data key="d3">the microbe primes the plant's own immune defences</data>
+    </node>
+    <node id="mode:killer-toxin antagonism">
+      <data key="d0">ModeOfAction</data>
+      <data key="d1">killer-toxin antagonism</data>
+      <data key="d3">the yeast secretes a protein toxin that kills competing yeasts and fungi</data>
+    </node>
+    <node id="compound:oligandrin">
+      <data key="d0">Compound</data>
+      <data key="d1">oligandrin</data>
+      <data key="d3">product of olpA (oligandrin elicitor (Pythium oligandrum))</data>
+      <data key="d4">signal</data>
+      <data key="d5">Oomycete</data>
+      <data key="d6">0.01595</data>
+      <data key="d7">True</data>
+      <data key="d8">0.98</data>
+      <data key="d9">52</data>
+      <data key="d10">1.703</data>
+      <data key="d11">a protein elicitor, not a small molecule</data>
+    </node>
+    <node id="pathway:map01054">
+      <data key="d0">Pathway</data>
+      <data key="d1">map01054</data>
+      <data key="d3">Nonribosomal peptide structures</data>
+    </node>
+    <node id="gene:fenA">
+      <data key="d0">Gene</data>
+      <data key="d1">fenA</data>
+      <data key="d3">fengycin antifungal lipopeptide synthetase</data>
+      <data key="d4">signal</data>
+      <data key="d5">Bacteria</data>
+      <data key="d6">0.04496</data>
+      <data key="d7">True</data>
+      <data key="d8">1.0</data>
+      <data key="d9">109</data>
+    </node>
+    <node id="gene:iaaM">
+      <data key="d0">Gene</data>
+      <data key="d1">iaaM</data>
+      <data key="d3">auxin (IAA) production to boost growth</data>
+      <data key="d4">decoy</data>
+      <data key="d5">Plant-growth (other trait)</data>
+      <data key="d6">-0.00046</data>
+      <data key="d7">False</data>
+      <data key="d8">0.34</data>
+      <data key="d9">160</data>
+    </node>
+    <node id="mode:cell-wall degradation">
+      <data key="d0">ModeOfAction</data>
+      <data key="d1">cell-wall degradation</data>
+      <data key="d3">enzymes digest the chitin and glucan walls of fungal pathogens</data>
+    </node>
+    <node id="genus:Saccharomyces">
+      <data key="d0">Genus</data>
+      <data key="d1">Saccharomyces</data>
+      <data key="d2">Yeast</data>
+      <data key="d12">25</data>
+      <data key="d13">12.05</data>
+      <data key="d14">NCBI Datasets</data>
+    </node>
+    <node id="class:Organonitrogen compounds">
+      <data key="d0">ChemicalClass</data>
+      <data key="d1">Organonitrogen compounds</data>
+      <data key="d15">main class</data>
+    </node>
+    <node id="gene:kilT">
+      <data key="d0">Gene</data>
+      <data key="d1">kilT</data>
+      <data key="d3">killer toxin (yeast antagonism)</data>
+      <data key="d4">signal</data>
+      <data key="d5">Yeast</data>
+      <data key="d6">0.02418</data>
+      <data key="d7">True</data>
+      <data key="d8">1.0</data>
+      <data key="d9">58</data>
+    </node>
+    <node id="genus:Metschnikowia">
+      <data key="d0">Genus</data>
+      <data key="d1">Metschnikowia</data>
+      <data key="d2">Yeast</data>
+      <data key="d12">25</data>
+      <data key="d13">14.35</data>
+      <data key="d14">NCBI Datasets</data>
+    </node>
+    <node id="gene:phzE">
+      <data key="d0">Gene</data>
+      <data key="d1">phzE</data>
+      <data key="d3">phenazine antibiotic biosynthesis</data>
+      <data key="d4">signal</data>
+      <data key="d5">Bacteria</data>
+      <data key="d6">0.02338</data>
+      <data key="d7">True</data>
+      <data key="d8">1.0</data>
+      <data key="d9">133</data>
+    </node>
+    <node id="gene:accB">
+      <data key="d0">Gene</data>
+      <data key="d1">accB</data>
+      <data key="d3">accessory gene with no link to performance</data>
+      <data key="d4">decoy</data>
+      <data key="d5">Accessory noise</data>
+      <data key="d6">0.00039</data>
+      <data key="d7">False</data>
+      <data key="d9">307</data>
+    </node>
+    <node id="gene:accF">
+      <data key="d0">Gene</data>
+      <data key="d1">accF</data>
+      <data key="d3">accessory gene with no link to performance</data>
+      <data key="d4">decoy</data>
+      <data key="d5">Accessory noise</data>
+      <data key="d6">0.00083</data>
+      <data key="d7">False</data>
+      <data key="d9">307</data>
+    </node>
+    <node id="compound:bg_metabolite_1">
+      <data key="d0">Compound</data>
+      <data key="d1">bg_metabolite_1</data>
+      <data key="d3">background compound with no link to performance</data>
+      <data key="d4">decoy</data>
+      <data key="d5">Background chemistry</data>
+      <data key="d6">0.00061</data>
+      <data key="d7">False</data>
+      <data key="d9">26</data>
+      <data key="d10">6.992</data>
+    </node>
+    <node id="genus:Paenibacillus">
+      <data key="d0">Genus</data>
+      <data key="d1">Paenibacillus</data>
+      <data key="d2">Bacteria</data>
+      <data key="d12">25</data>
+      <data key="d13">6.51</data>
+      <data key="d14">NCBI Datasets</data>
+    </node>
+    <node id="compound:pyoverdine">
+      <data key="d0">Compound</data>
+      <data key="d1">pyoverdine</data>
+      <data key="d3">product of pvdA (pyoverdine siderophore (iron competition))</data>
+      <data key="d4">signal</data>
+      <data key="d5">Bacteria</data>
+      <data key="d6">0.00768</data>
+      <data key="d7">False</data>
+      <data key="d8">1.0</data>
+      <data key="d9">119</data>
+      <data key="d10">2.05</data>
+      <data key="d16">5289234</data>
+      <data key="d17">C55H85N17O22</data>
+      <data key="d18">1336.4</data>
+    </node>
+    <node id="mode:antibiosis">
+      <data key="d0">ModeOfAction</data>
+      <data key="d1">antibiosis</data>
+      <data key="d3">the microbe releases antimicrobial chemicals or volatiles that stop the pathogen</data>
+    </node>
+    <node id="pathway:map00404">
+      <data key="d0">Pathway</data>
+      <data key="d1">map00404</data>
+      <data key="d3">Staurosporine biosynthesis</data>
+    </node>
+    <node id="gene:prnD">
+      <data key="d0">Gene</data>
+      <data key="d1">prnD</data>
+      <data key="d3">pyrrolnitrin antifungal antibiotic biosynthesis</data>
+      <data key="d4">signal</data>
+      <data key="d5">Bacteria</data>
+      <data key="d6">0.03044</data>
+      <data key="d7">True</data>
+      <data key="d8">1.0</data>
+      <data key="d9">114</data>
+    </node>
+    <node id="gene:nifH">
+      <data key="d0">Gene</data>
+      <data key="d1">nifH</data>
+      <data key="d3">nitrogen fixation</data>
+      <data key="d4">decoy</data>
+      <data key="d5">Plant-growth (other trait)</data>
+      <data key="d6">-3e-05</data>
+      <data key="d7">False</data>
+      <data key="d9">98</data>
+    </node>
+    <node id="mode:mycoparasitism">
+      <data key="d0">ModeOfAction</data>
+      <data key="d1">mycoparasitism</data>
+      <data key="d3">the microbe attacks and feeds on the pathogen itself</data>
+    </node>
+    <node id="compound:bg_metabolite_6">
+      <data key="d0">Compound</data>
+      <data key="d1">bg_metabolite_6</data>
+      <data key="d3">background compound with no link to performance</data>
+      <data key="d4">decoy</data>
+      <data key="d5">Background chemistry</data>
+      <data key="d6">0.00028</data>
+      <data key="d7">False</data>
+      <data key="d9">22</data>
+      <data key="d10">6.988</data>
+    </node>
+    <node id="compound:fengycin">
+      <data key="d0">Compound</data>
+      <data key="d1">fengycin</data>
+      <data key="d3">product of fenA (fengycin antifungal lipopeptide synthetase)</data>
+      <data key="d4">signal</data>
+      <data key="d5">Bacteria</data>
+      <data key="d6">0.00493</data>
+      <data key="d7">True</data>
+      <data key="d8">1.0</data>
+      <data key="d9">112</data>
+      <data key="d10">1.821</data>
+      <data key="d16">443591</data>
+      <data key="d17">C72H110N12O20</data>
+      <data key="d18">1463.7</data>
+    </node>
+    <node id="genus:Halomonas">
+      <data key="d0">Genus</data>
+      <data key="d1">Halomonas</data>
+      <data key="d2">Bacteria</data>
+    </node>
+    <node id="gene:srfAA">
+      <data key="d0">Gene</data>
+      <data key="d1">srfAA</data>
+      <data key="d3">surfactin lipopeptide synthetase</data>
+      <data key="d4">signal</data>
+      <data key="d5">Bacteria</data>
+      <data key="d6">0.02171</data>
+      <data key="d7">True</data>
+      <data key="d8">0.98</data>
+      <data key="d9">135</data>
+    </node>
+    <node id="genus:Metarhizium">
+      <data key="d0">Genus</data>
+      <data key="d1">Metarhizium</data>
+      <data key="d2">Fungi</data>
+      <data key="d12">25</data>
+      <data key="d13">41.01</data>
+      <data key="d14">NCBI Datasets</data>
+    </node>
+    <node id="kingdom:Oomycete">
+      <data key="d0">Kingdom</data>
+      <data key="d1">Oomycete</data>
+      <data key="d3">one of the four groups of microbes we model</data>
+    </node>
+    <node id="class:Alkaloids">
+      <data key="d0">ChemicalClass</data>
+      <data key="d1">Alkaloids</data>
+      <data key="d15">super class</data>
+    </node>
+    <node id="genus:Bacillus">
+      <data key="d0">Genus</data>
+      <data key="d1">Bacillus</data>
+      <data key="d2">Bacteria</data>
+      <data key="d12">25</data>
+      <data key="d13">4.21</data>
+      <data key="d14">NCBI Datasets</data>
+    </node>
+    <node id="compound:six_PP">
+      <data key="d0">Compound</data>
+      <data key="d1">six_PP</data>
+      <data key="d3">product of sixPP (6-pentyl-alpha-pyrone antifungal volatile)</data>
+      <data key="d4">signal</data>
+      <data key="d5">Fungi</data>
+      <data key="d6">0.01539</data>
+      <data key="d7">True</data>
+      <data key="d8">1.0</data>
+      <data key="d9">92</data>
+      <data key="d10">1.926</data>
+      <data key="d16">33960</data>
+      <data key="d17">C10H14O2</data>
+      <data key="d18">166.22</data>
+    </node>
+    <node id="compound:phenazine">
+      <data key="d0">Compound</data>
+      <data key="d1">phenazine</data>
+      <data key="d3">product of phzE (phenazine antibiotic biosynthesis)</data>
+      <data key="d4">signal</data>
+      <data key="d5">Bacteria</data>
+      <data key="d6">0.00628</data>
+      <data key="d7">True</data>
+      <data key="d8">1.0</data>
+      <data key="d9">124</data>
+      <data key="d10">2.132</data>
+      <data key="d16">4757</data>
+      <data key="d17">C12H8N2</data>
+      <data key="d18">180.2</data>
+    </node>
+    <node id="gene:prb1">
+      <data key="d0">Gene</data>
+      <data key="d1">prb1</data>
+      <data key="d3">mycoparasitic protease</data>
+      <data key="d4">signal</data>
+      <data key="d5">Cross-kingdom</data>
+      <data key="d6">0.00224</data>
+      <data key="d7">False</data>
+      <data key="d9">112</data>
+    </node>
+    <node id="compound:pyrrolnitrin">
+      <data key="d0">Compound</data>
+      <data key="d1">pyrrolnitrin</data>
+      <data key="d3">product of prnD (pyrrolnitrin antifungal antibiotic biosynthesis)</data>
+      <data key="d4">signal</data>
+      <data key="d5">Bacteria</data>
+      <data key="d6">0.0007</data>
+      <data key="d7">False</data>
+      <data key="d8">1.0</data>
+      <data key="d9">108</data>
+      <data key="d10">1.956</data>
+      <data key="d16">13916</data>
+      <data key="d17">C10H6Cl2N2O2</data>
+      <data key="d18">257.07</data>
+    </node>
+    <node id="compound:bg_metabolite_2">
+      <data key="d0">Compound</data>
+      <data key="d1">bg_metabolite_2</data>
+      <data key="d3">background compound with no link to performance</data>
+      <data key="d4">decoy</data>
+      <data key="d5">Background chemistry</data>
+      <data key="d6">-0.00071</data>
+      <data key="d7">False</data>
+      <data key="d8">0.56</data>
+      <data key="d9">17</data>
+      <data key="d10">7.055</data>
+    </node>
+    <node id="kingdom:Fungi">
+      <data key="d0">Kingdom</data>
+      <data key="d1">Fungi</data>
+      <data key="d3">one of the four groups of microbes we model</data>
+    </node>
+    <node id="gene:hcnA">
+      <data key="d0">Gene</data>
+      <data key="d1">hcnA</data>
+      <data key="d3">hydrogen cyanide (HCN) production</data>
+      <data key="d4">signal</data>
+      <data key="d5">Bacteria</data>
+      <data key="d6">0.04322</data>
+      <data key="d7">True</data>
+      <data key="d8">1.0</data>
+      <data key="d9">106</data>
+    </node>
+    <node id="gene:pvdA">
+      <data key="d0">Gene</data>
+      <data key="d1">pvdA</data>
+      <data key="d3">pyoverdine siderophore (iron competition)</data>
+      <data key="d4">signal</data>
+      <data key="d5">Bacteria</data>
+      <data key="d6">0.02551</data>
+      <data key="d7">True</data>
+      <data key="d8">1.0</data>
+      <data key="d9">117</data>
+    </node>
+    <node id="gene:chiA">
+      <data key="d0">Gene</data>
+      <data key="d1">chiA</data>
+      <data key="d3">chitinase (digests fungal cell walls)</data>
+      <data key="d4">signal</data>
+      <data key="d5">Cross-kingdom</data>
+      <data key="d6">0.01535</data>
+      <data key="d7">True</data>
+      <data key="d8">0.9</data>
+      <data key="d9">193</data>
+    </node>
+    <node id="genus:Clonostachys">
+      <data key="d0">Genus</data>
+      <data key="d1">Clonostachys</data>
+      <data key="d2">Fungi</data>
+    </node>
+    <node id="genus:Microbacterium">
+      <data key="d0">Genus</data>
+      <data key="d1">Microbacterium</data>
+      <data key="d2">Bacteria</data>
+    </node>
+    <node id="gene:gcd">
+      <data key="d0">Gene</data>
+      <data key="d1">gcd</data>
+      <data key="d3">phosphate solubilisation</data>
+      <data key="d4">decoy</data>
+      <data key="d5">Plant-growth (other trait)</data>
+      <data key="d6">-0.00046</data>
+      <data key="d7">False</data>
+      <data key="d9">130</data>
+    </node>
+    <node id="compound:DAPG">
+      <data key="d0">Compound</data>
+      <data key="d1">DAPG</data>
+      <data key="d3">product of phlD (DAPG antifungal antibiotic biosynthesis)</data>
+      <data key="d4">signal</data>
+      <data key="d5">Bacteria</data>
+      <data key="d6">0.00832</data>
+      <data key="d7">True</data>
+      <data key="d8">1.0</data>
+      <data key="d9">123</data>
+      <data key="d10">1.863</data>
+      <data key="d16">16547</data>
+      <data key="d17">C10H10O5</data>
+      <data key="d18">210.18</data>
+    </node>
+    <node id="gene:olpA">
+      <data key="d0">Gene</data>
+      <data key="d1">olpA</data>
+      <data key="d3">oligandrin elicitor (Pythium oligandrum)</data>
+      <data key="d4">signal</data>
+      <data key="d5">Oomycete</data>
+      <data key="d6">0.00806</data>
+      <data key="d7">True</data>
+      <data key="d9">41</data>
+    </node>
+    <node id="mode:plant growth promotion">
+      <data key="d0">ModeOfAction</data>
+      <data key="d1">plant growth promotion</data>
+      <data key="d3">the microbe feeds or stimulates the plant (nitrogen, phosphate, hormones)</data>
+    </node>
+    <node id="gene:accC">
+      <data key="d0">Gene</data>
+      <data key="d1">accC</data>
+      <data key="d3">accessory gene with no link to performance</data>
+      <data key="d4">decoy</data>
+      <data key="d5">Accessory noise</data>
+      <data key="d6">0.0002</data>
+      <data key="d7">False</data>
+      <data key="d9">203</data>
+    </node>
+    <node id="compound:iturin">
+      <data key="d0">Compound</data>
+      <data key="d1">iturin</data>
+      <data key="d3">product of ituA (iturin antifungal lipopeptide synthetase)</data>
+      <data key="d4">signal</data>
+      <data key="d5">Bacteria</data>
+      <data key="d6">0.01018</data>
+      <data key="d7">True</data>
+      <data key="d8">1.0</data>
+      <data key="d9">121</data>
+      <data key="d10">2.21</data>
+      <data key="d16">102287549</data>
+      <data key="d17">C48H74N12O14</data>
+      <data key="d18">1043.2</data>
+    </node>
+    <node id="class:Amino acids and peptides">
+      <data key="d0">ChemicalClass</data>
+      <data key="d1">Amino acids and peptides</data>
+      <data key="d15">main class</data>
+    </node>
+    <node id="class:Organoheterocyclic compounds">
+      <data key="d0">ChemicalClass</data>
+      <data key="d1">Organoheterocyclic compounds</data>
+      <data key="d15">super class</data>
+    </node>
+    <node id="outcome:disease suppression">
+      <data key="d0">Outcome</data>
+      <data key="d1">disease suppression</data>
+      <data key="d3">the strain protects plants against a fungal disease (the score the models predict)</data>
+    </node>
+    <node id="gene:accE">
+      <data key="d0">Gene</data>
+      <data key="d1">accE</data>
+      <data key="d3">accessory gene with no link to performance</data>
+      <data key="d4">decoy</data>
+      <data key="d5">Accessory noise</data>
+      <data key="d6">0.00556</data>
+      <data key="d7">True</data>
+      <data key="d9">349</data>
+    </node>
+    <node id="gene:ef1a">
+      <data key="d0">Gene</data>
+      <data key="d1">ef1a</data>
+      <data key="d3">translation elongation factor (broadly conserved)</data>
+      <data key="d4">housekeeping</data>
+      <data key="d5">Housekeeping</data>
+      <data key="d6">0.0</data>
+      <data key="d7">False</data>
+      <data key="d9">579</data>
+    </node>
+    <node id="genus:Aureobasidium">
+      <data key="d0">Genus</data>
+      <data key="d1">Aureobasidium</data>
+      <data key="d2">Yeast</data>
+      <data key="d12">25</data>
+      <data key="d13">26.2</data>
+      <data key="d14">NCBI Datasets</data>
+    </node>
+    <node id="kingdom:Yeast">
+      <data key="d0">Kingdom</data>
+      <data key="d1">Yeast</data>
+      <data key="d3">one of the four groups of microbes we model</data>
+    </node>
+    <node id="gene:beaS">
+      <data key="d0">Gene</data>
+      <data key="d1">beaS</data>
+      <data key="d3">beauvericin insecticidal toxin synthetase</data>
+      <data key="d4">signal</data>
+      <data key="d5">Fungi</data>
+      <data key="d6">8e-05</data>
+      <data key="d7">False</data>
+      <data key="d8">1.0</data>
+      <data key="d9">69</data>
+    </node>
+    <node id="genus:Candida">
+      <data key="d0">Genus</data>
+      <data key="d1">Candida</data>
+      <data key="d2">Yeast</data>
+    </node>
+    <node id="gene:accA">
+      <data key="d0">Gene</data>
+      <data key="d1">accA</data>
+      <data key="d3">accessory gene with no link to performance</data>
+      <data key="d4">decoy</data>
+      <data key="d5">Accessory noise</data>
+      <data key="d6">-0.00013</data>
+      <data key="d7">False</data>
+      <data key="d9">192</data>
+    </node>
+    <node id="gene:dtxS">
+      <data key="d0">Gene</data>
+      <data key="d1">dtxS</data>
+      <data key="d3">destruxin insecticidal toxin synthetase</data>
+      <data key="d4">signal</data>
+      <data key="d5">Fungi</data>
+      <data key="d6">0.02978</data>
+      <data key="d7">True</data>
+      <data key="d8">1.0</data>
+      <data key="d9">63</data>
+    </node>
+    <node id="gene:sidA">
+      <data key="d0">Gene</data>
+      <data key="d1">sidA</data>
+      <data key="d3">yeast siderophore (iron competition)</data>
+      <data key="d4">signal</data>
+      <data key="d5">Yeast</data>
+      <data key="d6">0.02755</data>
+      <data key="d7">True</data>
+      <data key="d8">1.0</data>
+      <data key="d9">67</data>
+    </node>
+    <node id="gene:sixPP">
+      <data key="d0">Gene</data>
+      <data key="d1">sixPP</data>
+      <data key="d3">6-pentyl-alpha-pyrone antifungal volatile</data>
+      <data key="d4">signal</data>
+      <data key="d5">Fungi</data>
+      <data key="d6">0.0055</data>
+      <data key="d7">True</data>
+      <data key="d8">1.0</data>
+      <data key="d9">87</data>
+    </node>
+    <node id="class:Anthranilic acid alkaloids">
+      <data key="d0">ChemicalClass</data>
+      <data key="d1">Anthranilic acid alkaloids</data>
+      <data key="d15">main class</data>
+    </node>
+    <node id="outcome:plant growth">
+      <data key="d0">Outcome</data>
+      <data key="d1">plant growth</data>
+      <data key="d3">the strain helps plants grow (a second trait in the data, not the one we predict)</data>
+    </node>
+    <node id="compound:bg_metabolite_3">
+      <data key="d0">Compound</data>
+      <data key="d1">bg_metabolite_3</data>
+      <data key="d3">background compound with no link to performance</data>
+      <data key="d4">decoy</data>
+      <data key="d5">Background chemistry</data>
+      <data key="d6">0.00045</data>
+      <data key="d7">False</data>
+      <data key="d8">0.54</data>
+      <data key="d9">26</data>
+      <data key="d10">7.339</data>
+    </node>
+    <node id="mode:iron competition">
+      <data key="d0">ModeOfAction</data>
+      <data key="d1">iron competition</data>
+      <data key="d3">siderophores grab the iron the pathogen needs, starving it</data>
+    </node>
+    <node id="compound:HCN">
+      <data key="d0">Compound</data>
+      <data key="d1">HCN</data>
+      <data key="d3">product of hcnA (hydrogen cyanide (HCN) production)</data>
+      <data key="d4">signal</data>
+      <data key="d5">Bacteria</data>
+      <data key="d6">0.00136</data>
+      <data key="d7">False</data>
+      <data key="d8">1.0</data>
+      <data key="d9">107</data>
+      <data key="d10">1.947</data>
+      <data key="d16">768</data>
+      <data key="d17">CHN</data>
+      <data key="d18">27.025</data>
+    </node>
+    <node id="class:Organic acids">
+      <data key="d0">ChemicalClass</data>
+      <data key="d1">Organic acids</data>
+      <data key="d15">super class</data>
+    </node>
+    <node id="genus:Pseudomonas">
+      <data key="d0">Genus</data>
+      <data key="d1">Pseudomonas</data>
+      <data key="d2">Bacteria</data>
+      <data key="d12">25</data>
+      <data key="d13">6.42</data>
+      <data key="d14">NCBI Datasets</data>
+    </node>
+    <node id="mode:toxin production">
+      <data key="d0">ModeOfAction</data>
+      <data key="d1">toxin production</data>
+      <data key="d3">the microbe makes toxins that harm pests and competing microbes</data>
+    </node>
+    <node id="gene:ssu_rRNA">
+      <data key="d0">Gene</data>
+      <data key="d1">ssu_rRNA</data>
+      <data key="d3">small-subunit ribosomal RNA gene (a universal marker)</data>
+      <data key="d4">housekeeping</data>
+      <data key="d5">Housekeeping</data>
+      <data key="d6">0.0</data>
+      <data key="d7">False</data>
+      <data key="d9">579</data>
+    </node>
+    <node id="gene:acdS">
+      <data key="d0">Gene</data>
+      <data key="d1">acdS</data>
+      <data key="d3">ACC deaminase (relieves plant stress)</data>
+      <data key="d4">decoy</data>
+      <data key="d5">Plant-growth (other trait)</data>
+      <data key="d6">-0.00052</data>
+      <data key="d7">False</data>
+      <data key="d9">159</data>
+    </node>
+    <node id="kingdom:Bacteria">
+      <data key="d0">Kingdom</data>
+      <data key="d1">Bacteria</data>
+      <data key="d3">one of the four groups of microbes we model</data>
+    </node>
+    <node id="compound:surfactin">
+      <data key="d0">Compound</data>
+      <data key="d1">surfactin</data>
+      <data key="d3">product of srfAA (surfactin lipopeptide synthetase)</data>
+      <data key="d4">signal</data>
+      <data key="d5">Bacteria</data>
+      <data key="d6">0.0001</data>
+      <data key="d7">False</data>
+      <data key="d8">0.98</data>
+      <data key="d9">126</data>
+      <data key="d10">2.043</data>
+      <data key="d16">443592</data>
+      <data key="d17">C53H93N7O13</data>
+      <data key="d18">1036.3</data>
+    </node>
+    <node id="gene:rpb1">
+      <data key="d0">Gene</data>
+      <data key="d1">rpb1</data>
+      <data key="d3">largest RNA-polymerase subunit (broadly conserved)</data>
+      <data key="d4">housekeeping</data>
+      <data key="d5">Housekeeping</data>
+      <data key="d6">0.0</data>
+      <data key="d7">False</data>
+      <data key="d9">577</data>
+    </node>
+    <node id="genus:Trichoderma">
+      <data key="d0">Genus</data>
+      <data key="d1">Trichoderma</data>
+      <data key="d2">Fungi</data>
+      <data key="d12">25</data>
+      <data key="d13">37.81</data>
+      <data key="d14">NCBI Datasets</data>
+    </node>
+    <node id="gene:phlD">
+      <data key="d0">Gene</data>
+      <data key="d1">phlD</data>
+      <data key="d3">DAPG antifungal antibiotic biosynthesis</data>
+      <data key="d4">signal</data>
+      <data key="d5">Bacteria</data>
+      <data key="d6">0.01522</data>
+      <data key="d7">True</data>
+      <data key="d8">1.0</data>
+      <data key="d9">123</data>
+    </node>
+    <node id="genus:Beauveria">
+      <data key="d0">Genus</data>
+      <data key="d1">Beauveria</data>
+      <data key="d2">Fungi</data>
+      <data key="d12">25</data>
+      <data key="d13">34.57</data>
+      <data key="d14">NCBI Datasets</data>
+    </node>
+    <node id="pathway:map01100">
+      <data key="d0">Pathway</data>
+      <data key="d1">map01100</data>
+      <data key="d3">Metabolic pathways</data>
+    </node>
+    <node id="compound:killer_toxin">
+      <data key="d0">Compound</data>
+      <data key="d1">killer_toxin</data>
+      <data key="d3">product of kilT (killer toxin (yeast antagonism))</data>
+      <data key="d4">signal</data>
+      <data key="d5">Yeast</data>
+      <data key="d6">0.0033</data>
+      <data key="d7">False</data>
+      <data key="d8">0.98</data>
+      <data key="d9">61</data>
+      <data key="d10">1.686</data>
+      <data key="d11">a protein toxin, not a small molecule</data>
+    </node>
+    <node id="compound:bg_metabolite_4">
+      <data key="d0">Compound</data>
+      <data key="d1">bg_metabolite_4</data>
+      <data key="d3">background compound with no link to performance</data>
+      <data key="d4">decoy</data>
+      <data key="d5">Background chemistry</data>
+      <data key="d6">-0.00026</data>
+      <data key="d7">False</data>
+      <data key="d9">26</data>
+      <data key="d10">7.1</data>
+    </node>
+    <node id="gene:accD">
+      <data key="d0">Gene</data>
+      <data key="d1">accD</data>
+      <data key="d3">accessory gene with no link to performance</data>
+      <data key="d4">decoy</data>
+      <data key="d5">Accessory noise</data>
+      <data key="d6">-1e-05</data>
+      <data key="d7">False</data>
+      <data key="d9">297</data>
+    </node>
+    <node id="class:Organic nitrogen compounds">
+      <data key="d0">ChemicalClass</data>
+      <data key="d1">Organic nitrogen compounds</data>
+      <data key="d15">super class</data>
+    </node>
+    <node id="compound:bg_metabolite_5">
+      <data key="d0">Compound</data>
+      <data key="d1">bg_metabolite_5</data>
+      <data key="d3">background compound with no link to performance</data>
+      <data key="d4">decoy</data>
+      <data key="d5">Background chemistry</data>
+      <data key="d6">-0.00033</data>
+      <data key="d7">False</data>
+      <data key="d9">18</data>
+      <data key="d10">7.122</data>
+    </node>
+    <node id="gene:ech42">
+      <data key="d0">Gene</data>
+      <data key="d1">ech42</data>
+      <data key="d3">endochitinase (Trichoderma mycoparasitism)</data>
+      <data key="d4">signal</data>
+      <data key="d5">Fungi</data>
+      <data key="d6">0.00031</data>
+      <data key="d7">False</data>
+      <data key="d9">112</data>
+    </node>
+    <node id="genus:Streptomyces">
+      <data key="d0">Genus</data>
+      <data key="d1">Streptomyces</data>
+      <data key="d2">Bacteria</data>
+      <data key="d12">25</data>
+      <data key="d13">8.54</data>
+      <data key="d14">NCBI Datasets</data>
+    </node>
+    <node id="mode:lipopeptide membrane attack">
+      <data key="d0">ModeOfAction</data>
+      <data key="d1">lipopeptide membrane attack</data>
+      <data key="d3">lipopeptides punch holes in the pathogen's cell membrane</data>
+    </node>
+    <node id="pathway:map00460">
+      <data key="d0">Pathway</data>
+      <data key="d1">map00460</data>
+      <data key="d3">Cyanoamino acid metabolism</data>
+    </node>
+    <node id="gene:glcA">
+      <data key="d0">Gene</data>
+      <data key="d1">glcA</data>
+      <data key="d3">beta-1,3-glucanase (degrades fungal walls)</data>
+      <data key="d4">signal</data>
+      <data key="d5">Cross-kingdom</data>
+      <data key="d6">0.00986</data>
+      <data key="d7">True</data>
+      <data key="d8">0.96</data>
+      <data key="d9">179</data>
+    </node>
+    <node id="class:Substituted pyrroles">
+      <data key="d0">ChemicalClass</data>
+      <data key="d1">Substituted pyrroles</data>
+      <data key="d15">main class</data>
+    </node>
+    <node id="pathway:map01110">
+      <data key="d0">Pathway</data>
+      <data key="d1">map01110</data>
+      <data key="d3">Biosynthesis of secondary metabolites</data>
+    </node>
+    <node id="compound:beauvericin">
+      <data key="d0">Compound</data>
+      <data key="d1">beauvericin</data>
+      <data key="d3">product of beaS (beauvericin insecticidal toxin synthetase)</data>
+      <data key="d4">signal</data>
+      <data key="d5">Fungi</data>
+      <data key="d6">0.02897</data>
+      <data key="d7">True</data>
+      <data key="d8">1.0</data>
+      <data key="d9">70</data>
+      <data key="d10">1.888</data>
+      <data key="d16">3007984</data>
+      <data key="d17">C45H57N3O9</data>
+      <data key="d18">783.9</data>
+    </node>
+    <node id="compound:destruxin">
+      <data key="d0">Compound</data>
+      <data key="d1">destruxin</data>
+      <data key="d3">product of dtxS (destruxin insecticidal toxin synthetase)</data>
+      <data key="d4">signal</data>
+      <data key="d5">Fungi</data>
+      <data key="d6">0.00363</data>
+      <data key="d7">False</data>
+      <data key="d8">1.0</data>
+      <data key="d9">64</data>
+      <data key="d10">1.776</data>
+      <data key="d16">11421831</data>
+      <data key="d17">C29H47N5O7</data>
+      <data key="d18">577.7</data>
+    </node>
+    <node id="compound:yeast_siderophore">
+      <data key="d0">Compound</data>
+      <data key="d1">yeast_siderophore</data>
+      <data key="d3">product of sidA (yeast siderophore (iron competition))</data>
+      <data key="d4">signal</data>
+      <data key="d5">Yeast</data>
+      <data key="d6">0.00023</data>
+      <data key="d7">False</data>
+      <data key="d8">1.0</data>
+      <data key="d9">77</data>
+      <data key="d10">1.873</data>
+      <data key="d11">a class of molecules, not one compound</data>
+    </node>
+    <node id="genus:Pythium">
+      <data key="d0">Genus</data>
+      <data key="d1">Pythium</data>
+      <data key="d2">Oomycete</data>
+      <data key="d12">25</data>
+      <data key="d13">40.36</data>
+      <data key="d14">NCBI Datasets</data>
+    </node>
+    <edge source="genus:Brevibacterium" target="kingdom:Bacteria" id="in_kingdom|BacDive (DSMZ)">
+      <data key="d19">in_kingdom</data>
+      <data key="d20">BacDive (DSMZ)</data>
+    </edge>
+    <edge source="gene:ituA" target="compound:iturin" id="makes|domain model (gene descriptions in src/strainscope/generate_data.py)">
+      <data key="d19">makes</data>
+      <data key="d21">0.7312</data>
+      <data key="d20">domain model (gene descriptions in src/strainscope/generate_data.py)</data>
+      <data key="d22">Phase 3 measured Spearman rho 0.73 between gene and product</data>
+    </edge>
+    <edge source="gene:ituA" target="mode:lipopeptide membrane attack" id="acts_by|domain model (gene descriptions in src/strainscope/generate_data.py)">
+      <data key="d19">acts_by</data>
+      <data key="d20">domain model (gene descriptions in src/strainscope/generate_data.py)</data>
+    </edge>
+    <edge source="gene:ituA" target="outcome:disease suppression" id="associated_with|Phase 4 (permutation importance of the winning model)">
+      <data key="d19">associated_with</data>
+      <data key="d21">0.013</data>
+      <data key="d20">Phase 4 (permutation importance of the winning model)</data>
+      <data key="d22">Elastic net logistic regression: AUC drops 0.013 when shuffled</data>
+    </edge>
+    <edge source="gene:ituA" target="outcome:disease suppression" id="associated_with|Phase 3 (DIABLO signature, stability &gt;= 0.8)">
+      <data key="d19">associated_with</data>
+      <data key="d21">1.0</data>
+      <data key="d20">Phase 3 (DIABLO signature, stability &gt;= 0.8)</data>
+      <data key="d22">picked in 100% of DIABLO re-fits</data>
+    </edge>
+    <edge source="mode:induced plant resistance" target="outcome:disease suppression" id="contributes_to|domain model (gene descriptions in src/strainscope/generate_data.py)">
+      <data key="d19">contributes_to</data>
+      <data key="d20">domain model (gene descriptions in src/strainscope/generate_data.py)</data>
+    </edge>
+    <edge source="mode:killer-toxin antagonism" target="outcome:disease suppression" id="contributes_to|domain model (gene descriptions in src/strainscope/generate_data.py)">
+      <data key="d19">contributes_to</data>
+      <data key="d20">domain model (gene descriptions in src/strainscope/generate_data.py)</data>
+    </edge>
+    <edge source="compound:oligandrin" target="mode:induced plant resistance" id="acts_by|domain model (gene descriptions in src/strainscope/generate_data.py)">
+      <data key="d19">acts_by</data>
+      <data key="d20">domain model (gene descriptions in src/strainscope/generate_data.py)</data>
+    </edge>
+    <edge source="compound:oligandrin" target="outcome:disease suppression" id="associated_with|Phase 4 (permutation importance of the winning model)">
+      <data key="d19">associated_with</data>
+      <data key="d21">0.0159</data>
+      <data key="d20">Phase 4 (permutation importance of the winning model)</data>
+      <data key="d22">Elastic net logistic regression: AUC drops 0.016 when shuffled</data>
+    </edge>
+    <edge source="compound:oligandrin" target="outcome:disease suppression" id="associated_with|Phase 3 (DIABLO signature, stability &gt;= 0.8)">
+      <data key="d19">associated_with</data>
+      <data key="d21">0.98</data>
+      <data key="d20">Phase 3 (DIABLO signature, stability &gt;= 0.8)</data>
+      <data key="d22">picked in 98% of DIABLO re-fits</data>
+    </edge>
+    <edge source="gene:fenA" target="compound:fengycin" id="makes|domain model (gene descriptions in src/strainscope/generate_data.py)">
+      <data key="d19">makes</data>
+      <data key="d21">0.7131</data>
+      <data key="d20">domain model (gene descriptions in src/strainscope/generate_data.py)</data>
+      <data key="d22">Phase 3 measured Spearman rho 0.71 between gene and product</data>
+    </edge>
+    <edge source="gene:fenA" target="mode:lipopeptide membrane attack" id="acts_by|domain model (gene descriptions in src/strainscope/generate_data.py)">
+      <data key="d19">acts_by</data>
+      <data key="d20">domain model (gene descriptions in src/strainscope/generate_data.py)</data>
+    </edge>
+    <edge source="gene:fenA" target="outcome:disease suppression" id="associated_with|Phase 4 (permutation importance of the winning model)">
+      <data key="d19">associated_with</data>
+      <data key="d21">0.045</data>
+      <data key="d20">Phase 4 (permutation importance of the winning model)</data>
+      <data key="d22">Elastic net logistic regression: AUC drops 0.045 when shuffled</data>
+    </edge>
+    <edge source="gene:fenA" target="outcome:disease suppression" id="associated_with|Phase 3 (DIABLO signature, stability &gt;= 0.8)">
+      <data key="d19">associated_with</data>
+      <data key="d21">1.0</data>
+      <data key="d20">Phase 3 (DIABLO signature, stability &gt;= 0.8)</data>
+      <data key="d22">picked in 100% of DIABLO re-fits</data>
+    </edge>
+    <edge source="gene:iaaM" target="mode:plant growth promotion" id="acts_by|domain model (gene descriptions in src/strainscope/generate_data.py)">
+      <data key="d19">acts_by</data>
+      <data key="d20">domain model (gene descriptions in src/strainscope/generate_data.py)</data>
+    </edge>
+    <edge source="mode:cell-wall degradation" target="outcome:disease suppression" id="contributes_to|domain model (gene descriptions in src/strainscope/generate_data.py)">
+      <data key="d19">contributes_to</data>
+      <data key="d20">domain model (gene descriptions in src/strainscope/generate_data.py)</data>
+    </edge>
+    <edge source="genus:Saccharomyces" target="kingdom:Yeast" id="in_kingdom|synthetic library (Phase 1, cleaned in Phase 2)">
+      <data key="d19">in_kingdom</data>
+      <data key="d20">synthetic library (Phase 1, cleaned in Phase 2)</data>
+    </edge>
+    <edge source="class:Organonitrogen compounds" target="class:Organic nitrogen compounds" id="subclass_of|RefMet (Metabolomics Workbench)">
+      <data key="d19">subclass_of</data>
+      <data key="d20">RefMet (Metabolomics Workbench)</data>
+    </edge>
+    <edge source="gene:kilT" target="compound:killer_toxin" id="makes|domain model (gene descriptions in src/strainscope/generate_data.py)">
+      <data key="d19">makes</data>
+      <data key="d21">0.4034</data>
+      <data key="d20">domain model (gene descriptions in src/strainscope/generate_data.py)</data>
+      <data key="d22">Phase 3 measured Spearman rho 0.40 between gene and product</data>
+    </edge>
+    <edge source="gene:kilT" target="mode:killer-toxin antagonism" id="acts_by|domain model (gene descriptions in src/strainscope/generate_data.py)">
+      <data key="d19">acts_by</data>
+      <data key="d20">domain model (gene descriptions in src/strainscope/generate_data.py)</data>
+    </edge>
+    <edge source="gene:kilT" target="outcome:disease suppression" id="associated_with|Phase 4 (permutation importance of the winning model)">
+      <data key="d19">associated_with</data>
+      <data key="d21">0.0242</data>
+      <data key="d20">Phase 4 (permutation importance of the winning model)</data>
+      <data key="d22">Elastic net logistic regression: AUC drops 0.024 when shuffled</data>
+    </edge>
+    <edge source="gene:kilT" target="outcome:disease suppression" id="associated_with|Phase 3 (DIABLO signature, stability &gt;= 0.8)">
+      <data key="d19">associated_with</data>
+      <data key="d21">1.0</data>
+      <data key="d20">Phase 3 (DIABLO signature, stability &gt;= 0.8)</data>
+      <data key="d22">picked in 100% of DIABLO re-fits</data>
+    </edge>
+    <edge source="genus:Metschnikowia" target="kingdom:Yeast" id="in_kingdom|synthetic library (Phase 1, cleaned in Phase 2)">
+      <data key="d19">in_kingdom</data>
+      <data key="d20">synthetic library (Phase 1, cleaned in Phase 2)</data>
+    </edge>
+    <edge source="gene:phzE" target="compound:phenazine" id="makes|domain model (gene descriptions in src/strainscope/generate_data.py)">
+      <data key="d19">makes</data>
+      <data key="d21">0.7346</data>
+      <data key="d20">domain model (gene descriptions in src/strainscope/generate_data.py)</data>
+      <data key="d22">Phase 3 measured Spearman rho 0.73 between gene and product</data>
+    </edge>
+    <edge source="gene:phzE" target="mode:antibiosis" id="acts_by|domain model (gene descriptions in src/strainscope/generate_data.py)">
+      <data key="d19">acts_by</data>
+      <data key="d20">domain model (gene descriptions in src/strainscope/generate_data.py)</data>
+    </edge>
+    <edge source="gene:phzE" target="outcome:disease suppression" id="associated_with|Phase 4 (permutation importance of the winning model)">
+      <data key="d19">associated_with</data>
+      <data key="d21">0.0234</data>
+      <data key="d20">Phase 4 (permutation importance of the winning model)</data>
+      <data key="d22">Elastic net logistic regression: AUC drops 0.023 when shuffled</data>
+    </edge>
+    <edge source="gene:phzE" target="outcome:disease suppression" id="associated_with|Phase 3 (DIABLO signature, stability &gt;= 0.8)">
+      <data key="d19">associated_with</data>
+      <data key="d21">1.0</data>
+      <data key="d20">Phase 3 (DIABLO signature, stability &gt;= 0.8)</data>
+      <data key="d22">picked in 100% of DIABLO re-fits</data>
+    </edge>
+    <edge source="genus:Paenibacillus" target="kingdom:Bacteria" id="in_kingdom|synthetic library (Phase 1, cleaned in Phase 2)">
+      <data key="d19">in_kingdom</data>
+      <data key="d20">synthetic library (Phase 1, cleaned in Phase 2)</data>
+    </edge>
+    <edge source="compound:pyoverdine" target="mode:iron competition" id="acts_by|domain model (gene descriptions in src/strainscope/generate_data.py)">
+      <data key="d19">acts_by</data>
+      <data key="d20">domain model (gene descriptions in src/strainscope/generate_data.py)</data>
+    </edge>
+    <edge source="compound:pyoverdine" target="outcome:disease suppression" id="associated_with|Phase 3 (DIABLO signature, stability &gt;= 0.8)">
+      <data key="d19">associated_with</data>
+      <data key="d21">1.0</data>
+      <data key="d20">Phase 3 (DIABLO signature, stability &gt;= 0.8)</data>
+      <data key="d22">picked in 100% of DIABLO re-fits</data>
+    </edge>
+    <edge source="mode:antibiosis" target="outcome:disease suppression" id="contributes_to|domain model (gene descriptions in src/strainscope/generate_data.py)">
+      <data key="d19">contributes_to</data>
+      <data key="d20">domain model (gene descriptions in src/strainscope/generate_data.py)</data>
+    </edge>
+    <edge source="gene:prnD" target="compound:pyrrolnitrin" id="makes|domain model (gene descriptions in src/strainscope/generate_data.py)">
+      <data key="d19">makes</data>
+      <data key="d21">0.7585</data>
+      <data key="d20">domain model (gene descriptions in src/strainscope/generate_data.py)</data>
+      <data key="d22">Phase 3 measured Spearman rho 0.76 between gene and product</data>
+    </edge>
+    <edge source="gene:prnD" target="mode:antibiosis" id="acts_by|domain model (gene descriptions in src/strainscope/generate_data.py)">
+      <data key="d19">acts_by</data>
+      <data key="d20">domain model (gene descriptions in src/strainscope/generate_data.py)</data>
+    </edge>
+    <edge source="gene:prnD" target="outcome:disease suppression" id="associated_with|Phase 4 (permutation importance of the winning model)">
+      <data key="d19">associated_with</data>
+      <data key="d21">0.0304</data>
+      <data key="d20">Phase 4 (permutation importance of the winning model)</data>
+      <data key="d22">Elastic net logistic regression: AUC drops 0.030 when shuffled</data>
+    </edge>
+    <edge source="gene:prnD" target="outcome:disease suppression" id="associated_with|Phase 3 (DIABLO signature, stability &gt;= 0.8)">
+      <data key="d19">associated_with</data>
+      <data key="d21">1.0</data>
+      <data key="d20">Phase 3 (DIABLO signature, stability &gt;= 0.8)</data>
+      <data key="d22">picked in 100% of DIABLO re-fits</data>
+    </edge>
+    <edge source="gene:nifH" target="mode:plant growth promotion" id="acts_by|domain model (gene descriptions in src/strainscope/generate_data.py)">
+      <data key="d19">acts_by</data>
+      <data key="d20">domain model (gene descriptions in src/strainscope/generate_data.py)</data>
+    </edge>
+    <edge source="mode:mycoparasitism" target="outcome:disease suppression" id="contributes_to|domain model (gene descriptions in src/strainscope/generate_data.py)">
+      <data key="d19">contributes_to</data>
+      <data key="d20">domain model (gene descriptions in src/strainscope/generate_data.py)</data>
+    </edge>
+    <edge source="compound:fengycin" target="mode:lipopeptide membrane attack" id="acts_by|domain model (gene descriptions in src/strainscope/generate_data.py)">
+      <data key="d19">acts_by</data>
+      <data key="d20">domain model (gene descriptions in src/strainscope/generate_data.py)</data>
+    </edge>
+    <edge source="compound:fengycin" target="outcome:disease suppression" id="associated_with|Phase 4 (permutation importance of the winning model)">
+      <data key="d19">associated_with</data>
+      <data key="d21">0.0049</data>
+      <data key="d20">Phase 4 (permutation importance of the winning model)</data>
+      <data key="d22">Elastic net logistic regression: AUC drops 0.005 when shuffled</data>
+    </edge>
+    <edge source="compound:fengycin" target="outcome:disease suppression" id="associated_with|Phase 3 (DIABLO signature, stability &gt;= 0.8)">
+      <data key="d19">associated_with</data>
+      <data key="d21">1.0</data>
+      <data key="d20">Phase 3 (DIABLO signature, stability &gt;= 0.8)</data>
+      <data key="d22">picked in 100% of DIABLO re-fits</data>
+    </edge>
+    <edge source="compound:fengycin" target="pathway:map01054" id="in_pathway|KEGG (academic use)">
+      <data key="d19">in_pathway</data>
+      <data key="d20">KEGG (academic use)</data>
+      <data key="d22">KEGG C12042 in map01054</data>
+    </edge>
+    <edge source="compound:fengycin" target="class:Amino acids and peptides" id="classified_as|RefMet (Metabolomics Workbench)">
+      <data key="d19">classified_as</data>
+      <data key="d20">RefMet (Metabolomics Workbench)</data>
+      <data key="d22">RefMet name Fengycin</data>
+    </edge>
+    <edge source="genus:Halomonas" target="kingdom:Bacteria" id="in_kingdom|BacDive (DSMZ)">
+      <data key="d19">in_kingdom</data>
+      <data key="d20">BacDive (DSMZ)</data>
+    </edge>
+    <edge source="gene:srfAA" target="compound:surfactin" id="makes|domain model (gene descriptions in src/strainscope/generate_data.py)">
+      <data key="d19">makes</data>
+      <data key="d21">0.7372</data>
+      <data key="d20">domain model (gene descriptions in src/strainscope/generate_data.py)</data>
+      <data key="d22">Phase 3 measured Spearman rho 0.74 between gene and product</data>
+    </edge>
+    <edge source="gene:srfAA" target="mode:lipopeptide membrane attack" id="acts_by|domain model (gene descriptions in src/strainscope/generate_data.py)">
+      <data key="d19">acts_by</data>
+      <data key="d20">domain model (gene descriptions in src/strainscope/generate_data.py)</data>
+    </edge>
+    <edge source="gene:srfAA" target="outcome:disease suppression" id="associated_with|Phase 4 (permutation importance of the winning model)">
+      <data key="d19">associated_with</data>
+      <data key="d21">0.0217</data>
+      <data key="d20">Phase 4 (permutation importance of the winning model)</data>
+      <data key="d22">Elastic net logistic regression: AUC drops 0.022 when shuffled</data>
+    </edge>
+    <edge source="gene:srfAA" target="outcome:disease suppression" id="associated_with|Phase 3 (DIABLO signature, stability &gt;= 0.8)">
+      <data key="d19">associated_with</data>
+      <data key="d21">0.98</data>
+      <data key="d20">Phase 3 (DIABLO signature, stability &gt;= 0.8)</data>
+      <data key="d22">picked in 98% of DIABLO re-fits</data>
+    </edge>
+    <edge source="genus:Metarhizium" target="kingdom:Fungi" id="in_kingdom|synthetic library (Phase 1, cleaned in Phase 2)">
+      <data key="d19">in_kingdom</data>
+      <data key="d20">synthetic library (Phase 1, cleaned in Phase 2)</data>
+    </edge>
+    <edge source="genus:Bacillus" target="kingdom:Bacteria" id="in_kingdom|synthetic library (Phase 1, cleaned in Phase 2)">
+      <data key="d19">in_kingdom</data>
+      <data key="d20">synthetic library (Phase 1, cleaned in Phase 2)</data>
+    </edge>
+    <edge source="compound:six_PP" target="mode:antibiosis" id="acts_by|domain model (gene descriptions in src/strainscope/generate_data.py)">
+      <data key="d19">acts_by</data>
+      <data key="d20">domain model (gene descriptions in src/strainscope/generate_data.py)</data>
+    </edge>
+    <edge source="compound:six_PP" target="outcome:disease suppression" id="associated_with|Phase 4 (permutation importance of the winning model)">
+      <data key="d19">associated_with</data>
+      <data key="d21">0.0154</data>
+      <data key="d20">Phase 4 (permutation importance of the winning model)</data>
+      <data key="d22">Elastic net logistic regression: AUC drops 0.015 when shuffled</data>
+    </edge>
+    <edge source="compound:six_PP" target="outcome:disease suppression" id="associated_with|Phase 3 (DIABLO signature, stability &gt;= 0.8)">
+      <data key="d19">associated_with</data>
+      <data key="d21">1.0</data>
+      <data key="d20">Phase 3 (DIABLO signature, stability &gt;= 0.8)</data>
+      <data key="d22">picked in 100% of DIABLO re-fits</data>
+    </edge>
+    <edge source="compound:phenazine" target="mode:antibiosis" id="acts_by|domain model (gene descriptions in src/strainscope/generate_data.py)">
+      <data key="d19">acts_by</data>
+      <data key="d20">domain model (gene descriptions in src/strainscope/generate_data.py)</data>
+    </edge>
+    <edge source="compound:phenazine" target="outcome:disease suppression" id="associated_with|Phase 4 (permutation importance of the winning model)">
+      <data key="d19">associated_with</data>
+      <data key="d21">0.0063</data>
+      <data key="d20">Phase 4 (permutation importance of the winning model)</data>
+      <data key="d22">Elastic net logistic regression: AUC drops 0.006 when shuffled</data>
+    </edge>
+    <edge source="compound:phenazine" target="outcome:disease suppression" id="associated_with|Phase 3 (DIABLO signature, stability &gt;= 0.8)">
+      <data key="d19">associated_with</data>
+      <data key="d21">1.0</data>
+      <data key="d20">Phase 3 (DIABLO signature, stability &gt;= 0.8)</data>
+      <data key="d22">picked in 100% of DIABLO re-fits</data>
+    </edge>
+    <edge source="compound:phenazine" target="class:Anthranilic acid alkaloids" id="classified_as|RefMet (Metabolomics Workbench)">
+      <data key="d19">classified_as</data>
+      <data key="d20">RefMet (Metabolomics Workbench)</data>
+      <data key="d22">RefMet name Phenazine</data>
+    </edge>
+    <edge source="gene:prb1" target="mode:mycoparasitism" id="acts_by|domain model (gene descriptions in src/strainscope/generate_data.py)">
+      <data key="d19">acts_by</data>
+      <data key="d20">domain model (gene descriptions in src/strainscope/generate_data.py)</data>
+    </edge>
+    <edge source="compound:pyrrolnitrin" target="mode:antibiosis" id="acts_by|domain model (gene descriptions in src/strainscope/generate_data.py)">
+      <data key="d19">acts_by</data>
+      <data key="d20">domain model (gene descriptions in src/strainscope/generate_data.py)</data>
+    </edge>
+    <edge source="compound:pyrrolnitrin" target="outcome:disease suppression" id="associated_with|Phase 3 (DIABLO signature, stability &gt;= 0.8)">
+      <data key="d19">associated_with</data>
+      <data key="d21">1.0</data>
+      <data key="d20">Phase 3 (DIABLO signature, stability &gt;= 0.8)</data>
+      <data key="d22">picked in 100% of DIABLO re-fits</data>
+    </edge>
+    <edge source="compound:pyrrolnitrin" target="pathway:map00404" id="in_pathway|KEGG (academic use)">
+      <data key="d19">in_pathway</data>
+      <data key="d20">KEGG (academic use)</data>
+      <data key="d22">KEGG C12491 in map00404</data>
+    </edge>
+    <edge source="compound:pyrrolnitrin" target="pathway:map01100" id="in_pathway|KEGG (academic use)">
+      <data key="d19">in_pathway</data>
+      <data key="d20">KEGG (academic use)</data>
+      <data key="d22">KEGG C12491 in map01100</data>
+    </edge>
+    <edge source="compound:pyrrolnitrin" target="pathway:map01110" id="in_pathway|KEGG (academic use)">
+      <data key="d19">in_pathway</data>
+      <data key="d20">KEGG (academic use)</data>
+      <data key="d22">KEGG C12491 in map01110</data>
+    </edge>
+    <edge source="compound:pyrrolnitrin" target="class:Substituted pyrroles" id="classified_as|RefMet (Metabolomics Workbench)">
+      <data key="d19">classified_as</data>
+      <data key="d20">RefMet (Metabolomics Workbench)</data>
+      <data key="d22">RefMet name Pyrrolnitrin</data>
+    </edge>
+    <edge source="gene:hcnA" target="compound:HCN" id="makes|domain model (gene descriptions in src/strainscope/generate_data.py)">
+      <data key="d19">makes</data>
+      <data key="d21">0.7435</data>
+      <data key="d20">domain model (gene descriptions in src/strainscope/generate_data.py)</data>
+      <data key="d22">Phase 3 measured Spearman rho 0.74 between gene and product</data>
+    </edge>
+    <edge source="gene:hcnA" target="mode:antibiosis" id="acts_by|domain model (gene descriptions in src/strainscope/generate_data.py)">
+      <data key="d19">acts_by</data>
+      <data key="d20">domain model (gene descriptions in src/strainscope/generate_data.py)</data>
+    </edge>
+    <edge source="gene:hcnA" target="outcome:disease suppression" id="associated_with|Phase 4 (permutation importance of the winning model)">
+      <data key="d19">associated_with</data>
+      <data key="d21">0.0432</data>
+      <data key="d20">Phase 4 (permutation importance of the winning model)</data>
+      <data key="d22">Elastic net logistic regression: AUC drops 0.043 when shuffled</data>
+    </edge>
+    <edge source="gene:hcnA" target="outcome:disease suppression" id="associated_with|Phase 3 (DIABLO signature, stability &gt;= 0.8)">
+      <data key="d19">associated_with</data>
+      <data key="d21">1.0</data>
+      <data key="d20">Phase 3 (DIABLO signature, stability &gt;= 0.8)</data>
+      <data key="d22">picked in 100% of DIABLO re-fits</data>
+    </edge>
+    <edge source="gene:pvdA" target="compound:pyoverdine" id="makes|domain model (gene descriptions in src/strainscope/generate_data.py)">
+      <data key="d19">makes</data>
+      <data key="d21">0.7563</data>
+      <data key="d20">domain model (gene descriptions in src/strainscope/generate_data.py)</data>
+      <data key="d22">Phase 3 measured Spearman rho 0.76 between gene and product</data>
+    </edge>
+    <edge source="gene:pvdA" target="mode:iron competition" id="acts_by|domain model (gene descriptions in src/strainscope/generate_data.py)">
+      <data key="d19">acts_by</data>
+      <data key="d20">domain model (gene descriptions in src/strainscope/generate_data.py)</data>
+    </edge>
+    <edge source="gene:pvdA" target="outcome:disease suppression" id="associated_with|Phase 4 (permutation importance of the winning model)">
+      <data key="d19">associated_with</data>
+      <data key="d21">0.0255</data>
+      <data key="d20">Phase 4 (permutation importance of the winning model)</data>
+      <data key="d22">Elastic net logistic regression: AUC drops 0.026 when shuffled</data>
+    </edge>
+    <edge source="gene:pvdA" target="outcome:disease suppression" id="associated_with|Phase 3 (DIABLO signature, stability &gt;= 0.8)">
+      <data key="d19">associated_with</data>
+      <data key="d21">1.0</data>
+      <data key="d20">Phase 3 (DIABLO signature, stability &gt;= 0.8)</data>
+      <data key="d22">picked in 100% of DIABLO re-fits</data>
+    </edge>
+    <edge source="gene:chiA" target="mode:cell-wall degradation" id="acts_by|domain model (gene descriptions in src/strainscope/generate_data.py)">
+      <data key="d19">acts_by</data>
+      <data key="d20">domain model (gene descriptions in src/strainscope/generate_data.py)</data>
+    </edge>
+    <edge source="gene:chiA" target="outcome:disease suppression" id="associated_with|Phase 4 (permutation importance of the winning model)">
+      <data key="d19">associated_with</data>
+      <data key="d21">0.0154</data>
+      <data key="d20">Phase 4 (permutation importance of the winning model)</data>
+      <data key="d22">Elastic net logistic regression: AUC drops 0.015 when shuffled</data>
+    </edge>
+    <edge source="gene:chiA" target="outcome:disease suppression" id="associated_with|Phase 3 (DIABLO signature, stability &gt;= 0.8)">
+      <data key="d19">associated_with</data>
+      <data key="d21">0.9</data>
+      <data key="d20">Phase 3 (DIABLO signature, stability &gt;= 0.8)</data>
+      <data key="d22">picked in 90% of DIABLO re-fits</data>
+    </edge>
+    <edge source="genus:Clonostachys" target="kingdom:Fungi" id="in_kingdom|synthetic library (Phase 1, cleaned in Phase 2)">
+      <data key="d19">in_kingdom</data>
+      <data key="d20">synthetic library (Phase 1, cleaned in Phase 2)</data>
+    </edge>
+    <edge source="genus:Microbacterium" target="kingdom:Bacteria" id="in_kingdom|BacDive (DSMZ)">
+      <data key="d19">in_kingdom</data>
+      <data key="d20">BacDive (DSMZ)</data>
+    </edge>
+    <edge source="gene:gcd" target="mode:plant growth promotion" id="acts_by|domain model (gene descriptions in src/strainscope/generate_data.py)">
+      <data key="d19">acts_by</data>
+      <data key="d20">domain model (gene descriptions in src/strainscope/generate_data.py)</data>
+    </edge>
+    <edge source="compound:DAPG" target="mode:antibiosis" id="acts_by|domain model (gene descriptions in src/strainscope/generate_data.py)">
+      <data key="d19">acts_by</data>
+      <data key="d20">domain model (gene descriptions in src/strainscope/generate_data.py)</data>
+    </edge>
+    <edge source="compound:DAPG" target="outcome:disease suppression" id="associated_with|Phase 4 (permutation importance of the winning model)">
+      <data key="d19">associated_with</data>
+      <data key="d21">0.0083</data>
+      <data key="d20">Phase 4 (permutation importance of the winning model)</data>
+      <data key="d22">Elastic net logistic regression: AUC drops 0.008 when shuffled</data>
+    </edge>
+    <edge source="compound:DAPG" target="outcome:disease suppression" id="associated_with|Phase 3 (DIABLO signature, stability &gt;= 0.8)">
+      <data key="d19">associated_with</data>
+      <data key="d21">1.0</data>
+      <data key="d20">Phase 3 (DIABLO signature, stability &gt;= 0.8)</data>
+      <data key="d22">picked in 100% of DIABLO re-fits</data>
+    </edge>
+    <edge source="gene:olpA" target="compound:oligandrin" id="makes|domain model (gene descriptions in src/strainscope/generate_data.py)">
+      <data key="d19">makes</data>
+      <data key="d21">0.2183</data>
+      <data key="d20">domain model (gene descriptions in src/strainscope/generate_data.py)</data>
+      <data key="d22">Phase 3 measured Spearman rho 0.22 between gene and product</data>
+    </edge>
+    <edge source="gene:olpA" target="mode:induced plant resistance" id="acts_by|domain model (gene descriptions in src/strainscope/generate_data.py)">
+      <data key="d19">acts_by</data>
+      <data key="d20">domain model (gene descriptions in src/strainscope/generate_data.py)</data>
+    </edge>
+    <edge source="gene:olpA" target="outcome:disease suppression" id="associated_with|Phase 4 (permutation importance of the winning model)">
+      <data key="d19">associated_with</data>
+      <data key="d21">0.0081</data>
+      <data key="d20">Phase 4 (permutation importance of the winning model)</data>
+      <data key="d22">Elastic net logistic regression: AUC drops 0.008 when shuffled</data>
+    </edge>
+    <edge source="mode:plant growth promotion" target="outcome:plant growth" id="contributes_to|domain model (gene descriptions in src/strainscope/generate_data.py)">
+      <data key="d19">contributes_to</data>
+      <data key="d20">domain model (gene descriptions in src/strainscope/generate_data.py)</data>
+    </edge>
+    <edge source="compound:iturin" target="mode:lipopeptide membrane attack" id="acts_by|domain model (gene descriptions in src/strainscope/generate_data.py)">
+      <data key="d19">acts_by</data>
+      <data key="d20">domain model (gene descriptions in src/strainscope/generate_data.py)</data>
+    </edge>
+    <edge source="compound:iturin" target="outcome:disease suppression" id="associated_with|Phase 4 (permutation importance of the winning model)">
+      <data key="d19">associated_with</data>
+      <data key="d21">0.0102</data>
+      <data key="d20">Phase 4 (permutation importance of the winning model)</data>
+      <data key="d22">Elastic net logistic regression: AUC drops 0.010 when shuffled</data>
+    </edge>
+    <edge source="compound:iturin" target="outcome:disease suppression" id="associated_with|Phase 3 (DIABLO signature, stability &gt;= 0.8)">
+      <data key="d19">associated_with</data>
+      <data key="d21">1.0</data>
+      <data key="d20">Phase 3 (DIABLO signature, stability &gt;= 0.8)</data>
+      <data key="d22">picked in 100% of DIABLO re-fits</data>
+    </edge>
+    <edge source="compound:iturin" target="pathway:map01054" id="in_pathway|KEGG (academic use)">
+      <data key="d19">in_pathway</data>
+      <data key="d20">KEGG (academic use)</data>
+      <data key="d22">KEGG C12266 in map01054</data>
+    </edge>
+    <edge source="class:Amino acids and peptides" target="class:Organic acids" id="subclass_of|RefMet (Metabolomics Workbench)">
+      <data key="d19">subclass_of</data>
+      <data key="d20">RefMet (Metabolomics Workbench)</data>
+    </edge>
+    <edge source="gene:accE" target="outcome:disease suppression" id="associated_with|Phase 4 (permutation importance of the winning model)">
+      <data key="d19">associated_with</data>
+      <data key="d21">0.0056</data>
+      <data key="d20">Phase 4 (permutation importance of the winning model)</data>
+      <data key="d22">Elastic net logistic regression: AUC drops 0.006 when shuffled</data>
+    </edge>
+    <edge source="genus:Aureobasidium" target="kingdom:Yeast" id="in_kingdom|synthetic library (Phase 1, cleaned in Phase 2)">
+      <data key="d19">in_kingdom</data>
+      <data key="d20">synthetic library (Phase 1, cleaned in Phase 2)</data>
+    </edge>
+    <edge source="gene:beaS" target="compound:beauvericin" id="makes|domain model (gene descriptions in src/strainscope/generate_data.py)">
+      <data key="d19">makes</data>
+      <data key="d21">0.5936</data>
+      <data key="d20">domain model (gene descriptions in src/strainscope/generate_data.py)</data>
+      <data key="d22">Phase 3 measured Spearman rho 0.59 between gene and product</data>
+    </edge>
+    <edge source="gene:beaS" target="mode:toxin production" id="acts_by|domain model (gene descriptions in src/strainscope/generate_data.py)">
+      <data key="d19">acts_by</data>
+      <data key="d20">domain model (gene descriptions in src/strainscope/generate_data.py)</data>
+    </edge>
+    <edge source="gene:beaS" target="outcome:disease suppression" id="associated_with|Phase 3 (DIABLO signature, stability &gt;= 0.8)">
+      <data key="d19">associated_with</data>
+      <data key="d21">1.0</data>
+      <data key="d20">Phase 3 (DIABLO signature, stability &gt;= 0.8)</data>
+      <data key="d22">picked in 100% of DIABLO re-fits</data>
+    </edge>
+    <edge source="genus:Candida" target="kingdom:Yeast" id="in_kingdom|synthetic library (Phase 1, cleaned in Phase 2)">
+      <data key="d19">in_kingdom</data>
+      <data key="d20">synthetic library (Phase 1, cleaned in Phase 2)</data>
+    </edge>
+    <edge source="gene:dtxS" target="compound:destruxin" id="makes|domain model (gene descriptions in src/strainscope/generate_data.py)">
+      <data key="d19">makes</data>
+      <data key="d21">0.5685</data>
+      <data key="d20">domain model (gene descriptions in src/strainscope/generate_data.py)</data>
+      <data key="d22">Phase 3 measured Spearman rho 0.57 between gene and product</data>
+    </edge>
+    <edge source="gene:dtxS" target="mode:toxin production" id="acts_by|domain model (gene descriptions in src/strainscope/generate_data.py)">
+      <data key="d19">acts_by</data>
+      <data key="d20">domain model (gene descriptions in src/strainscope/generate_data.py)</data>
+    </edge>
+    <edge source="gene:dtxS" target="outcome:disease suppression" id="associated_with|Phase 4 (permutation importance of the winning model)">
+      <data key="d19">associated_with</data>
+      <data key="d21">0.0298</data>
+      <data key="d20">Phase 4 (permutation importance of the winning model)</data>
+      <data key="d22">Elastic net logistic regression: AUC drops 0.030 when shuffled</data>
+    </edge>
+    <edge source="gene:dtxS" target="outcome:disease suppression" id="associated_with|Phase 3 (DIABLO signature, stability &gt;= 0.8)">
+      <data key="d19">associated_with</data>
+      <data key="d21">1.0</data>
+      <data key="d20">Phase 3 (DIABLO signature, stability &gt;= 0.8)</data>
+      <data key="d22">picked in 100% of DIABLO re-fits</data>
+    </edge>
+    <edge source="gene:sidA" target="compound:yeast_siderophore" id="makes|domain model (gene descriptions in src/strainscope/generate_data.py)">
+      <data key="d19">makes</data>
+      <data key="d21">0.5208</data>
+      <data key="d20">domain model (gene descriptions in src/strainscope/generate_data.py)</data>
+      <data key="d22">Phase 3 measured Spearman rho 0.52 between gene and product</data>
+    </edge>
+    <edge source="gene:sidA" target="mode:iron competition" id="acts_by|domain model (gene descriptions in src/strainscope/generate_data.py)">
+      <data key="d19">acts_by</data>
+      <data key="d20">domain model (gene descriptions in src/strainscope/generate_data.py)</data>
+    </edge>
+    <edge source="gene:sidA" target="outcome:disease suppression" id="associated_with|Phase 4 (permutation importance of the winning model)">
+      <data key="d19">associated_with</data>
+      <data key="d21">0.0276</data>
+      <data key="d20">Phase 4 (permutation importance of the winning model)</data>
+      <data key="d22">Elastic net logistic regression: AUC drops 0.028 when shuffled</data>
+    </edge>
+    <edge source="gene:sidA" target="outcome:disease suppression" id="associated_with|Phase 3 (DIABLO signature, stability &gt;= 0.8)">
+      <data key="d19">associated_with</data>
+      <data key="d21">1.0</data>
+      <data key="d20">Phase 3 (DIABLO signature, stability &gt;= 0.8)</data>
+      <data key="d22">picked in 100% of DIABLO re-fits</data>
+    </edge>
+    <edge source="gene:sixPP" target="compound:six_PP" id="makes|domain model (gene descriptions in src/strainscope/generate_data.py)">
+      <data key="d19">makes</data>
+      <data key="d21">0.6244</data>
+      <data key="d20">domain model (gene descriptions in src/strainscope/generate_data.py)</data>
+      <data key="d22">Phase 3 measured Spearman rho 0.62 between gene and product</data>
+    </edge>
+    <edge source="gene:sixPP" target="mode:antibiosis" id="acts_by|domain model (gene descriptions in src/strainscope/generate_data.py)">
+      <data key="d19">acts_by</data>
+      <data key="d20">domain model (gene descriptions in src/strainscope/generate_data.py)</data>
+    </edge>
+    <edge source="gene:sixPP" target="outcome:disease suppression" id="associated_with|Phase 4 (permutation importance of the winning model)">
+      <data key="d19">associated_with</data>
+      <data key="d21">0.0055</data>
+      <data key="d20">Phase 4 (permutation importance of the winning model)</data>
+      <data key="d22">Elastic net logistic regression: AUC drops 0.005 when shuffled</data>
+    </edge>
+    <edge source="gene:sixPP" target="outcome:disease suppression" id="associated_with|Phase 3 (DIABLO signature, stability &gt;= 0.8)">
+      <data key="d19">associated_with</data>
+      <data key="d21">1.0</data>
+      <data key="d20">Phase 3 (DIABLO signature, stability &gt;= 0.8)</data>
+      <data key="d22">picked in 100% of DIABLO re-fits</data>
+    </edge>
+    <edge source="class:Anthranilic acid alkaloids" target="class:Alkaloids" id="subclass_of|RefMet (Metabolomics Workbench)">
+      <data key="d19">subclass_of</data>
+      <data key="d20">RefMet (Metabolomics Workbench)</data>
+    </edge>
+    <edge source="mode:iron competition" target="outcome:disease suppression" id="contributes_to|domain model (gene descriptions in src/strainscope/generate_data.py)">
+      <data key="d19">contributes_to</data>
+      <data key="d20">domain model (gene descriptions in src/strainscope/generate_data.py)</data>
+    </edge>
+    <edge source="compound:HCN" target="mode:antibiosis" id="acts_by|domain model (gene descriptions in src/strainscope/generate_data.py)">
+      <data key="d19">acts_by</data>
+      <data key="d20">domain model (gene descriptions in src/strainscope/generate_data.py)</data>
+    </edge>
+    <edge source="compound:HCN" target="outcome:disease suppression" id="associated_with|Phase 3 (DIABLO signature, stability &gt;= 0.8)">
+      <data key="d19">associated_with</data>
+      <data key="d21">1.0</data>
+      <data key="d20">Phase 3 (DIABLO signature, stability &gt;= 0.8)</data>
+      <data key="d22">picked in 100% of DIABLO re-fits</data>
+    </edge>
+    <edge source="compound:HCN" target="pathway:map00460" id="in_pathway|KEGG (academic use)">
+      <data key="d19">in_pathway</data>
+      <data key="d20">KEGG (academic use)</data>
+      <data key="d22">KEGG C01326 in map00460</data>
+    </edge>
+    <edge source="compound:HCN" target="pathway:map01100" id="in_pathway|KEGG (academic use)">
+      <data key="d19">in_pathway</data>
+      <data key="d20">KEGG (academic use)</data>
+      <data key="d22">KEGG C01326 in map01100</data>
+    </edge>
+    <edge source="compound:HCN" target="pathway:map01110" id="in_pathway|KEGG (academic use)">
+      <data key="d19">in_pathway</data>
+      <data key="d20">KEGG (academic use)</data>
+      <data key="d22">KEGG C01326 in map01110</data>
+    </edge>
+    <edge source="compound:HCN" target="class:Organonitrogen compounds" id="classified_as|RefMet (Metabolomics Workbench)">
+      <data key="d19">classified_as</data>
+      <data key="d20">RefMet (Metabolomics Workbench)</data>
+      <data key="d22">RefMet name Hydrogen cyanide</data>
+    </edge>
+    <edge source="genus:Pseudomonas" target="kingdom:Bacteria" id="in_kingdom|synthetic library (Phase 1, cleaned in Phase 2)">
+      <data key="d19">in_kingdom</data>
+      <data key="d20">synthetic library (Phase 1, cleaned in Phase 2)</data>
+    </edge>
+    <edge source="mode:toxin production" target="outcome:disease suppression" id="contributes_to|domain model (gene descriptions in src/strainscope/generate_data.py)">
+      <data key="d19">contributes_to</data>
+      <data key="d20">domain model (gene descriptions in src/strainscope/generate_data.py)</data>
+    </edge>
+    <edge source="gene:acdS" target="mode:plant growth promotion" id="acts_by|domain model (gene descriptions in src/strainscope/generate_data.py)">
+      <data key="d19">acts_by</data>
+      <data key="d20">domain model (gene descriptions in src/strainscope/generate_data.py)</data>
+    </edge>
+    <edge source="compound:surfactin" target="mode:lipopeptide membrane attack" id="acts_by|domain model (gene descriptions in src/strainscope/generate_data.py)">
+      <data key="d19">acts_by</data>
+      <data key="d20">domain model (gene descriptions in src/strainscope/generate_data.py)</data>
+    </edge>
+    <edge source="compound:surfactin" target="outcome:disease suppression" id="associated_with|Phase 3 (DIABLO signature, stability &gt;= 0.8)">
+      <data key="d19">associated_with</data>
+      <data key="d21">0.98</data>
+      <data key="d20">Phase 3 (DIABLO signature, stability &gt;= 0.8)</data>
+      <data key="d22">picked in 98% of DIABLO re-fits</data>
+    </edge>
+    <edge source="compound:surfactin" target="pathway:map01054" id="in_pathway|KEGG (academic use)">
+      <data key="d19">in_pathway</data>
+      <data key="d20">KEGG (academic use)</data>
+      <data key="d22">KEGG C12043 in map01054</data>
+    </edge>
+    <edge source="compound:surfactin" target="class:Amino acids and peptides" id="classified_as|RefMet (Metabolomics Workbench)">
+      <data key="d19">classified_as</data>
+      <data key="d20">RefMet (Metabolomics Workbench)</data>
+      <data key="d22">RefMet name Surfactin</data>
+    </edge>
+    <edge source="genus:Trichoderma" target="kingdom:Fungi" id="in_kingdom|synthetic library (Phase 1, cleaned in Phase 2)">
+      <data key="d19">in_kingdom</data>
+      <data key="d20">synthetic library (Phase 1, cleaned in Phase 2)</data>
+    </edge>
+    <edge source="gene:phlD" target="compound:DAPG" id="makes|domain model (gene descriptions in src/strainscope/generate_data.py)">
+      <data key="d19">makes</data>
+      <data key="d21">0.7521</data>
+      <data key="d20">domain model (gene descriptions in src/strainscope/generate_data.py)</data>
+      <data key="d22">Phase 3 measured Spearman rho 0.75 between gene and product</data>
+    </edge>
+    <edge source="gene:phlD" target="mode:antibiosis" id="acts_by|domain model (gene descriptions in src/strainscope/generate_data.py)">
+      <data key="d19">acts_by</data>
+      <data key="d20">domain model (gene descriptions in src/strainscope/generate_data.py)</data>
+    </edge>
+    <edge source="gene:phlD" target="outcome:disease suppression" id="associated_with|Phase 4 (permutation importance of the winning model)">
+      <data key="d19">associated_with</data>
+      <data key="d21">0.0152</data>
+      <data key="d20">Phase 4 (permutation importance of the winning model)</data>
+      <data key="d22">Elastic net logistic regression: AUC drops 0.015 when shuffled</data>
+    </edge>
+    <edge source="gene:phlD" target="outcome:disease suppression" id="associated_with|Phase 3 (DIABLO signature, stability &gt;= 0.8)">
+      <data key="d19">associated_with</data>
+      <data key="d21">1.0</data>
+      <data key="d20">Phase 3 (DIABLO signature, stability &gt;= 0.8)</data>
+      <data key="d22">picked in 100% of DIABLO re-fits</data>
+    </edge>
+    <edge source="genus:Beauveria" target="kingdom:Fungi" id="in_kingdom|synthetic library (Phase 1, cleaned in Phase 2)">
+      <data key="d19">in_kingdom</data>
+      <data key="d20">synthetic library (Phase 1, cleaned in Phase 2)</data>
+    </edge>
+    <edge source="compound:killer_toxin" target="mode:killer-toxin antagonism" id="acts_by|domain model (gene descriptions in src/strainscope/generate_data.py)">
+      <data key="d19">acts_by</data>
+      <data key="d20">domain model (gene descriptions in src/strainscope/generate_data.py)</data>
+    </edge>
+    <edge source="compound:killer_toxin" target="outcome:disease suppression" id="associated_with|Phase 3 (DIABLO signature, stability &gt;= 0.8)">
+      <data key="d19">associated_with</data>
+      <data key="d21">0.98</data>
+      <data key="d20">Phase 3 (DIABLO signature, stability &gt;= 0.8)</data>
+      <data key="d22">picked in 98% of DIABLO re-fits</data>
+    </edge>
+    <edge source="gene:ech42" target="mode:cell-wall degradation" id="acts_by|domain model (gene descriptions in src/strainscope/generate_data.py)">
+      <data key="d19">acts_by</data>
+      <data key="d20">domain model (gene descriptions in src/strainscope/generate_data.py)</data>
+    </edge>
+    <edge source="gene:ech42" target="mode:mycoparasitism" id="acts_by|domain model (gene descriptions in src/strainscope/generate_data.py)">
+      <data key="d19">acts_by</data>
+      <data key="d20">domain model (gene descriptions in src/strainscope/generate_data.py)</data>
+    </edge>
+    <edge source="genus:Streptomyces" target="kingdom:Bacteria" id="in_kingdom|synthetic library (Phase 1, cleaned in Phase 2)">
+      <data key="d19">in_kingdom</data>
+      <data key="d20">synthetic library (Phase 1, cleaned in Phase 2)</data>
+    </edge>
+    <edge source="mode:lipopeptide membrane attack" target="outcome:disease suppression" id="contributes_to|domain model (gene descriptions in src/strainscope/generate_data.py)">
+      <data key="d19">contributes_to</data>
+      <data key="d20">domain model (gene descriptions in src/strainscope/generate_data.py)</data>
+    </edge>
+    <edge source="gene:glcA" target="mode:cell-wall degradation" id="acts_by|domain model (gene descriptions in src/strainscope/generate_data.py)">
+      <data key="d19">acts_by</data>
+      <data key="d20">domain model (gene descriptions in src/strainscope/generate_data.py)</data>
+    </edge>
+    <edge source="gene:glcA" target="outcome:disease suppression" id="associated_with|Phase 4 (permutation importance of the winning model)">
+      <data key="d19">associated_with</data>
+      <data key="d21">0.0099</data>
+      <data key="d20">Phase 4 (permutation importance of the winning model)</data>
+      <data key="d22">Elastic net logistic regression: AUC drops 0.010 when shuffled</data>
+    </edge>
+    <edge source="gene:glcA" target="outcome:disease suppression" id="associated_with|Phase 3 (DIABLO signature, stability &gt;= 0.8)">
+      <data key="d19">associated_with</data>
+      <data key="d21">0.96</data>
+      <data key="d20">Phase 3 (DIABLO signature, stability &gt;= 0.8)</data>
+      <data key="d22">picked in 96% of DIABLO re-fits</data>
+    </edge>
+    <edge source="class:Substituted pyrroles" target="class:Organoheterocyclic compounds" id="subclass_of|RefMet (Metabolomics Workbench)">
+      <data key="d19">subclass_of</data>
+      <data key="d20">RefMet (Metabolomics Workbench)</data>
+    </edge>
+    <edge source="compound:beauvericin" target="mode:toxin production" id="acts_by|domain model (gene descriptions in src/strainscope/generate_data.py)">
+      <data key="d19">acts_by</data>
+      <data key="d20">domain model (gene descriptions in src/strainscope/generate_data.py)</data>
+    </edge>
+    <edge source="compound:beauvericin" target="outcome:disease suppression" id="associated_with|Phase 4 (permutation importance of the winning model)">
+      <data key="d19">associated_with</data>
+      <data key="d21">0.029</data>
+      <data key="d20">Phase 4 (permutation importance of the winning model)</data>
+      <data key="d22">Elastic net logistic regression: AUC drops 0.029 when shuffled</data>
+    </edge>
+    <edge source="compound:beauvericin" target="outcome:disease suppression" id="associated_with|Phase 3 (DIABLO signature, stability &gt;= 0.8)">
+      <data key="d19">associated_with</data>
+      <data key="d21">1.0</data>
+      <data key="d20">Phase 3 (DIABLO signature, stability &gt;= 0.8)</data>
+      <data key="d22">picked in 100% of DIABLO re-fits</data>
+    </edge>
+    <edge source="compound:beauvericin" target="class:Amino acids and peptides" id="classified_as|RefMet (Metabolomics Workbench)">
+      <data key="d19">classified_as</data>
+      <data key="d20">RefMet (Metabolomics Workbench)</data>
+      <data key="d22">RefMet name Beauvericin</data>
+    </edge>
+    <edge source="compound:destruxin" target="mode:toxin production" id="acts_by|domain model (gene descriptions in src/strainscope/generate_data.py)">
+      <data key="d19">acts_by</data>
+      <data key="d20">domain model (gene descriptions in src/strainscope/generate_data.py)</data>
+    </edge>
+    <edge source="compound:destruxin" target="outcome:disease suppression" id="associated_with|Phase 3 (DIABLO signature, stability &gt;= 0.8)">
+      <data key="d19">associated_with</data>
+      <data key="d21">1.0</data>
+      <data key="d20">Phase 3 (DIABLO signature, stability &gt;= 0.8)</data>
+      <data key="d22">picked in 100% of DIABLO re-fits</data>
+    </edge>
+    <edge source="compound:yeast_siderophore" target="mode:iron competition" id="acts_by|domain model (gene descriptions in src/strainscope/generate_data.py)">
+      <data key="d19">acts_by</data>
+      <data key="d20">domain model (gene descriptions in src/strainscope/generate_data.py)</data>
+    </edge>
+    <edge source="compound:yeast_siderophore" target="outcome:disease suppression" id="associated_with|Phase 3 (DIABLO signature, stability &gt;= 0.8)">
+      <data key="d19">associated_with</data>
+      <data key="d21">1.0</data>
+      <data key="d20">Phase 3 (DIABLO signature, stability &gt;= 0.8)</data>
+      <data key="d22">picked in 100% of DIABLO re-fits</data>
+    </edge>
+    <edge source="genus:Pythium" target="kingdom:Oomycete" id="in_kingdom|synthetic library (Phase 1, cleaned in Phase 2)">
+      <data key="d19">in_kingdom</data>
+      <data key="d20">synthetic library (Phase 1, cleaned in Phase 2)</data>
+    </edge>
+  </graph>
+</graphml>

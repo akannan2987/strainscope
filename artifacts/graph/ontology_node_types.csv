@@ -1,0 +1,11 @@
+node_type,description,example,origin
+Kingdom,one of the four groups of microbes we model,Bacteria,core
+Genus,"a group of closely related species, one level above species",Bacillus,core
+Strain,"one microbe in the simulated library, with its measurements and prediction",STRAIN_0485,core
+Gene,"a gene a strain may carry (a weapon, a growth helper, a housekeeper or noise)",ituA,core
+Compound,"a small molecule a strain may produce, as measured by the lab",iturin,core
+ModeOfAction,how a weapon works against a disease (the mechanism),iron competition,core
+Outcome,something we care about in the field,disease suppression,core
+Pathway,a curated KEGG pathway map a compound takes part in,map01110,real
+ChemicalClass,a RefMet chemical class (main class or super class),Fatty acyls,real
+ReferenceStrain,"a real, catalogued strain from BacDive (for context; it has no measurements here)",a BacDive strain record,real

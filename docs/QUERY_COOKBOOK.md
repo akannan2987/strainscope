@@ -389,5 +389,152 @@ ORDER BY borderline DESC;
 
 ---
 
+## 10. The knowledge graph (Phase 5)
+
+These tables exist once you have run `python src/strainscope/graph.py publish`
+(or `graph.py all`); see [`docs/06-knowledge-graph.md` §9](06-knowledge-graph.md#9-step-5-publish-to-the-database-and-ask-it-in-sql).
+Every Phase 5 table starts with `kg_`. The graph itself is two tables:
+`kg_nodes` (one row per thing) and `kg_edges` (one row per connection, with
+`from_id`, `relation`, `to_id`, `weight` and its source in `provenance`). Node
+ids carry their type in front, as in `gene:ituA` or `strain:STRAIN_0485`.
+*(The numbers below come from a run without the real tables of Phases 1b and
+1c; with them you'll also see pathway, chemical-class and reference-strain rows.)*
+
+> **If a table is missing:** `src/strainscope/harmonize.py` rebuilds the database
+> from scratch; re-run `python src/strainscope/graph.py publish`.
+
+**"What kinds of things are in the graph, and how many of each?"**
+```sql
+SELECT node_type, COUNT(*) AS nodes
+FROM kg_nodes
+GROUP BY node_type
+ORDER BY nodes DESC;
+```
+→ Strain 600, Gene 31, Compound 20, Genus 13, ModeOfAction 9, Kingdom 4,
+Outcome 2.
+
+**"Where does every connection come from?"**
+```sql
+SELECT relation, provenance, COUNT(*) AS edges
+FROM kg_edges
+GROUP BY relation, provenance
+ORDER BY edges DESC;
+```
+→ nine rows, from `carries` (5,880 edges from the synthetic library) down to
+`contributes_to` (9 edges from the domain model). `associated_with` appears
+twice: 29 edges from Phase 3's DIABLO signature and 23 from Phase 4's model.
+Every edge has a source; this query is how you check.
+
+**"Which compounds does the top strain produce, and how does each one work?"** A
+two-hop walk: strain → compound, then compound → mode of action, written as a
+join of the edge table with itself.
+```sql
+SELECT REPLACE(p.to_id, 'compound:', '') AS compound,
+       ROUND(p.weight, 1) AS times_usual_level,
+       REPLACE(a.to_id, 'mode:', '') AS mode_of_action
+FROM kg_edges p
+JOIN kg_edges a ON a.from_id = p.to_id AND a.relation = 'acts_by'
+WHERE p.from_id = 'strain:STRAIN_0485' AND p.relation = 'produces'
+ORDER BY times_usual_level DESC;
+```
+→ nine rows, phenazine first (51.9 times the usual level, antibiosis).
+The last row, oligandrin at 4.1 times, is an oomycete's elicitor in a bacterium
+that doesn't carry `olpA`. It turns out to be ordinary background noise just over
+the 4x line rather than a planted spike ([the story](06-knowledge-graph.md#12-notes-from-the-build-kept-on-purpose)).
+
+**"Where do the biology and the data agree?"**
+```sql
+SELECT verdict, COUNT(*) AS features
+FROM kg_knowledge_vs_data
+GROUP BY verdict
+ORDER BY features DESC;
+```
+→ confirmed 30, no link to disease suppression 15, mechanism only 2 (`ech42`,
+`prb1`), data only 1 (`accE`, the decoy Phase 4 already flagged).
+
+**"What turns up together? The communities and their members."**
+```sql
+SELECT community, COUNT(*) AS features,
+       STRING_AGG(label, ', ' ORDER BY label) AS members
+FROM kg_communities
+WHERE community > 0
+GROUP BY community
+ORDER BY community;
+```
+→ four communities: the bacterial weapons (19 features, with three plant-growth
+genes that are common in bacteria), the fungal weapons (9), the yeast weapons (4)
+and the oomycete pair (2). `community = -1` means "no strong ties"; drop the
+`WHERE` line to see those 14 too.
+
+**"The most connected nodes, and what they are."**
+```sql
+SELECT label, node_type, degree, strains_connected
+FROM kg_hubs
+ORDER BY degree DESC
+LIMIT 5;
+```
+→ ssu_rRNA, ef1a and rpb1 (the housekeeping genes, 577 to 579 strains), then
+accE and accB. The biggest hubs carry no information about performance; sort by
+`betweenness` instead to find the concepts that bridge the most routes.
+
+**"Why do the top two strains rank where they do?"**
+```sql
+SELECT rank, strain_id, kind, text
+FROM kg_explanations
+WHERE rank <= 2
+ORDER BY rank, "order";
+```
+→ ten rows: for each strain its mechanism paths (`kind = 'mechanism'`), the
+`accE` flag (`data only`) and, for STRAIN_0103, two weapons common in bacteria
+that it lacks (`missing`). `"order"` sits in double quotes because ORDER is a
+SQL keyword.
+
+**"Every route from ituA to an outcome", walked inside the database.** A
+*recursive* query keeps joining the edge table to its own results, one step
+further each time:
+```sql
+WITH RECURSIVE walk(node, depth, route) AS (
+    SELECT 'gene:ituA', 0, 'ituA'
+    UNION ALL
+    SELECT e.to_id, w.depth + 1, w.route || ' > ' || SPLIT_PART(e.to_id, ':', 2)
+    FROM walk w
+    JOIN kg_edges e ON e.from_id = w.node
+    WHERE w.depth < 3 AND e.relation IN ('makes', 'acts_by', 'contributes_to')
+)
+SELECT DISTINCT depth, route
+FROM walk
+ORDER BY depth, route;
+```
+→ six rows, ending in the two complete routes: `ituA > lipopeptide membrane
+attack > disease suppression` and `ituA > iturin > lipopeptide membrane attack >
+disease suppression`. SQL can walk a graph, but each extra step makes it harder
+to read, which is why the graph itself lives in NetworkX
+([`docs/06-knowledge-graph.md` §15](06-knowledge-graph.md#15-same-question-two-ways-sql-joins-and-a-graph-walk-optional-10-min)).
+
+**Try it yourself:** list the ten strains with the most mechanism paths. (Hint:
+`kg_explanations`, column `mechanism_paths`, one row per strain.) Then look at
+the one ranked far below the others with `python src/strainscope/graph.py show`
+on its id: what do several of its "produces" edges have in common?
+
+<details>
+<summary>One answer</summary>
+
+```sql
+SELECT strain_id, rank, MAX(mechanism_paths) AS mechanism_paths
+FROM kg_explanations
+GROUP BY strain_id, rank
+ORDER BY mechanism_paths DESC, rank
+LIMIT 10;
+```
+
+STRAIN_0485 leads with 10. STRAIN_0276 has 8 but ranks 108th: it produces DAPG,
+iturin and the fungal toxin destruxin without carrying the genes that make them,
+and its pvdA call is missing, so several of its "paths" rest on readings that may
+be spikes or background noise. The model gives it 54 % (borderline), and in the data it
+isn't effective.
+</details>
+
+---
+
 *Recipes are added as the project grows, and the app's SQL console (Phase 6) will
 ship with this cookbook built in.*

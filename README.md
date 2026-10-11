@@ -2,7 +2,7 @@
 
 ![StrainScope: multi-omics · machine learning · beneficial microbes](docs/img/strainscope_logo.svg)
 
-**Live app:** coming with the deployment phase (Phase 7) · **Version:** v0.1.1 + Phase 4 (machine learning); v0.2.0 arrives with Phase 5
+**Live app:** coming with the deployment phase (Phase 7) · **Version:** v0.2.0 (the analysis is complete: data, integration, machine learning and the knowledge graph)
 · ![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
 ![R](https://img.shields.io/badge/R-4.x-276DC3?logo=r)
 ![Streamlit](https://img.shields.io/badge/Streamlit-app-FF4B4B?logo=streamlit&logoColor=white)
@@ -111,8 +111,9 @@ fingerprint layers, grounded in real biology. A cleaning step harmonizes and
 quality-controls the mess. The layers are then integrated with a recognised
 multi-omics method (DIABLO, from the R package mixOmics) *and* a plain-Python
 counterpart. Machine-learning models predict strain performance, checked with
-careful cross-validation and error analysis, and a knowledge graph captures the
-strain → gene → metabolite → outcome relationships. An interactive Streamlit
+careful cross-validation and error analysis, and a knowledge graph links each
+strain to its genes, its compounds, the way each weapon works and the outcome,
+so every ranking can be explained with sources. An interactive Streamlit
 app, deployed free for anyone to use, ties it all together. Alongside it come
 Ask StrainScope, a documentation assistant that answers questions about the
 project from its own documents (and refuses questions that aren't about it), an
@@ -131,8 +132,8 @@ flowchart TD
         C[("DuckDB database<br/>clean, aligned tables · SQL")]
         D["Integration<br/>DIABLO (R, offline) + Python twin<br/>the cross-layer signature"]
         E["Machine learning (Python)<br/>predict performance · careful evaluation"]
-        F["Knowledge graph (NetworkX)<br/>strain → gene → metabolite → outcome"]
-        G[/"artifacts/<br/>predictions · importances ·<br/>signature · trained model"/]
+        F["Knowledge graph (NetworkX)<br/>strain → gene → compound →<br/>mode of action → outcome"]
+        G[/"artifacts/<br/>predictions · importances · signature ·<br/>trained model · knowledge graph"/]
     end
     subgraph CLOUD["The cloud: a free, public app"]
         H["Streamlit app<br/>explore · rank · SQL console · graph"]
@@ -147,6 +148,8 @@ flowchart TD
     C -->|relationships| F
     D --> G
     E --> G
+    D -.->|signature| F
+    E -.->|importance, ranking| F
     F --> G
     G -->|committed to Git, deployed| H
     H -.->|optional, API key as a secret| I
@@ -231,8 +234,11 @@ means, matching the build log below. Nothing is shown before it exists.*
   ![Test the top of the ranking](figures/top_n_ranking.png)
 
   Of the 50 best-ranked strains, 47 are truly effective; picking at random would find 12. The calibrated model is saved (under 20 KB) together with a model card. To explore it yourself, open `docs/interactive/model_explorer.html`. The results are in the database as `ml_*` tables too (see the [Query Cookbook §9](docs/QUERY_COOKBOOK.md#9-machine-learning-results-phase-4)).
-- **Phase 5 (knowledge graph):** *(next)* the network linking strains, genes and
-  metabolites, with the most connected "hub" features.
+- **Phase 5 (knowledge graph):** ✅ everything the project knows becomes one network you can walk: strains, genes, compounds, modes of action and outcomes (plus real KEGG pathways, RefMet classes and BacDive strains when fetched), with a source on every connection and every connection checked against a written-down ontology. The graph keeps two kinds of evidence apart: a *mechanism* (ituA makes iturin, which attacks the pathogen's membrane) and a *statistical association* (the model leans on it). That lets it flag the one decoy the model relies on as "statistics only". Communities of features that turn up together match the planted kingdom arsenals (purity 0.94), and the most connected genes turn out to be housekeeping genes that tell you nothing. Every ranking is explained as walks through the graph:
+
+  ![Why a strain ranks where it does](figures/strain_explanation.png)
+
+  Ask it yourself with `python src/strainscope/graph.py why STRAIN_0485`, `path ituA "disease suppression"` or `show iturin`, open `docs/interactive/graph_explorer.html`, or query the `kg_*` tables (see the [Query Cookbook §10](docs/QUERY_COOKBOOK.md#10-the-knowledge-graph-phase-5)). This completes **v0.2.0**.
 - **Phase 6 (the app):** *(planned)* a screenshot of the explorer.
 - **Phase 6b (Ask StrainScope):** *(planned)* a question answered from the docs
   with links, and an off-topic question politely refused.
@@ -258,8 +264,8 @@ means, matching the build log below. Nothing is shown before it exists.*
 | 3 | [Multi-omics integration (DIABLO in R + a Python twin)](docs/04-integration.md) | ✅ **v0.1.0** |
 | 3.1 | [Fix release: a safety gate that also checks new files, copy-safe commands](docs/HANDBOOK.md#stage-71-fix-release-v011-a-safer-safety-gate-and-copy-safe-commands) | ✅ **v0.1.1** |
 | 4 | [Machine learning, evaluated carefully](docs/05-machine-learning.md) | ✅ |
-| 5 | Knowledge graph (`docs/06-knowledge-graph.md`) | ⏳ next (**v0.2.0**) |
-| 6 | The Streamlit app (`docs/07-app.md`) | ⬜ planned |
+| 5 | [Knowledge graph: ontology, sourced edges, communities, explanations](docs/06-knowledge-graph.md) | ✅ **v0.2.0** |
+| 6 | The Streamlit app (`docs/07-app.md`) | ⏳ next |
 | 6b | Ask StrainScope, the documentation assistant (`docs/07b-docs-assistant.md`) | ⬜ planned (**v0.3.0**) |
 | 7 | Deployment + AI layer (`docs/08-deployment-ai.md`) | ⬜ planned |
 | 7b | The MCP server (`docs/08b-mcp-server.md`) | ⬜ planned |
@@ -286,7 +292,7 @@ Read them in this order:
 | 04 | [Integration](docs/04-integration.md) | What multi-omics integration *is*, three ways; DIABLO in R and a Python twin; repeated cross-validation, balanced error rate, negative controls, stability; grading against planted truth; R ↔ Python contracts; the same task in three languages |
 | n/a | [Query Cookbook](docs/QUERY_COOKBOOK.md) | Tested, explained SQL recipes against the project database (it grows every phase) |
 | 05 | [Machine learning](docs/05-machine-learning.md) | Four kinds of model; leak-proof pipelines and what a real leak looks like; why accuracy lies; tuning without peeking; calibration; permutation importance; error analysis; model cards |
-| 06 | `docs/06-knowledge-graph.md` *(next)* | Ontologies & graphs (a "family tree for concepts"); building and querying one with NetworkX |
+| 06 | [Knowledge graph](docs/06-knowledge-graph.md) | Graphs in six words; ontologies (a "family tree for concepts") written before the data; a source on every edge; mechanism vs statistical association; hubs, communities and how to grade them; explaining a ranking by walking the graph; SQL vs NetworkX |
 | 07 | `docs/07-app.md` | Streamlit; turning analysis into buttons; a read-only SQL console |
 | 07b | `docs/07b-docs-assistant.md` | Search over documents, citing sources, refusing off-topic questions, golden question sets; optional local or hosted language model |
 | 08 | `docs/08-deployment-ai.md` | Streamlit Community Cloud; secrets; explanations, a data assistant and GraphRAG that degrade gracefully without a key |
@@ -300,8 +306,8 @@ Read them in this order:
 The full plan lives in [`docs/ROADMAP.md`](docs/ROADMAP.md). It covers every
 phase, why each one sits where it does in the order, and the deferred items,
 each with the event that would put it on the schedule. In short, after
-integration come machine learning (Phase 4), the knowledge graph (5) and the
-app (6), then:
+integration came machine learning (Phase 4) and the knowledge graph (5), which
+complete the analysis (v0.2.0). Next is the app (6), then:
 
 - **Ask StrainScope** (Phase 6b): a question box over the project's own
   documentation. It answers with the matching passages and links to the exact
@@ -393,7 +399,8 @@ strainscope/
 │   ├── 03-harmonization-qc.md     ← Phase 2: cleaning, the ledger, DuckDB + SQL    ✅
 │   ├── 04-integration.md          ← Phase 3: DIABLO + Python twin                  ✅
 │   ├── 05-machine-learning.md     ← Phase 4: models, leaks, calibration            ✅
-│   ├── 06 … 09                    ← Phases 5-8 (incl. 07b, 08b)                    ⬜
+│   ├── 06-knowledge-graph.md      ← Phase 5: ontology, graph, explanations         ✅
+│   ├── 07 … 09                    ← Phases 6-8 (incl. 07b, 08b)                    ⬜
 │   ├── ROADMAP.md                 ← what is built next, and why                    ✅
 │   ├── PRODUCT_ROADMAP.md         ← beyond the repo: verdicts and triggers         ✅
 │   ├── QUERY_COOKBOOK.md          ← tested SQL recipes (grows every phase)         ✅
@@ -405,7 +412,8 @@ strainscope/
 │       ├── batch_before_after.html← Phase 2: cleaning, before and after
 │       ├── real_genomes.html, real_compounds.html ← Phases 1b-1c
 │       ├── integration_explorer.html ← Phase 3: four linked views
-│       └── model_explorer.html    ← Phase 4: scoreboard, calibration, every strain
+│       ├── model_explorer.html    ← Phase 4: scoreboard, calibration, every strain
+│       └── graph_explorer.html    ← Phase 5: the network, communities, explanations
 │
 ├── figures/                       ← teaching figures, each regenerated by a script
 │   ├── make_phase1_figures.py     ← Phase 1                                        ✅
@@ -414,6 +422,7 @@ strainscope/
 │   ├── make_phase2_figures.py     ← Phase 2: before/after cleaning evidence        ✅
 │   ├── make_phase3_figures.py     ← Phase 3: concepts, results, the explorer       ✅
 │   ├── make_phase4_figures.py     ← Phase 4: pictographs, results, model explorer  ✅
+│   ├── make_phase5_figures.py     ← Phase 5: graph concepts, results, explorer     ✅
 │   ├── make_illustrations.py      ← logo, icon and journey map (docs/img/)         ✅
 │   └── *.png                      ← the figures themselves                         ✅
 │
@@ -427,7 +436,8 @@ strainscope/
 │   ├── sql.py                     ← Phase 2: the read-only SQL console             ✅
 │   ├── integrate.py               ← Phase 3: blocks, Python twin, grading, publish ✅
 │   ├── model.py                   ← Phase 4: compare, calibrate, explain, final    ✅
-│   ├── graph.py                   ← Phase 5: the knowledge graph                   ⬜
+│   ├── ontology.py                ← Phase 5: the domain model (types, relations)   ✅
+│   ├── graph.py                   ← Phase 5: build, analyse, explain, ask          ✅
 │   ├── ask.py                     ← Phase 6b: Ask StrainScope                      ⬜
 │   ├── explain.py                 ← Phase 7: explanations + data assistant         ⬜
 │   ├── mcp_server.py              ← Phase 7b: the MCP server                       ⬜
@@ -439,16 +449,17 @@ strainscope/
 ├── artifacts/                     ← small results the app reads (committed)
 │   ├── integration/*.csv          ← Phase 3: signature, scores, scoreboards …      ✅
 │   ├── model/                     ← Phase 4: scoreboard, ranking, model + card     ✅
-│   └── (Phase 5+)                 ← the knowledge graph                            ⬜
+│   └── graph/                     ← Phase 5: nodes, edges, communities, reasons    ✅
 │
 ├── app/
 │   └── streamlit_app.py           ← the app (Phases 6-7)                            ⬜
 │
-├── tests/                         ← automated checks (pytest): 49 today            ✅
+├── tests/                         ← automated checks (pytest): 61 today            ✅
 │   ├── test_sources.py            ← ingestion parsers, offline
 │   ├── test_harmonize.py          ← cleaning rules and the database loader
 │   ├── test_integrate.py          ← integration, grading, the R ↔ Python contract
 │   ├── test_model.py              ← leak-proof preparation, metrics, the whole ML chain
+│   ├── test_graph.py              ← the ontology, sourced edges, explanations, paths
 │   └── test_safety_gate.py        ← the pre-push safety gate, in throw-away repos
 │
 ├── data/                          ← NOT in Git; regenerated on demand
@@ -498,17 +509,20 @@ python src/strainscope/fetch_real.py      # Phase 1b/1c - real data (optional, n
 python src/strainscope/harmonize.py       # Phase 2  - clean + build the database
 python src/strainscope/integrate.py all   # Phase 3  - prepare, DIABLO (if R is present), Python twin, publish
 python src/strainscope/model.py all       # Phase 4  - compare, calibrate, explain, final model, publish
+python src/strainscope/graph.py all       # Phase 5  - build the knowledge graph, analyse, explain, publish
 
 # Look at the results
 python src/strainscope/sql.py             # the read-only SQL console (see docs/QUERY_COOKBOOK.md)
 python figures/make_phase3_figures.py     # redraw the Phase 3 figures + interactive explorer
 python figures/make_phase4_figures.py     # redraw the Phase 4 figures + model explorer
+python figures/make_phase5_figures.py     # redraw the Phase 5 figures + graph explorer
+python src/strainscope/graph.py why STRAIN_0485   # why does this strain rank first?
 
 # Check everything
-pytest -q                                 # 49 passed
+pytest -q                                 # 61 passed
 ```
 
-Coming with later phases: `python src/strainscope/graph.py` (5), `streamlit run app/streamlit_app.py` (6),
+Coming with later phases: `streamlit run app/streamlit_app.py` (6),
 `python src/strainscope/ask.py "question"` (6b), and the one-command
 `python src/strainscope/pipeline.py` (8).
 
@@ -559,7 +573,7 @@ The push line sends local `develop` to remote `develop` and fast-forwards remote
 `beta` and `master` to match, so one command keeps all three branches in
 lock-step. The `master` sync-back keeps the local copy consistent with what was
 just pushed. `--ff-only` means "update only if it's clean, otherwise stop and
-warn." Tags (`v0.1.0`, `v0.2.0`, `v0.3.0`, `v1.0.0`; [why these](docs/ROADMAP.md#version-tags))
+warn." Tags (`v0.1.0`, `v0.1.1`, `v0.2.0`, `v0.3.0`, `v1.0.0`; [why these](docs/ROADMAP.md#version-tags))
 are pushed with `--tags` only when a new version is cut. The full reasoning and the
 "if it goes wrong" cases are in [`docs/01-setup.md`](docs/01-setup.md#part-h-initialise-git-and-push-with-the-master--beta--develop-workflow).
 

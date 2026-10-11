@@ -1,0 +1,25 @@
+kind,item,count
+nodes,Strain,600
+nodes,ReferenceStrain,100
+nodes,Gene,31
+nodes,Compound,20
+nodes,Genus,16
+nodes,ModeOfAction,9
+nodes,ChemicalClass,8
+nodes,Pathway,5
+nodes,Kingdom,4
+nodes,Outcome,2
+edges,acts_by | domain model (gene descriptions in src/strainscope/generate_data.py),37
+edges,"associated_with | Phase 3 (DIABLO signature, stability >= 0.8)",29
+edges,associated_with | Phase 4 (permutation importance of the winning model),23
+edges,belongs_to | BacDive (DSMZ),100
+edges,"belongs_to | synthetic library (Phase 1, cleaned in Phase 2)",600
+edges,"carries | synthetic library (Phase 1, cleaned in Phase 2)",5880
+edges,classified_as | RefMet (Metabolomics Workbench),6
+edges,contributes_to | domain model (gene descriptions in src/strainscope/generate_data.py),9
+edges,in_kingdom | BacDive (DSMZ),3
+edges,"in_kingdom | synthetic library (Phase 1, cleaned in Phase 2)",13
+edges,in_pathway | KEGG (academic use),9
+edges,makes | domain model (gene descriptions in src/strainscope/generate_data.py),14
+edges,"produces | synthetic library (Phase 1, cleaned in Phase 2)",1491
+edges,subclass_of | RefMet (Metabolomics Workbench),4

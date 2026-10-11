@@ -1,0 +1,96 @@
+node_id,label,node_type,degree,strains_connected,concept_degree,betweenness,role
+gene:ssu_rRNA,ssu_rRNA,Gene,579,579,0,0.0,housekeeping
+gene:ef1a,ef1a,Gene,579,579,0,0.0,housekeeping
+gene:rpb1,rpb1,Gene,577,577,0,0.0,housekeeping
+gene:accE,accE,Gene,350,349,1,0.0,decoy
+gene:accB,accB,Gene,307,307,0,0.0,decoy
+gene:accF,accF,Gene,307,307,0,0.0,decoy
+gene:accD,accD,Gene,297,297,0,0.0,decoy
+gene:accC,accC,Gene,203,203,0,0.0,decoy
+gene:chiA,chiA,Gene,195,193,2,0.0,signal
+gene:accA,accA,Gene,192,192,0,0.0,decoy
+gene:glcA,glcA,Gene,181,179,2,0.0,signal
+gene:iaaM,iaaM,Gene,161,160,1,0.0,decoy
+gene:acdS,acdS,Gene,160,159,1,0.0,decoy
+gene:srfAA,srfAA,Gene,138,135,3,0.0,signal
+gene:phzE,phzE,Gene,136,133,3,0.0,signal
+compound:surfactin,surfactin,Compound,131,126,5,0.0114,signal
+gene:gcd,gcd,Gene,131,130,1,0.0,decoy
+compound:phenazine,phenazine,Compound,128,124,4,0.0238,signal
+gene:ituA,ituA,Gene,128,125,3,0.0,signal
+gene:phlD,phlD,Gene,126,123,3,0.0,signal
+compound:DAPG,DAPG,Compound,126,123,3,0.0,signal
+compound:iturin,iturin,Compound,125,121,4,0.0037,signal
+compound:pyoverdine,pyoverdine,Compound,122,119,3,0.0,signal
+gene:pvdA,pvdA,Gene,120,117,3,0.0,signal
+compound:fengycin,fengycin,Compound,117,112,5,0.0114,signal
+gene:prnD,prnD,Gene,117,114,3,0.0,signal
+compound:pyrrolnitrin,pyrrolnitrin,Compound,115,108,7,0.0459,signal
+compound:HCN,HCN,Compound,114,107,7,0.0459,signal
+gene:ech42,ech42,Gene,114,112,2,0.0002,signal
+gene:prb1,prb1,Gene,113,112,1,0.0,signal
+gene:fenA,fenA,Gene,112,109,3,0.0,signal
+gene:hcnA,hcnA,Gene,109,106,3,0.0,signal
+gene:nifH,nifH,Gene,99,98,1,0.0,decoy
+genus:Pseudomonas,Pseudomonas,Genus,97,74,1,0.0,
+compound:six_PP,six_PP,Compound,95,92,3,0.0,signal
+genus:Paenibacillus,Paenibacillus,Genus,93,67,1,0.0,
+genus:Streptomyces,Streptomyces,Genus,92,66,1,0.0,
+gene:sixPP,sixPP,Gene,90,87,3,0.0,signal
+genus:Bacillus,Bacillus,Genus,86,60,1,0.0,
+compound:yeast_siderophore,yeast_siderophore,Compound,80,77,3,0.0,signal
+compound:beauvericin,beauvericin,Compound,74,70,4,0.0076,signal
+gene:beaS,beaS,Gene,72,69,3,0.0,signal
+gene:sidA,sidA,Gene,70,67,3,0.0,signal
+compound:destruxin,destruxin,Compound,67,64,3,0.0,signal
+gene:dtxS,dtxS,Gene,66,63,3,0.0,signal
+compound:killer_toxin,killer_toxin,Compound,64,61,3,0.0,signal
+gene:kilT,kilT,Gene,61,58,3,0.0,signal
+genus:Pythium,Pythium,Genus,56,55,1,0.0,
+compound:oligandrin,oligandrin,Compound,55,52,3,0.0,signal
+genus:Clonostachys,Clonostachys,Genus,51,50,1,0.0,
+genus:Beauveria,Beauveria,Genus,46,45,1,0.0,
+genus:Metarhizium,Metarhizium,Genus,45,44,1,0.0,
+genus:Trichoderma,Trichoderma,Genus,45,44,1,0.0,
+gene:olpA,olpA,Gene,44,41,3,0.0,signal
+outcome:disease suppression,disease suppression,Outcome,39,0,39,0.2768,
+genus:Aureobasidium,Aureobasidium,Genus,34,33,1,0.0,
+compound:bg_metabolite_1,bg_metabolite_1,Compound,26,26,0,0.0,decoy
+compound:bg_metabolite_3,bg_metabolite_3,Compound,26,26,0,0.0,decoy
+compound:bg_metabolite_4,bg_metabolite_4,Compound,26,26,0,0.0,decoy
+genus:Saccharomyces,Saccharomyces,Genus,23,22,1,0.0,
+genus:Metschnikowia,Metschnikowia,Genus,22,21,1,0.0,
+compound:bg_metabolite_6,bg_metabolite_6,Compound,22,22,0,0.0,decoy
+genus:Candida,Candida,Genus,20,19,1,0.0,
+compound:bg_metabolite_5,bg_metabolite_5,Compound,18,18,0,0.0,decoy
+compound:bg_metabolite_2,bg_metabolite_2,Compound,17,17,0,0.0,decoy
+mode:antibiosis,antibiosis,ModeOfAction,11,0,11,0.0152,
+kingdom:Bacteria,Bacteria,Kingdom,7,0,7,0.0048,
+mode:lipopeptide membrane attack,lipopeptide membrane attack,ModeOfAction,7,0,7,0.0016,
+mode:plant growth promotion,plant growth promotion,ModeOfAction,5,0,5,0.0023,
+mode:toxin production,toxin production,ModeOfAction,5,0,5,0.0007,
+mode:iron competition,iron competition,ModeOfAction,5,0,5,0.0005,
+class:Amino acids and peptides,Amino acids and peptides,ChemicalClass,4,0,4,0.0125,
+mode:cell-wall degradation,cell-wall degradation,ModeOfAction,4,0,4,0.0062,
+kingdom:Yeast,Yeast,Kingdom,4,0,4,0.0014,
+kingdom:Fungi,Fungi,Kingdom,4,0,4,0.0014,
+mode:mycoparasitism,mycoparasitism,ModeOfAction,3,0,3,0.0177,
+pathway:map01054,map01054,Pathway,3,0,3,0.0003,
+mode:induced plant resistance,induced plant resistance,ModeOfAction,3,0,3,0.0,
+mode:killer-toxin antagonism,killer-toxin antagonism,ModeOfAction,3,0,3,0.0,
+class:Substituted pyrroles,Substituted pyrroles,ChemicalClass,2,0,2,0.0121,
+class:Anthranilic acid alkaloids,Anthranilic acid alkaloids,ChemicalClass,2,0,2,0.0121,
+class:Organonitrogen compounds,Organonitrogen compounds,ChemicalClass,2,0,2,0.0121,
+pathway:map01100,map01100,Pathway,2,0,2,0.0009,
+pathway:map01110,map01110,Pathway,2,0,2,0.0009,
+genus:Microbacterium,Microbacterium,Genus,2,0,1,0.0,
+genus:Halomonas,Halomonas,Genus,2,0,1,0.0,
+genus:Brevibacterium,Brevibacterium,Genus,2,0,1,0.0,
+outcome:plant growth,plant growth,Outcome,1,0,1,0.0,
+kingdom:Oomycete,Oomycete,Kingdom,1,0,1,0.0,
+pathway:map00404,map00404,Pathway,1,0,1,0.0,
+pathway:map00460,map00460,Pathway,1,0,1,0.0,
+class:Organoheterocyclic compounds,Organoheterocyclic compounds,ChemicalClass,1,0,1,0.0,
+class:Alkaloids,Alkaloids,ChemicalClass,1,0,1,0.0,
+class:Organic nitrogen compounds,Organic nitrogen compounds,ChemicalClass,1,0,1,0.0,
+class:Organic acids,Organic acids,ChemicalClass,1,0,1,0.0,

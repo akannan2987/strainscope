@@ -1,0 +1,49 @@
+node_id,label,node_type,community,arsenal,role,n_strains,ties
+gene:accA,accA,Gene,-1,Accessory noise,decoy,192,0
+gene:accB,accB,Gene,-1,Accessory noise,decoy,307,0
+gene:accC,accC,Gene,-1,Accessory noise,decoy,203,0
+gene:accD,accD,Gene,-1,Accessory noise,decoy,297,0
+gene:accE,accE,Gene,-1,Accessory noise,decoy,349,0
+gene:accF,accF,Gene,-1,Accessory noise,decoy,307,0
+compound:bg_metabolite_1,bg_metabolite_1,Compound,-1,Background chemistry,decoy,26,0
+compound:bg_metabolite_2,bg_metabolite_2,Compound,-1,Background chemistry,decoy,17,0
+compound:bg_metabolite_3,bg_metabolite_3,Compound,-1,Background chemistry,decoy,26,0
+compound:bg_metabolite_4,bg_metabolite_4,Compound,-1,Background chemistry,decoy,26,0
+compound:bg_metabolite_5,bg_metabolite_5,Compound,-1,Background chemistry,decoy,18,0
+compound:bg_metabolite_6,bg_metabolite_6,Compound,-1,Background chemistry,decoy,22,0
+gene:chiA,chiA,Gene,-1,Cross-kingdom,signal,193,0
+gene:iaaM,iaaM,Gene,-1,Plant-growth (other trait),decoy,160,0
+compound:DAPG,DAPG,Compound,1,Bacteria,signal,123,17
+compound:HCN,HCN,Compound,1,Bacteria,signal,107,10
+gene:fenA,fenA,Gene,1,Bacteria,signal,109,17
+compound:fengycin,fengycin,Compound,1,Bacteria,signal,112,14
+gene:hcnA,hcnA,Gene,1,Bacteria,signal,106,13
+gene:ituA,ituA,Gene,1,Bacteria,signal,125,17
+compound:iturin,iturin,Compound,1,Bacteria,signal,121,18
+compound:phenazine,phenazine,Compound,1,Bacteria,signal,124,17
+gene:phlD,phlD,Gene,1,Bacteria,signal,123,17
+gene:phzE,phzE,Gene,1,Bacteria,signal,133,17
+gene:prnD,prnD,Gene,1,Bacteria,signal,114,18
+gene:pvdA,pvdA,Gene,1,Bacteria,signal,117,14
+compound:pyoverdine,pyoverdine,Compound,1,Bacteria,signal,119,12
+compound:pyrrolnitrin,pyrrolnitrin,Compound,1,Bacteria,signal,108,16
+gene:srfAA,srfAA,Gene,1,Bacteria,signal,135,17
+compound:surfactin,surfactin,Compound,1,Bacteria,signal,126,16
+gene:acdS,acdS,Gene,1,Plant-growth (other trait),decoy,159,4
+gene:gcd,gcd,Gene,1,Plant-growth (other trait),decoy,130,14
+gene:nifH,nifH,Gene,1,Plant-growth (other trait),decoy,98,14
+gene:glcA,glcA,Gene,2,Cross-kingdom,signal,179,3
+gene:prb1,prb1,Gene,2,Cross-kingdom,signal,112,8
+gene:beaS,beaS,Gene,2,Fungi,signal,69,6
+compound:beauvericin,beauvericin,Compound,2,Fungi,signal,70,5
+compound:destruxin,destruxin,Compound,2,Fungi,signal,64,4
+gene:dtxS,dtxS,Gene,2,Fungi,signal,63,6
+gene:ech42,ech42,Gene,2,Fungi,signal,112,8
+gene:sixPP,sixPP,Gene,2,Fungi,signal,87,8
+compound:six_PP,six_PP,Compound,2,Fungi,signal,92,6
+gene:kilT,kilT,Gene,3,Yeast,signal,58,3
+compound:killer_toxin,killer_toxin,Compound,3,Yeast,signal,61,3
+gene:sidA,sidA,Gene,3,Yeast,signal,67,3
+compound:yeast_siderophore,yeast_siderophore,Compound,3,Yeast,signal,77,3
+compound:oligandrin,oligandrin,Compound,4,Oomycete,signal,52,1
+gene:olpA,olpA,Gene,4,Oomycete,signal,41,1

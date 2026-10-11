@@ -2,7 +2,7 @@
 
 # The StrainScope Handbook: from day 0 to the finished product
 
-**Handbook version:** 1.3 · **Last updated:** 2026-10-10 · **Repository state it describes:** version v0.1.1 plus Phase 4. Phases 0 → 4 are built and tested (data, real sources, cleaning, database, multi-omics integration, machine learning), along with the v0.1.1 fix release; Phase 5 (the knowledge graph, release v0.2.0) is next. 49 automated tests.
+**Handbook version:** 1.4 · **Last updated:** 2026-10-11 · **Repository state it describes:** version **v0.2.0**. Phases 0 → 5 are built and tested (data, real sources, cleaning, database, multi-omics integration, machine learning, the knowledge graph), along with the v0.1.1 fix release. The analysis is complete; Phase 6 (the app) is next. 61 automated tests.
 
 **This is the one document to read first, and the one to come back to.** It walks the whole journey in order (understanding the project, preparing a blank computer, building every phase, releasing, and what lies beyond), explaining *why* at every step and linking to the specialised guide that holds the detail. You should never have to hunt through the repository to find out what to do next; if you ever do, that's a defect in this Handbook.
 
@@ -41,9 +41,9 @@ flowchart TB
     classDef done fill:#E6F4EA,stroke:#4CAF7D,color:#0B3D2E;
     classDef next fill:#FFF3CD,stroke:#C9A227,color:#4A3B00;
     classDef later fill:#F5F5F5,stroke:#B0B0B0,color:#555555,stroke-dasharray:4 3;
-    class S0,S1,S2,S3,S4,S5,S6,S7,S8 done
-    class S9 next
-    class S10,S11,S12,S13,S14,S15 later
+    class S0,S1,S2,S3,S4,S5,S6,S7,S8,S9 done
+    class S10 next
+    class S11,S12,S13,S14,S15 later
     style FOUND fill:#F5F9FF,stroke:#B9D2FF,color:#0B2545
     style DATA fill:#F5F9FF,stroke:#B9D2FF,color:#0B2545
     style ANALYSIS fill:#F5F9FF,stroke:#B9D2FF,color:#0B2545
@@ -64,8 +64,8 @@ flowchart TB
 | 7 | Integration | Phase 3: multi-omics integration | [`docs/04-integration.md`](04-integration.md) | ~4 h (3 sittings) | ✅ |
 | 7.1 | Fix | Fix release v0.1.1: a safer safety gate, copy-safe commands | [`docs/01-setup.md` Part H](01-setup.md#the-pre-push-safety-gate-check-public-safesh), [`CHANGELOG.md`](../CHANGELOG.md) | ~20 min | ✅ |
 | 8 | Prediction | Phase 4: machine learning, measured carefully | [`docs/05-machine-learning.md`](05-machine-learning.md) | ~3½ h (3 sittings) | ✅ |
-| 9 | Graph | Phase 5: the knowledge graph | `docs/06-knowledge-graph.md` | 3 h | ⏳ next |
-| 10 | App | Phase 6: the app | `docs/07-app.md` | 3-4 h | ⏳ |
+| 9 | Graph | Phase 5: the knowledge graph | [`docs/06-knowledge-graph.md`](06-knowledge-graph.md) | ~3 h (2 sittings) | ✅ |
+| 10 | App | Phase 6: the app | `docs/07-app.md` | 3-4 h | ⏳ next |
 | 11 | Assistant | Phase 6b: Ask StrainScope, the documentation assistant | `docs/07b-docs-assistant.md` | 2-3 h | ⏳ |
 | 12 | Cloud | Phase 7: deployment and the AI layer | `docs/08-deployment-ai.md` | 3-4 h | ⏳ |
 | 13 | MCP | Phase 7b: the MCP server | `docs/08b-mcp-server.md` | 2 h | ⏳ |
@@ -283,16 +283,20 @@ Check the result with `git tag -n1`: both `v0.1.0` and `v0.1.1` are listed, each
 
 ## Stage 9: Phase 5, the knowledge graph
 
-**What.** `docs/06-knowledge-graph.md` (arrives with the phase): write the domain model in English first (an **ontology**, which you can picture as a family tree for concepts: what is a strain, a gene, a compound, a pathway, and how may they connect?), then build the graph with NetworkX from real KEGG/RefMet edges, Phase 3's gene ↔ product correlations and Phase 4's importances; find hubs, communities and paths.
+**What.** Follow [`docs/06-knowledge-graph.md`](06-knowledge-graph.md). First read the domain model, `src/strainscope/ontology.py`: an **ontology**, which you can picture as a family tree for concepts (what is a strain, a gene, a compound, a mode of action, a pathway, and how may they connect?). Then four steps of `python src/strainscope/graph.py`: `build` (the graph from the clean tables, the domain model, the real KEGG / RefMet / BacDive / NCBI tables if you fetched them, and the results of Phases 3 and 4, with every edge checked against the ontology and carrying its source), `analyse` (hubs, communities graded against the planted arsenals, and where the biology and the statistics agree), `explain` (why each strain ranks where it does, as walks through the graph) and `publish` (the results as `kg_*` tables). One command runs all four in well under a minute: `python src/strainscope/graph.py all`. Then ask it questions (`graph.py why STRAIN_0042`, `graph.py path ituA "disease suppression"`, `graph.py show iturin`) and draw the figures with `python figures/make_phase5_figures.py`.
 
-**Why.** In a table, relationships are scattered across rows and columns, while a graph lets you walk along them. The graph answers *why* a strain ranks high ("it carries ituA → makes iturin → which sits in the lipopeptide pathway…") and is the foundation for GraphRAG in Stage 12.
-**Checkpoint (planned).** A graph file plus an interactive graph view; path queries return real, sourced edges. **Tag:** v0.2.0.
+![The domain model: every node type and allowed connection](../figures/ontology_map.png)
+
+**Why.** Phase 4 ranks the strains; this phase says *why*. In a table, relationships are scattered across rows and columns, while a graph lets you walk along them: STRAIN_0485 carries fenA, which makes fengycin, which attacks the pathogen's membrane, which suppresses disease. You'll learn the words that describe any network (node, edge, degree, hub, path, community, betweenness), why the ontology comes before the data, why every edge carries its source, and the difference between a *mechanism* ("this is how it works") and a *statistical association* ("these go together in the data"). The graph keeps the two apart, so it can flag a feature the model leans on that nothing explains. The walks built here are what the app's strain page (Stage 10), GraphRAG (Stage 12) and the MCP server (Stage 13) will use. Four real lessons from the build are kept in the guide's §12.
+
+**Checkpoint.** `build` reports 679 nodes and 8,096 edges without the real tables (more with them: pathway, chemical-class and reference-strain nodes, with KEGG, RefMet and BacDive as sources), every edge allowed by the ontology and with a source. `analyse` finds four communities that match the planted arsenals (purity 0.94, adjusted Rand index 0.93); the most connected genes are the housekeeping genes, which carry no information; 30 features are confirmed by both the mechanism and the data, and one (`accE`, Phase 4's decoy) has statistical support and no mechanism. `explain`: all of the top 50 strains have at least one mechanism path; `graph.py path ituA "disease suppression"` answers with the two-step mechanism and `path accE "disease suppression"` with the statistic alone. `pytest -q` → **61 passed**. The [graph explorer](interactive/graph_explorer.html) opens in a browser.
+**Commit message:** `feat: add the knowledge graph with ontology, sourced edges, communities and explanations`, then tagged **v0.2.0** ("the analysis is complete"; the ritual is in [`docs/06-knowledge-graph.md` §17](06-knowledge-graph.md#17-save-your-work-safety-gate-the-commit-ritual-and-the-v020-release)).
 
 ---
 
 ## Stage 10: Phase 6, the app
 
-**What.** `docs/07-app.md`: a Streamlit app where you choose data (**Upload · Synthetic · Fetch-real**), explore the integration results, rank strains, view the graph, and query everything in the built-in SQL console with the cookbook one click away.
+**What.** `docs/07-app.md`: a Streamlit app where you choose data (**Upload · Synthetic · Fetch-real**), explore the integration results, rank strains, open a strain's page with its explanation and graph neighbourhood (from Phase 5's `artifacts/graph/`), view the graph, and query everything in the built-in SQL console with the cookbook one click away.
 
 **Why.** Results are far more useful to other people once they can click around in them. Streamlit turns Python into a web page without needing web-development knowledge; the app reads only the small `artifacts/` files, which keeps it fast.
 **Checkpoint (planned).** `streamlit run app/streamlit_app.py` opens the app locally on all three operating systems.
@@ -318,7 +322,7 @@ Check the result with `git tag -n1`: both `v0.1.0` and `v0.1.1` are listed, each
 
 ## Stage 13: Phase 7b, the MCP server
 
-**What.** `docs/08b-mcp-server.md`: a small **Model Context Protocol** server. It's a standard "USB port" through which AI assistants can use StrainScope's tools directly: `ask_docs`, `query_database` (read-only), `get_signature`, `rank_strain`. Every call is validated and logged.
+**What.** `docs/08b-mcp-server.md`: a small **Model Context Protocol** server. It's a standard "USB port" through which AI assistants can use StrainScope's tools directly: `ask_docs`, `query_database` (read-only), `get_signature`, `rank_strain`, `explain_strain` (Phase 5's walks through the graph). Every call is validated and logged.
 
 **Why.** It turns the repository from "code someone reads" into "a tool an assistant can use", reusing exactly the functions the app already calls.
 
@@ -359,7 +363,7 @@ Then the end-of-phase ritual (Stage 2) when the stage is complete.
 | a command "is not recognized" / "not found" | your setup guide: is `(.venv)` in your prompt? On Windows, is R on your PATH? ([`docs/01-setup.md`](01-setup.md) Part F and Part I) |
 | `R -e ...` does nothing sensible on Windows | PowerShell treats `r` as "repeat last command", so use `Rscript -e ...` instead ([`docs/04-integration.md` §16](04-integration.md#16-what-could-go-wrong-mini-faq)) |
 | a test fails | the *What could go wrong* section of the phase guide you are on |
-| the database is missing or a table is gone | rebuild: `python src/strainscope/generate_data.py`, then `python src/strainscope/harmonize.py`, then `python src/strainscope/integrate.py publish` and `python src/strainscope/model.py publish` ([`docs/03-harmonization-qc.md` §11](03-harmonization-qc.md#11-what-could-go-wrong-mini-faq)) |
+| the database is missing or a table is gone | rebuild: `python src/strainscope/generate_data.py`, then `python src/strainscope/harmonize.py`, then `python src/strainscope/integrate.py publish`, `python src/strainscope/model.py publish` and `python src/strainscope/graph.py publish` ([`docs/03-harmonization-qc.md` §11](03-harmonization-qc.md#11-what-could-go-wrong-mini-faq)) |
 | `mixOmics is not installed in this project's R library` | [`docs/04-integration.md` §6](04-integration.md#6-step-2-install-mixomics-into-the-projects-r-library-once-per-machine): the package is installed, but invisible to the project |
 | an API call fails or returns odd numbers | the real-data guides' FAQs ([`02b`](02b-real-data-ingestion.md), [`02c`](02c-more-real-sources.md)) and their *Notes from the build* |
 | the safety gate says NOT SAFE | read the flagged line; never weaken the check ([`docs/01-setup.md`](01-setup.md) Part H) |
@@ -372,6 +376,8 @@ Then the end-of-phase ritual (Stage 2) when the stage is complete.
 | a figure looks wrong or is missing | re-run the phase's figure script in `figures/` (each guide names it) |
 | `model built with scikit-learn X, running Y`, or `Can't get attribute 'KingdomPrep'` | rebuild the model: `python src/strainscope/model.py final` ([`docs/05-machine-learning.md` §16](05-machine-learning.md#16-what-could-go-wrong-mini-faq)) |
 | `python src/strainscope/model.py compare` takes many minutes | normal on a laptop with few processor cores (about 250 model fits); for a quick trial add `--repeats 2` ([`docs/05-machine-learning.md` §16](05-machine-learning.md#16-what-could-go-wrong-mini-faq)) |
+| the graph has no pathway or chemical-class nodes although you fetched real data | the real tables reach the database only through `harmonize.py`: run it, then the three `publish` steps, then `python src/strainscope/graph.py all` ([`docs/06-knowledge-graph.md` §16](06-knowledge-graph.md#16-what-could-go-wrong-mini-faq)) |
+| `graph.py path` or `show` says `nothing in the graph is called ...` | check the spelling, and put names with spaces in quotes (`"disease suppression"`); the message suggests close matches |
 
 ## Every file in the repository, and where it is explained
 
@@ -394,11 +400,14 @@ Nothing in this repository is undocumented magic. Paths are relative to the proj
 | `src/strainscope/integrate.py` | integration, Python side | [`docs/04-integration.md`](04-integration.md) |
 | `R/diablo_integration.R` | integration, R side (DIABLO) | [`docs/04-integration.md`](04-integration.md) §7 |
 | `src/strainscope/model.py` | machine learning: compare, calibrate, explain, final, publish; `load_model()` and `score_strains()` for the app | [`docs/05-machine-learning.md`](05-machine-learning.md) |
-| `tests/test_sources.py`, `tests/test_harmonize.py`, `tests/test_integrate.py`, `tests/test_model.py` | the automated checks | each phase guide's *tests* section |
+| `src/strainscope/ontology.py` | the domain model: node types, relations, modes of action, the edge checker | [`docs/06-knowledge-graph.md`](06-knowledge-graph.md) §1, §3 |
+| `src/strainscope/graph.py` | the knowledge graph: build, analyse, explain, publish; the questions `why`, `path` and `show` | [`docs/06-knowledge-graph.md`](06-knowledge-graph.md) |
+| `tests/test_sources.py`, `tests/test_harmonize.py`, `tests/test_integrate.py`, `tests/test_model.py`, `tests/test_graph.py` | the automated checks | each phase guide's *tests* section |
 | `tests/test_safety_gate.py` | the safety gate's own tests | [`docs/01-setup.md`](01-setup.md) Part H, Stage 7.1 above |
 | `figures/make_phase*_figures.py`, `figures/make_illustrations.py`, `figures/*.png` | every figure and the script that draws it | each phase guide's *figures* section |
 | `artifacts/integration/*.csv` | Phase 3's small result tables (committed; the app will read them) | [`docs/04-integration.md`](04-integration.md) §2, §9 |
 | `artifacts/model/*.csv`, `artifacts/model/model_card.json`, `artifacts/model/strainscope_model.joblib` | Phase 4's result tables, the saved model and its card (committed; the app and the MCP server will read them) | [`docs/05-machine-learning.md`](05-machine-learning.md) §2, §8 |
+| `artifacts/graph/nodes.csv`, `artifacts/graph/edges.csv`, `artifacts/graph/knowledge_layer.graphml`, `artifacts/graph/*.csv` | Phase 5's graph (two plain tables, plus a GraphML copy of the knowledge layer) and its result tables: hubs, communities, knowledge vs data, explanations (committed; the app will read them) | [`docs/06-knowledge-graph.md`](06-knowledge-graph.md) §2, §5 to 9 |
 | `docs/*.md` | the tutorial, glossary, cookbook, roadmaps and this Handbook | this table |
 | `docs/img/*.svg` | the logo, icon and journey map | `figures/make_illustrations.py` |
 | `docs/interactive/*.html`, `docs/interactive/plotly.min.js` | the interactive charts (open in a browser; work offline) | each phase guide's *figures* section |

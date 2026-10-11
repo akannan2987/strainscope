@@ -227,6 +227,40 @@ first appears. If a term is missing, that's a documentation bug worth fixing.
 - **Model card**: a short document that travels with a saved model: what it is, its data, its scores and how they were measured, what it's for and not for, and the software versions (`artifacts/model/model_card.json`). It plays the role of the label on a medicine bottle.
 - **Pickle / joblib file**: Python's way of saving an object such as a trained model to disk (`.joblib`). Loading one runs code stored inside it, so load only files you built yourself.
 
+## Phase 5: the knowledge graph (doc 06)
+
+- **Graph / network**: things (nodes) and the connections between them (edges). A family tree, a railway map and a social network are all graphs.
+- **Node**: one thing in a graph; here a strain, a gene, a compound, a mode of action, an outcome, a kingdom, a genus, or (with the real tables) a KEGG pathway, a RefMet chemical class or a BacDive strain record.
+- **Edge**: one connection between two nodes. Ours point one way (STRAIN_0485 *carries* fenA, never the reverse), which makes them *directed* edges, and each has a **relation** name.
+- **Relation**: the kind of connection an edge stands for: `belongs_to`, `in_kingdom`, `carries`, `produces`, `makes`, `acts_by`, `contributes_to`, `associated_with`, `in_pathway`, `classified_as`, `subclass_of`. The full list, with what each may connect, is in `src/strainscope/ontology.py`.
+- **Ontology**: the agreed list of the kinds of things in a domain and the ways they may connect, written down before any data is loaded (a strain *carries* a gene; a gene *makes* a compound; a pathway can't carry anything). You can think of it as a family tree for concepts. Ours has ten node types and eleven relations.
+- **Domain model**: the project's own written-down knowledge of the biology: which gene makes which compound and which mode of action each weapon uses. Here it comes from the descriptions that define the simulated library; on real strains it would come from the literature.
+- **Knowledge graph**: the ontology filled in with facts, every edge carrying its source. If the ontology is the family tree's blank template, the knowledge graph is the tree with every name written in.
+- **Provenance (on an edge)**: where a connection came from, stored on the edge itself: the synthetic library, the domain model, KEGG, RefMet, BacDive, or Phases 3 and 4. It's what lets anyone trace a claim back to its origin.
+- **Mode of action**: *how* a weapon works against a disease: antibiosis, lipopeptide membrane attack, iron competition, cell-wall degradation, mycoparasitism, toxin production, induced plant resistance, killer-toxin antagonism (and, for the plant-growth genes, plant growth promotion).
+- **Mechanism vs statistical association**: a mechanism says *how* something works (`acts_by` → `contributes_to`); an association says two things *go together* in the data (`associated_with`, from Phases 3 and 4), with no claim about why. "Smokers get more lung cancer" is an association; "tar damages lung cells" is the mechanism behind it.
+- **Knowledge vs data**: the table (`artifacts/graph/knowledge_vs_data.csv`) that sorts every feature by what supports it: both a mechanism and the data, a mechanism only, the data only ("treat with care"), or neither.
+- **Degree**: how many edges touch a node.
+- **Hub**: a node with unusually many connections. A hub isn't automatically important: here the biggest hubs are housekeeping genes that every strain carries.
+- **Path / shortest path**: a walk from one node to another along edges; the shortest path takes the fewest steps. Our path search counts a statistics-only edge as 2.5 steps, so it prefers a route that says *how*.
+- **Betweenness**: the share of shortest paths between other nodes that pass through a node, like a railway junction that many journeys go through.
+- **Knowledge layer**: every node type except individual strains. Concept analyses run on it so 600 strain nodes don't drown out a few dozen concepts.
+- **Co-occurrence**: two features turning up in the same strains.
+- **Phi correlation**: an ordinary correlation for yes/no data; 0 means no pattern, 1 means always together. Features are linked for the community search when phi is at least 0.15.
+- **Jaccard index**: the share of strains having either feature that have both. Simple, but it favours common features, which is why the community search uses phi instead.
+- **Community**: a group of nodes more tightly linked to each other than to the rest of the graph.
+- **Louvain method**: a community-finding method that keeps moving nodes between groups as long as that makes the groups more tightly knit inside than between, a bit like rearranging wedding guests so each table is full of people who know each other. It's randomised, so it's run with a fixed seed (42).
+- **Purity**: of the members of each community, the share that belong to that community's most common planted group; 1 = every community is "pure".
+- **Adjusted Rand index (ARI)**: a score for how closely two groupings of the same items agree: 1 = identical, 0 = no better than chance.
+- **Detection threshold ("produces")**: a strain counts as producing a compound when its cleaned level is at least 4 times that compound's median across all strains, so background readings don't count.
+- **Measurement spike**: a wildly high reading that doesn't reflect the biology (Phase 1 planted about 1 %). When a compound appears without the gene that makes it, the explanations say it may be a spike or ordinary background noise just over the detection line; in this library both happen.
+- **Explanation (of a ranking)**: the walks through the graph behind one strain's rank: up to three mechanism paths (`+`), any data-only flags (`?`) and up to two missing weapons (`-`), each with its sources (`artifacts/graph/explanations.csv`, and `python src/strainscope/graph.py why STRAIN_ID`).
+- **NetworkX**: the free Python library the graph is built with; it needs no database and has ready-made functions for paths, centrality and communities.
+- **MultiDiGraph**: NetworkX's name for a graph whose edges have a direction and where two nodes may be joined by several edges (one per source, for example).
+- **GraphML**: a standard text format for graphs that Gephi and Cytoscape open directly and Neo4j can import with its APOC plugin (`artifacts/graph/knowledge_layer.graphml`).
+- **Recursive query (SQL)**: a query that keeps joining a table to its own results, which is how a database walks a graph (`WITH RECURSIVE`, Cookbook §10).
+- **Graph database (Neo4j)**: a database built to store and query graphs for many users at once. Deferred until the graph outgrows memory ([roadmap](ROADMAP.md#deferred-items-and-their-triggers)).
+
 ## The Handbook, releases and the planned phases (docs HANDBOOK, ROADMAP, PRODUCT_ROADMAP)
 
 - **Handbook**: [`docs/HANDBOOK.md`](HANDBOOK.md), the one living document that walks the whole journey from a blank laptop to the finished product and links every specialised guide. Read it first; it's updated in the same commit as every change.
@@ -235,9 +269,6 @@ first appears. If a term is missing, that's a documentation bug worth fixing.
 - **Tag (Git)**: a bookmark on one exact commit, named with a version number (`v0.1.0`), so anyone can return to that state. *Annotated* tags (`git tag -a`) also record who, when and why.
 - **Semantic versioning**: version numbers as `MAJOR.MINOR.PATCH`: MINOR for a new usable level, PATCH for fixes, MAJOR 1 for the first complete release.
 - **Changelog**: [`CHANGELOG.md`](../CHANGELOG.md), the human-readable list of what changed in each version.
-- **Ontology** *(Phase 5)*: the agreed rules of what kinds of things exist in a domain and how they may connect (a strain *carries* a gene, a gene *helps make* a compound). You can think of it as a family tree for concepts.
-- **Knowledge graph** *(Phase 5)*: the filled-in family tree, with actual strains, genes, compounds and pathways as dots (nodes) joined by labelled lines (edges) you can walk.
-- **Hub**: a node with unusually many connections; often a central gene or compound.
 - **RAG (retrieval-augmented generation)** *(Phase 6b to 7)*: find the relevant passages first, then let a language model write an answer *only from them*, citing them. It's an open-book exam with the page numbers written down.
 - **Ask StrainScope** *(Phase 6b)*: the project's documentation assistant. It answers from the project's own documents with links, and refuses questions that aren't about StrainScope.
 - **Out-of-scope refusal**: the assistant's polite "that isn't about this project" when even the best-matching passage matches weakly. It happens *before* any language model is called, so nothing can be invented.

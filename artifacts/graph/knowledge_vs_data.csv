@@ -1,0 +1,49 @@
+node_id,label,node_type,role,arsenal,mechanism,model_reliable,diablo_robust,modes,verdict
+compound:DAPG,DAPG,Compound,signal,Bacteria,True,True,True,antibiosis,confirmed: mechanism and data agree
+compound:HCN,HCN,Compound,signal,Bacteria,True,False,True,antibiosis,confirmed: mechanism and data agree
+compound:beauvericin,beauvericin,Compound,signal,Fungi,True,True,True,toxin production,confirmed: mechanism and data agree
+compound:destruxin,destruxin,Compound,signal,Fungi,True,False,True,toxin production,confirmed: mechanism and data agree
+compound:fengycin,fengycin,Compound,signal,Bacteria,True,True,True,lipopeptide membrane attack,confirmed: mechanism and data agree
+compound:iturin,iturin,Compound,signal,Bacteria,True,True,True,lipopeptide membrane attack,confirmed: mechanism and data agree
+compound:killer_toxin,killer_toxin,Compound,signal,Yeast,True,False,True,killer-toxin antagonism,confirmed: mechanism and data agree
+compound:oligandrin,oligandrin,Compound,signal,Oomycete,True,True,True,induced plant resistance,confirmed: mechanism and data agree
+compound:phenazine,phenazine,Compound,signal,Bacteria,True,True,True,antibiosis,confirmed: mechanism and data agree
+compound:pyoverdine,pyoverdine,Compound,signal,Bacteria,True,False,True,iron competition,confirmed: mechanism and data agree
+compound:pyrrolnitrin,pyrrolnitrin,Compound,signal,Bacteria,True,False,True,antibiosis,confirmed: mechanism and data agree
+compound:six_PP,six_PP,Compound,signal,Fungi,True,True,True,antibiosis,confirmed: mechanism and data agree
+compound:surfactin,surfactin,Compound,signal,Bacteria,True,False,True,lipopeptide membrane attack,confirmed: mechanism and data agree
+compound:yeast_siderophore,yeast_siderophore,Compound,signal,Yeast,True,False,True,iron competition,confirmed: mechanism and data agree
+gene:beaS,beaS,Gene,signal,Fungi,True,False,True,toxin production,confirmed: mechanism and data agree
+gene:chiA,chiA,Gene,signal,Cross-kingdom,True,True,True,cell-wall degradation,confirmed: mechanism and data agree
+gene:dtxS,dtxS,Gene,signal,Fungi,True,True,True,toxin production,confirmed: mechanism and data agree
+gene:fenA,fenA,Gene,signal,Bacteria,True,True,True,lipopeptide membrane attack,confirmed: mechanism and data agree
+gene:glcA,glcA,Gene,signal,Cross-kingdom,True,True,True,cell-wall degradation,confirmed: mechanism and data agree
+gene:hcnA,hcnA,Gene,signal,Bacteria,True,True,True,antibiosis,confirmed: mechanism and data agree
+gene:ituA,ituA,Gene,signal,Bacteria,True,True,True,lipopeptide membrane attack,confirmed: mechanism and data agree
+gene:kilT,kilT,Gene,signal,Yeast,True,True,True,killer-toxin antagonism,confirmed: mechanism and data agree
+gene:olpA,olpA,Gene,signal,Oomycete,True,True,False,induced plant resistance,confirmed: mechanism and data agree
+gene:phlD,phlD,Gene,signal,Bacteria,True,True,True,antibiosis,confirmed: mechanism and data agree
+gene:phzE,phzE,Gene,signal,Bacteria,True,True,True,antibiosis,confirmed: mechanism and data agree
+gene:prnD,prnD,Gene,signal,Bacteria,True,True,True,antibiosis,confirmed: mechanism and data agree
+gene:pvdA,pvdA,Gene,signal,Bacteria,True,True,True,iron competition,confirmed: mechanism and data agree
+gene:sidA,sidA,Gene,signal,Yeast,True,True,True,iron competition,confirmed: mechanism and data agree
+gene:sixPP,sixPP,Gene,signal,Fungi,True,True,True,antibiosis,confirmed: mechanism and data agree
+gene:srfAA,srfAA,Gene,signal,Bacteria,True,True,True,lipopeptide membrane attack,confirmed: mechanism and data agree
+gene:ech42,ech42,Gene,signal,Fungi,True,False,False,cell-wall degradation; mycoparasitism,mechanism only: the data did not need it
+gene:prb1,prb1,Gene,signal,Cross-kingdom,True,False,False,mycoparasitism,mechanism only: the data did not need it
+gene:accE,accE,Gene,decoy,Accessory noise,False,True,False,,data only: no known mechanism (treat with care)
+compound:bg_metabolite_1,bg_metabolite_1,Compound,decoy,Background chemistry,False,False,False,,neither: no link to disease suppression
+compound:bg_metabolite_2,bg_metabolite_2,Compound,decoy,Background chemistry,False,False,False,,neither: no link to disease suppression
+compound:bg_metabolite_3,bg_metabolite_3,Compound,decoy,Background chemistry,False,False,False,,neither: no link to disease suppression
+compound:bg_metabolite_4,bg_metabolite_4,Compound,decoy,Background chemistry,False,False,False,,neither: no link to disease suppression
+compound:bg_metabolite_5,bg_metabolite_5,Compound,decoy,Background chemistry,False,False,False,,neither: no link to disease suppression
+compound:bg_metabolite_6,bg_metabolite_6,Compound,decoy,Background chemistry,False,False,False,,neither: no link to disease suppression
+gene:accA,accA,Gene,decoy,Accessory noise,False,False,False,,neither: no link to disease suppression
+gene:accB,accB,Gene,decoy,Accessory noise,False,False,False,,neither: no link to disease suppression
+gene:accC,accC,Gene,decoy,Accessory noise,False,False,False,,neither: no link to disease suppression
+gene:accD,accD,Gene,decoy,Accessory noise,False,False,False,,neither: no link to disease suppression
+gene:accF,accF,Gene,decoy,Accessory noise,False,False,False,,neither: no link to disease suppression
+gene:acdS,acdS,Gene,decoy,Plant-growth (other trait),False,False,False,plant growth promotion,neither: no link to disease suppression
+gene:gcd,gcd,Gene,decoy,Plant-growth (other trait),False,False,False,plant growth promotion,neither: no link to disease suppression
+gene:iaaM,iaaM,Gene,decoy,Plant-growth (other trait),False,False,False,plant growth promotion,neither: no link to disease suppression
+gene:nifH,nifH,Gene,decoy,Plant-growth (other trait),False,False,False,plant growth promotion,neither: no link to disease suppression

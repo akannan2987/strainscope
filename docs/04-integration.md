@@ -410,7 +410,7 @@ Each dot is a strain, placed by its two summary scores. Effective strains (green
 
 ![Genes by chemistry correlations](../figures/cross_block_heatmap.png)
 
-Every gene against every metabolite. The outlined squares are each gene with its *own* product, and they light up; almost everything else stays pale. This table is the seed of the Phase 5 knowledge graph, where each bright square will become an edge "gene → makes → compound".
+Every gene against every metabolite. The outlined squares are each gene with its *own* product, and they light up; almost everything else stays pale. This table feeds the Phase 5 knowledge graph: each bright square's correlation is stored on that pair's "gene → makes → compound" edge ([`docs/06-knowledge-graph.md` §5](06-knowledge-graph.md#5-step-1-build-the-graph)).
 
 ### Two languages, one answer
 
