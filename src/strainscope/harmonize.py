@@ -1,12 +1,12 @@
 """
-harmonize.py — StrainScope Phase 2: cleaning, quality control, and the database.
+harmonize.py (StrainScope Phase 2): cleaning, quality control, and the database.
 ================================================================================
 
 WHAT THIS MODULE DOES (in one sentence)
 ---------------------------------------
-It takes the three raw, deliberately-messy tables from Phase 1, cleans them
+It takes the three raw, messy-on-purpose tables from Phase 1, cleans them
 step by documented step, records every change in a "cleaning ledger", and loads
-the clean result — plus any real tables from Phase 1b — into one DuckDB
+the clean result (plus any real tables from Phase 1b) into one DuckDB
 database file that the rest of the project (and you, with SQL) can question.
 
 THE GOLDEN RULES OF CLEANING (read before the code)
@@ -14,7 +14,7 @@ THE GOLDEN RULES OF CLEANING (read before the code)
 1. NEVER edit the raw files. Raw data is evidence; cleaning produces NEW files.
    (You can always re-run cleaning; you can never un-edit evidence.)
 2. EVERY change is counted. The ledger records rows in, rows out, and cells
-   changed for every step — nothing vanishes silently.
+   changed for every step, so nothing vanishes silently.
 3. Decisions are WRITTEN DOWN, with reasons. "We capped outliers at 5×IQR
    because…" beats a mystery number every time.
 4. Cleaning is IDEMPOTENT: run it twice, get the identical result. That's what
@@ -22,9 +22,9 @@ THE GOLDEN RULES OF CLEANING (read before the code)
 
 ONE FILE, TWO ROLES (a Python idiom worth knowing)
 --------------------------------------------------
-This file is both a LIBRARY (other code — the app, the tests — imports its
-functions) and a SCRIPT (you run it directly). The functions are the reusable
-machinery; `main()` at the bottom is the narrative that drives them in order.
+This file is both a LIBRARY (the app and the tests import its functions) and
+a SCRIPT (you run it directly). The functions are the reusable machinery;
+`run()` at the bottom is the narrative that drives them in order.
 
 HOW TO RUN IT
 -------------
@@ -53,12 +53,12 @@ DB_PATH = PROCESSED / "strainscope.duckdb"
 # --- The vocabulary the messy text must be harmonised INTO -------------------
 # (One agreed spelling per real-world thing. This tiny "controlled vocabulary"
 #  is the whole trick behind text harmonisation.)
-GENUS_FIXES = {"Psuedomonas": "Pseudomonas"}     # the deliberate Phase-1 typo
+GENUS_FIXES = {"Psuedomonas": "Pseudomonas"}     # the typo Phase 1 planted on purpose
 METAB_COLS_HINT = None  # discovered from the data; kept for readability
 
 
 # =============================================================================
-# THE LEDGER — every step reports what it did, in numbers
+# THE LEDGER: every step reports what it did, in numbers
 # =============================================================================
 
 class Ledger:
@@ -78,7 +78,7 @@ class Ledger:
         return pd.DataFrame(self.entries)
 
     def print(self) -> None:
-        print("\n  ── Cleaning ledger — every change, counted ─────────────────")
+        print("\n  ── Cleaning ledger: every change, counted ──────────────────")
         for e in self.entries:
             delta = e["rows_in"] - e["rows_out"]
             rows = (f"{e['rows_in']}→{e['rows_out']} rows"
@@ -89,14 +89,14 @@ class Ledger:
 
 
 # =============================================================================
-# CLEANING FUNCTIONS — one job each, each honest about what it changed
+# CLEANING FUNCTIONS: one job each, and each reports what it changed
 # =============================================================================
 
 def drop_duplicate_strains(df: pd.DataFrame, table: str, ledger: Ledger) -> pd.DataFrame:
     """Remove repeated strain rows (same strain_id recorded twice).
 
     WHY FIRST: duplicates distort every count and statistic computed after
-    them, so de-duplication always leads. We keep the FIRST occurrence — with
+    them, so de-duplication always leads. We keep the FIRST occurrence. With
     exact duplicates the choice is cosmetic, but stating it makes the rule
     reproducible."""
     rows_in = len(df)
@@ -114,7 +114,7 @@ def harmonize_text(df: pd.DataFrame, ledger: Ledger) -> pd.DataFrame:
       2. unify case (genus Title-case: "trichoderma" -> "Trichoderma";
          sites lower-case: "Endosphere" -> "endosphere")
       3. fix known typos from a written-down mapping ("Psuedomonas" ->
-         "Pseudomonas") — never by guessing, always from an explicit list."""
+         "Pseudomonas"), never by guessing, always from an explicit list."""
     out = df.copy()
     changed = 0
     for col, case in (("genus", "title"), ("collection_site", "lower")):
@@ -131,7 +131,7 @@ def harmonize_text(df: pd.DataFrame, ledger: Ledger) -> pd.DataFrame:
 
 
 def clip_impossible_scores(df: pd.DataFrame, ledger: Ledger) -> pd.DataFrame:
-    """A suppression percentage cannot be below 0 or above 100 — values outside
+    """A suppression percentage cannot be below 0 or above 100. Values outside
     that range are measurement noise, and we CLIP them to the boundary.
 
     Why clip rather than delete? The strain itself is fine; only the reading
@@ -150,22 +150,22 @@ def cap_outliers(df: pd.DataFrame, metab_cols: list[str], ledger: Ledger,
 
     THE RULE (written down, so it's reproducible): for each metabolite, any
     value above  mult × its 95th percentile  (mult = 3) is CAPPED to that
-    ceiling. Reading it plainly: the 95th percentile is "the upper edge of
+    ceiling. Put another way, the 95th percentile is "the upper edge of
     plausible production"; a value THREE TIMES beyond that edge is a
     measurement artifact, not biology.
 
     WHY NOT the textbook Q3 + k·IQR fence? Because our abundances are
-    BIMODAL — strains without the producing gene sit in a low "trace" hump,
+    BIMODAL: strains without the producing gene sit in a low "trace" hump,
     strains with it in a high "producer" hump. For weapons carried by only one
     kingdom, the quartiles land inside the trace hump, the fence lands BELOW
-    the real producers, and the rule flattens genuine biology (verified: it
-    would have capped 779 cells here — six times the known injected spikes).
+    the real producers, and the rule flattens real biology (verified: it
+    would have capped 779 cells here, six times the known injected spikes).
     Textbook rules assume one-humped data; presence/absence chemistry has two.
 
-    HONEST LIMITATION (kept, not hidden): a spike of a *trace* value lands
+    KNOWN LIMITATION (kept, not hidden): a spike of a *trace* value lands
     inside the legitimate producer range and is indistinguishable from real
     production without gene context. Cleaning caps what is provably absurd and
-    documents that some corruption survives — the modelling phases are told.
+    documents that some corruption survives (the modelling phases are told).
 
     Why CAP (winsorise) rather than delete? The strain is real; only one
     reading spiked. Capping keeps the sample, removes the distortion, and the
@@ -179,7 +179,7 @@ def cap_outliers(df: pd.DataFrame, metab_cols: list[str], ledger: Ledger,
         capped += int(mask.sum())
     ledger.add("cap_outliers", "metabolomics", len(out), len(out), capped,
                f"values above {mult}×p95 capped ({capped} cells); moderate "
-               f"spikes are indistinguishable from real producers — documented")
+               f"spikes are indistinguishable from real producers (documented)")
     return out
 
 
@@ -187,12 +187,12 @@ def correct_batch_effect(df: pd.DataFrame, batch: pd.Series,
                          metab_cols: list[str], ledger: Ledger) -> pd.DataFrame:
     """Remove the systematic drift between lab batches (median-scaling).
 
-    THE IDEA, plainly: if batch 3's readings run ~15% hot for a metabolite
+    THE IDEA: if batch 3's readings run ~15% hot for a metabolite
     (its batch median is 1.15× the overall median), divide batch 3's values for
     that metabolite by 1.15. Do that per metabolite, per batch. Medians (not
     means) so the correction can't be dragged by leftover extremes.
 
-    ORDER MATTERS: this runs AFTER outlier capping — otherwise one spike could
+    ORDER MATTERS: this runs AFTER outlier capping. Otherwise one spike could
     poison its whole batch's scaling factor."""
     out = df.copy()
     # Whole-number CSVs parse as integers; scaling produces decimals, and
@@ -216,13 +216,12 @@ def correct_batch_effect(df: pd.DataFrame, batch: pd.Series,
 
 
 def account_missing(dfs: dict[str, pd.DataFrame], ledger: Ledger) -> None:
-    """COUNT the missing values — and deliberately leave them missing.
+    """COUNT the missing values, and leave them missing on purpose.
 
-    This is a decision, not an omission. Filling gaps ("imputation") bakes in
-    assumptions that depend on what you'll do downstream — the integration and
-    modelling phases will choose their own strategies, openly. Cleaning's job
-    is to make missingness VISIBLE and COUNTED, not to hide it. In the
-    database, these gaps become proper SQL NULLs."""
+    Filling gaps ("imputation") bakes in assumptions that depend on what
+    you'll do downstream, so the integration and modelling phases choose
+    their own strategies, openly. Cleaning's job is to make missingness
+    VISIBLE and COUNTED. In the database, these gaps become proper SQL NULLs."""
     for name, df in dfs.items():
         n = int(df.isna().sum().sum())
         ledger.add("account_missing", name, len(df), len(df), n,
@@ -231,7 +230,7 @@ def account_missing(dfs: dict[str, pd.DataFrame], ledger: Ledger) -> None:
 
 
 # =============================================================================
-# THE DATABASE — load clean synthetic + any real tables into DuckDB
+# THE DATABASE: load clean synthetic + any real tables into DuckDB
 # =============================================================================
 
 def load_to_duckdb(clean: dict[str, pd.DataFrame], db_path: Path = DB_PATH) -> list[str]:
@@ -266,7 +265,7 @@ def load_to_duckdb(clean: dict[str, pd.DataFrame], db_path: Path = DB_PATH) -> l
 
 
 # =============================================================================
-# MAIN — the narrative: raw -> cleaned -> counted -> stored
+# MAIN (the narrative): raw -> cleaned -> counted -> stored
 # =============================================================================
 
 def run(verbose: bool = True) -> tuple[dict[str, pd.DataFrame], Ledger, list[str]]:
@@ -278,7 +277,7 @@ def run(verbose: bool = True) -> tuple[dict[str, pd.DataFrame], Ledger, list[str
     phenotype = pd.read_csv(RAW / "phenotype.csv")
     metab_cols = [c for c in metabolomics.columns if c != "strain_id"]
 
-    # 1. Duplicates first — everything after depends on honest row counts.
+    # 1. Duplicates first: everything after depends on correct row counts.
     genomics = drop_duplicate_strains(genomics, "genomics", ledger)
     metabolomics = drop_duplicate_strains(metabolomics, "metabolomics", ledger)
     phenotype = drop_duplicate_strains(phenotype, "phenotype", ledger)
@@ -317,9 +316,9 @@ def run(verbose: bool = True) -> tuple[dict[str, pd.DataFrame], Ledger, list[str
         print(f"\n  Database: data/processed/{DB_PATH.name}")
         print(f"  Tables loaded: {', '.join(tables)}")
         real_n = sum(t.startswith('real_') for t in tables)
-        print(f"  ({real_n} real table(s) auto-loaded from data/processed/real/ — "
+        print(f"  ({real_n} real table(s) auto-loaded from data/processed/real/; "
               "future sources join automatically)")
-        print("\n  Raw files remain untouched — cleaning is re-runnable, evidence is safe.")
+        print("\n  Raw files remain untouched: cleaning is re-runnable, evidence is safe.")
     return clean, ledger, tables
 
 

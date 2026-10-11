@@ -1,6 +1,6 @@
 """
-bacdive.py — adapter for BacDive, the Bacterial Diversity Metadatabase.
-=======================================================================
+bacdive.py: adapter for BacDive, the Bacterial Diversity Metadatabase.
+======================================================================
 
 WHAT BACDIVE IS
 ---------------
@@ -8,16 +8,16 @@ BacDive (https://bacdive.dsmz.de) is run by the DSMZ, Germany's national
 collection of microorganisms, and is the world's largest database of
 standardised, strain-level bacterial information: ~82,000 real strains with
 taxonomy, where each was isolated, growth conditions, and more. Since February
-2026 its API is freely accessible — no account, no key.
+2026 its API is freely accessible, with no account and no key.
 
-WHAT WE TAKE, HONESTLY
-----------------------
+WHAT WE TAKE
+------------
 Real strain records for the bacterial genera StrainScope models (Bacillus,
 Pseudomonas, Streptomyces, Paenibacillus). That gives the project a table of
-REAL strains — names, isolation sources, countries — to browse next to the
-synthetic library. Note the honest boundary: BacDive covers bacteria (and
+REAL strains (names, isolation sources, countries) to browse next to the
+synthetic library. Note the boundary: BacDive covers bacteria (and
 archaea) only, and it does NOT contain a standardised "disease suppression"
-outcome — no public database does. So these records complement the synthetic
+outcome (no public database does). So these records complement the synthetic
 data; they don't replace it.
 
 HOW THE API WORKS (two steps)
@@ -28,7 +28,7 @@ HOW THE API WORKS (two steps)
 2. FETCH: GET https://api.bacdive.dsmz.de/fetch/{id};{id};{id}
           -> full records, keyed by id.
 Responses are JSON. If the API's shape ever changes, the raw responses are all
-saved to disk, so nothing is lost — only tidy() would need a tweak.
+saved to disk, so nothing is lost; only tidy() would need a tweak.
 """
 
 from __future__ import annotations
@@ -63,7 +63,7 @@ def _extract_ids(results, limit: int) -> list[str]:
 
     The live API returns a plain list of integer IDs ([171624, 171625, ...]);
     earlier documentation showed dict entries ([{"id": 171624}, ...]). Live
-    services evolve, so we accept BOTH — the first real fetch is exactly where
+    services evolve, so we accept BOTH. The first real fetch is exactly where
     such differences surface, and tolerant parsing is the cure."""
     ids: list[str] = []
     for r in results[:limit]:
@@ -79,7 +79,7 @@ class BacDive(Source):
 
     # ------------------------------------------------------------------ probe
     def probe(self) -> None:
-        print(f"\n[{self.name}] probing — how many real strains per genus?")
+        print(f"\n[{self.name}] probing: how many real strains per genus?")
         print(f"  {'genus':<14} strains available")
         print("  " + "-" * 32)
         total = 0
@@ -102,7 +102,7 @@ class BacDive(Source):
             list_url = f"{BASE}/taxon/{genus}"
             listing = self.get(list_url)
             if not listing or not listing.get("results"):
-                print(f"  [{genus}] nothing returned — logged and skipped")
+                print(f"  [{genus}] nothing returned; logged and skipped")
                 self.log("fetch", genus, list_url, 0, "empty")
                 continue
             ids = _extract_ids(listing["results"], limit)
@@ -128,7 +128,7 @@ class BacDive(Source):
                   f"(of {listing.get('count', '?'):,} available)")
             self.log("fetch", genus, list_url, len(records), "ok",
                      f"first {limit} of {listing.get('count', '?')}")
-        print(f"  Raw files in data/raw/real/{self.name}/ — log updated.")
+        print(f"  Raw files in data/raw/real/{self.name}/; log updated.")
 
     # ------------------------------------------------------------------- tidy
     def tidy(self) -> None:
@@ -153,6 +153,6 @@ class BacDive(Source):
         out = self.write_table("real_strains.csv", rows)
         print(f"  wrote {out.relative_to(out.parents[3])}  ({len(rows)} strains)")
         if rows and not any(r["genus"] for r in rows):
-            print("  ⚠ genus came back empty for every record — the API's field"
+            print("  ⚠ genus came back empty for every record. The API's field"
                   " names may have shifted; the raw JSON is saved, so open one"
                   " record and adjust the paths in tidy().")

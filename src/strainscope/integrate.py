@@ -1,11 +1,11 @@
 """
-src/strainscope/integrate.py — StrainScope Phase 3: multi-omics integration (the Python side).
-==============================================================================================
+src/strainscope/integrate.py (StrainScope Phase 3): multi-omics integration, the Python side.
+=============================================================================================
 
 WHAT THIS MODULE DOES (in one sentence)
 ---------------------------------------
 It turns the clean genomics and metabolomics tables into two aligned "blocks"
-ready for integration, runs a plain-Python counterpart to DIABLO with honest
+ready for integration, runs a plain-Python counterpart to DIABLO with leak-free
 cross-validation, checks how well each approach recovers the signal we know
 is there, and publishes every result into the project database.
 
@@ -23,13 +23,13 @@ or all four in order, with one command:
 WHERE THINGS GO
 ---------------
   data/processed/integration/   the prepared blocks (regenerable, NOT in Git)
-  artifacts/integration/        small result tables (committed — the app reads them)
+  artifacts/integration/        small result tables (committed, since the app reads them)
   data/processed/strainscope.duckdb   gains int_* tables after `publish`
 
 THE DECISIONS, WRITTEN DOWN (each is explained in docs/04-integration.md)
 ------------------------------------------------------------------------
 1. ALIGN on strain_id and refuse to continue if any strain is missing from a
-   block — integration needs the SAME strains in every block, in the same order.
+   block: integration needs the SAME strains in every block, in the same order.
 2. FILL gaps (imputation) using each strain's OWN kingdom: a missing gene call
    gets the most common value among strains of that kingdom; a missing
    metabolite gets that kingdom's median. Labels (effective or not) are never
@@ -76,7 +76,7 @@ CV_FOLDS, CV_REPEATS = 5, 10 # 5-fold cross-validation, repeated 10 times
 
 
 # =============================================================================
-# FEATURE ANNOTATION — what we KNOW about every column (synthetic superpower)
+# FEATURE ANNOTATION: what we KNOW about every column (synthetic superpower)
 # =============================================================================
 
 def _arsenal(prev: tuple[float, ...]) -> str:
@@ -94,7 +94,7 @@ def feature_annotations() -> pd.DataFrame:
 
     Because the data is synthetic, we know the ground truth: which features
     were written into the efficacy formula ('signal') and which were not
-    ('decoy'). Real projects never get this answer key — we use it to GRADE the
+    ('decoy'). Real projects never get this answer key. We use it to GRADE the
     signatures the methods find, which is the point of building on known data."""
     rows = []
     for gene, info in SIGNAL_GENES.items():
@@ -122,7 +122,7 @@ def feature_annotations() -> pd.DataFrame:
 
 
 # =============================================================================
-# PREPARE — clean tables -> aligned, imputed, filtered, transformed blocks
+# PREPARE: clean tables -> aligned, imputed, filtered, transformed blocks
 # =============================================================================
 
 def load_clean_tables(db_path: Path = DB_PATH) -> dict[str, pd.DataFrame]:
@@ -146,14 +146,14 @@ def align_blocks(genomics: pd.DataFrame, metabolomics: pd.DataFrame,
                  phenotype: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """Rule 1: the same strains, in the same order, in every block.
 
-    Integration methods match rows by POSITION, not by name — row 17 of the
+    Integration methods match rows by POSITION, not by name: row 17 of the
     genes block must be the same strain as row 17 of the chemistry block. So we
     check the strain sets are identical and stop loudly if they are not."""
     sets = [set(genomics.index), set(metabolomics.index), set(phenotype.index)]
     if not (sets[0] == sets[1] == sets[2]):
         missing = (sets[0] | sets[1] | sets[2]) - (sets[0] & sets[1] & sets[2])
         raise ValueError(f"{len(missing)} strain(s) are not present in every table, "
-                         f"e.g. {sorted(missing)[:5]} — re-run python src/strainscope/harmonize.py")
+                         f"e.g. {sorted(missing)[:5]}. Re-run python src/strainscope/harmonize.py")
     order = sorted(sets[0])
     return genomics.loc[order], metabolomics.loc[order], phenotype.loc[order]
 
@@ -162,7 +162,7 @@ def impute_within_kingdom(block: pd.DataFrame, kingdom: pd.Series,
                           binary: bool) -> tuple[pd.DataFrame, int]:
     """Rule 2: fill each gap from the strain's own kingdom.
 
-    Genes (binary): the most common value among that kingdom's strains — a
+    Genes (binary): the most common value among that kingdom's strains, so a
     missing call for a yeast is filled with what yeasts usually carry.
     Metabolites: that kingdom's median. Returns the filled block and how many
     cells were filled (for the ledger)."""
@@ -196,7 +196,7 @@ def centre_within_kingdom(block: pd.DataFrame, kingdom: pd.Series) -> pd.DataFra
     """Rule 5: subtract each kingdom's average from its own strains.
 
     After this, a value says "how much more (or less) of this does the strain
-    have than a typical member of ITS kingdom" — the same yardstick the efficacy
+    have than a typical member of ITS kingdom", the same yardstick the efficacy
     score uses. Only centring (no rescaling): rescaling would turn a gene that
     is rare in a kingdom into a giant number for the few strains carrying it."""
     out = block.copy()
@@ -208,7 +208,7 @@ def centre_within_kingdom(block: pd.DataFrame, kingdom: pd.Series) -> pd.DataFra
 
 def prepare(db_path: Path = DB_PATH, blocks_dir: Path = BLOCKS,
             artifacts_dir: Path = ARTIFACTS, verbose: bool = True) -> dict:
-    """Run rules 1–5 and write the blocks both R and Python read."""
+    """Run rules 1 to 5 and write the blocks both R and Python read."""
     t = load_clean_tables(db_path)
     g, m, p = align_blocks(t["genomics"], t["metabolomics"], t["phenotype"])
     kingdom = p["kingdom"]
@@ -280,7 +280,7 @@ def read_blocks(blocks_dir: Path = BLOCKS, centred: bool = True):
 
 
 # =============================================================================
-# TWIN — the Python counterpart, scored with the same honest yardstick
+# TWIN: the Python counterpart, scored with the same yardstick
 # =============================================================================
 
 def balanced_error_rate(y_true: np.ndarray, y_pred: np.ndarray) -> float:
@@ -289,7 +289,7 @@ def balanced_error_rate(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     Why not plain accuracy? Only 24 % of strains are effective, so a lazy model
     that always says "not effective" is 76 % accurate and completely useless.
     BER asks "how often are you wrong about the effective ones, and how often
-    about the others?" and averages the two — the lazy model scores 0.50,
+    about the others?" and averages the two. The lazy model scores 0.50,
     exactly what a coin would. Lower is better."""
     errors = [np.mean(y_pred[y_true == c] != c) for c in (0, 1)]
     return float(np.mean(errors))
@@ -300,7 +300,7 @@ def _lasso_args() -> dict:
 
     scikit-learn 1.8 renamed the switch: newer versions take `l1_ratio=1`,
     older ones `penalty="l1"`. Checking the installed version keeps the code
-    working — and warning-free — on both."""
+    working (and warning-free) on both."""
     import sklearn
     major, minor = (int(part) for part in sklearn.__version__.split(".")[:2])
     return {"l1_ratio": 1.0} if (major, minor) >= (1, 8) else {"penalty": "l1"}
@@ -310,8 +310,8 @@ def _scaled_concat(g: pd.DataFrame, m: pd.DataFrame) -> np.ndarray:
     """Concatenate two blocks so each contributes EQUALLY.
 
     Each column is standardised, then each block is divided by the square root
-    of its column count — otherwise the block with more columns would shout
-    louder simply because it has more voices. (This is "block scaling", the
+    of its column count. Otherwise the block with more columns would shout
+    louder just because it has more voices. (This is "block scaling", the
     early-integration counterpart to DIABLO giving each block its own say.)"""
     parts = []
     for block in (g, m):
@@ -348,7 +348,7 @@ def cross_validate_models(g: pd.DataFrame, m: pd.DataFrame, outcome: pd.DataFram
     # The "no signal" control (y-scrambling): every repeat gets its OWN random
     # shuffle of the labels, and the model is trained AND scored on shuffled
     # labels. Any score better than a coin here would mean the procedure finds
-    # "signal" in pure noise — i.e. something is leaking.
+    # "signal" in pure noise, i.e. something is leaking.
     rng = np.random.default_rng(seed)
     y_shuffles = [rng.permutation(y) for _ in range(repeats)]
 
@@ -358,7 +358,7 @@ def cross_validate_models(g: pd.DataFrame, m: pd.DataFrame, outcome: pd.DataFram
 
     def sparse_logistic():
         # L1 ("lasso") penalty: most weights are pushed to exactly zero, so the
-        # model SELECTS a short list of features — like DIABLO's keepX.
+        # model SELECTS a short list of features (like DIABLO's keepX).
         return make_pipeline(StandardScaler(),
                              LogisticRegression(**_lasso_args(), solver="liblinear", C=0.05,
                                                 class_weight="balanced", max_iter=5000))
@@ -416,8 +416,8 @@ def cross_validate_models(g: pd.DataFrame, m: pd.DataFrame, outcome: pd.DataFram
 
     def per_repeat(values: list[float]) -> np.ndarray:
         # One number per repeat (the average over its 5 folds). The ± we report
-        # is how much that number moves when the folds are reshuffled — the same
-        # definition mixOmics uses, so R and Python uncertainties are comparable.
+        # is how much that number moves when the folds are reshuffled. It's the
+        # same definition mixOmics uses, so R and Python uncertainties are comparable.
         return np.asarray(values).reshape(repeats, folds).mean(axis=1)
 
     board = pd.DataFrame([{
@@ -437,7 +437,7 @@ def cross_block_correlations(g: pd.DataFrame, m: pd.DataFrame) -> pd.DataFrame:
     """Spearman correlation between every gene and every metabolite.
 
     'Spearman' ranks the values first, so it measures 'when one goes up, does
-    the other tend to go up?' without assuming a straight line — robust to the
+    the other tend to go up?' without assuming a straight line; it's robust to the
     two-hump shape of our chemistry. High correlations between a gene and its
     own product are the biology we planted; strong correlations between
     unrelated pairs would be a warning sign. This table is also the seed of the
@@ -475,7 +475,7 @@ def grade_signature(selected: list[str], annotations: pd.DataFrame) -> dict:
 def twin(blocks_dir: Path = BLOCKS, artifacts_dir: Path = ARTIFACTS,
          repeats: int = CV_REPEATS, verbose: bool = True) -> dict:
     """The Python counterpart: scoreboard, lasso selection, correlations,
-    and — if DIABLO has run — the agreement check between the two languages."""
+    and (if DIABLO has run) the agreement check between the two languages."""
     started = time.time()
     g, m, o = read_blocks(blocks_dir, centred=True)
     annotations = pd.read_csv(artifacts_dir / "feature_annotations.csv") \
@@ -502,7 +502,7 @@ def twin(blocks_dir: Path = BLOCKS, artifacts_dir: Path = ARTIFACTS,
     if diablo_path.exists():
         # The DIABLO signature to read is COMPONENT 1 (the R script explains why
         # component 2 is kept only for the 2-D map). "Robust" = picked in at least
-        # 80 % of the cross-validation re-fits — the same rule as the lasso above.
+        # 80 % of the cross-validation re-fits, the same rule as the lasso above.
         diablo = pd.read_csv(diablo_path)
         comp1 = diablo[diablo["component"] == 1]
         diablo_all = sorted(set(comp1["feature"]))
@@ -535,7 +535,7 @@ def twin(blocks_dir: Path = BLOCKS, artifacts_dir: Path = ARTIFACTS,
                   f"{agreement['diablo_only']} DIABLO-only, {agreement['python_only']} Python-only "
                   f"(overlap score {agreement['jaccard']:.2f})")
         else:
-            print("  (DIABLO results not found yet — run the R step, then `twin` again "
+            print("  (DIABLO results not found yet. Run the R step, then `twin` again "
                   "for the two-language agreement check)")
         top = corr[corr["is_producer_pair"]].sort_values("spearman_rho", ascending=False)
         print(f"  gene ↔ own-product correlations: median rho "
@@ -547,7 +547,7 @@ def twin(blocks_dir: Path = BLOCKS, artifacts_dir: Path = ARTIFACTS,
 
 
 # =============================================================================
-# PUBLISH — results into the database, so SQL (and later the app) can use them
+# PUBLISH: results into the database, so SQL (and later the app) can use them
 # =============================================================================
 
 def publish(artifacts_dir: Path = ARTIFACTS, db_path: Path = DB_PATH,
@@ -555,14 +555,14 @@ def publish(artifacts_dir: Path = ARTIFACTS, db_path: Path = DB_PATH,
     """Load every artifacts/integration/*.csv into DuckDB as int_<name>.
 
     `CREATE OR REPLACE` makes this idempotent. Note the order rule: src/strainscope/harmonize.py
-    rebuilds the database from scratch (on purpose — derived results must never
+    rebuilds the database from scratch (on purpose: derived results must never
     outlive the data they came from), so re-run `publish` after `harmonize`."""
     import duckdb
     if not db_path.exists():
-        sys.exit("No database yet — run:  python src/strainscope/harmonize.py")
+        sys.exit("No database yet. Run:  python src/strainscope/harmonize.py")
     csvs = sorted(artifacts_dir.glob("*.csv"))
     if not csvs:
-        sys.exit("No integration results yet — run `prepare`, the R step and `twin` first.")
+        sys.exit("No integration results yet. Run `prepare`, the R step and `twin` first.")
     con = duckdb.connect(str(db_path))
     created = []
     try:
@@ -610,20 +610,20 @@ def run_r_step() -> bool:
     Returns True if it ran successfully, False if R is unavailable or failed."""
     rscript = find_rscript()
     if rscript is None:
-        print("  R not found — skipping DIABLO. Everything else still runs (Python-only path).\n"
+        print("  R not found; skipping DIABLO. Everything else still runs (Python-only path).\n"
               "  To include it: install R (docs/01-setup.md, Part I) or set STRAINSCOPE_RSCRIPT.")
         return False
     print(f"  running DIABLO with {rscript} (about 3 minutes) …")
     done = subprocess.run([rscript, str(R_SCRIPT.relative_to(ROOT))], cwd=ROOT)
     if done.returncode != 0:
-        print("  the R step failed — read its message above; see docs/04-integration.md §11.")
+        print("  the R step failed. Read its message above and see docs/04-integration.md §11.")
         return False
     return True
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="StrainScope Phase 3 — multi-omics integration (Python side).")
+        description="StrainScope Phase 3: multi-omics integration (Python side).")
     parser.add_argument("step", choices=["prepare", "twin", "publish", "all"],
                         help="which step to run (or 'all' for the whole chain)")
     parser.add_argument("--repeats", type=int, default=CV_REPEATS,

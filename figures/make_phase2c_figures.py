@@ -1,11 +1,11 @@
 """
-make_phase2c_figures.py — figures for Tier 2 real sources (+ the secrets lesson).
-=================================================================================
-1. A CONCEPT ILLUSTRATION (always drawn): the two homes of a secret — how an
+make_phase2c_figures.py: figures for Tier 2 real sources (+ the secrets lesson).
+================================================================================
+1. A CONCEPT ILLUSTRATION (always drawn): the two homes of a secret, and how an
    API key travels from shell/.env into a request header without ever touching
    Git.
 2. DATA FIGURES (only after `fetch_real.py --source ncbi_datasets` /
-   `--source metabolomics_wb`, from YOUR fetched tables — never invented):
+   `--source metabolomics_wb`, from YOUR fetched tables, never invented):
    real genome sizes by kingdom, GC-vs-size interactive, RefMet classes,
    studies per keyword.
 
@@ -60,9 +60,9 @@ def draw_secret_homes():
             ax.text((x1 + x2)/2, (y1 + y2)/2 + 0.16, label, ha="center",
                     fontsize=7.5, color="#5f6b7a", style="italic")
 
-    box(0.3, 3.4, 3.0, 1.2, "#E8F0FE", "Home 1 — the shell",
+    box(0.3, 3.4, 3.0, 1.2, "#E8F0FE", "Home 1: the shell",
         "export NCBI_API_KEY=…\n(this session only)")
-    box(0.3, 1.6, 3.0, 1.2, "#FFF3CD", "Home 2 — the .env file",
+    box(0.3, 1.6, 3.0, 1.2, "#FFF3CD", "Home 2: the .env file",
         "NCBI_API_KEY=…  (one line;\ngit-ignored + gate-guarded)")
     box(4.2, 2.4, 2.7, 1.4, "#F3E8FD", "The environment",
         "load_env() fills gaps;\nthe shell always wins", fs=9.5)
@@ -79,15 +79,15 @@ def draw_secret_homes():
     ax.text(5.9, 1.85, "✗ blocked:\n.gitignore + safety gate", ha="left",
             fontsize=7.5, color=RED)
 
-    ax.set_title("One key, two safe homes — and one place it must never appear",
+    ax.set_title("One key, two safe homes, and one place it must never appear",
                  fontsize=12)
-    footnote(fig, "StrainScope — concept illustration")
+    footnote(fig, "StrainScope: concept illustration")
     fig.tight_layout(); fig.savefig(FIG / "secret_homes.png"); plt.close(fig)
     print("  drew figures/secret_homes.png (concept illustration)")
 
 
 # =============================================================================
-# 2. DATA FIGURES — only from YOUR fetched tables
+# 2. DATA FIGURES: only from YOUR fetched tables
 # =============================================================================
 def draw_data_figures():
     import pandas as pd
@@ -95,7 +95,7 @@ def draw_data_figures():
     refmet_p = REAL / "real_refmet.csv"
     studies_p = REAL / "real_mw_studies.csv"
     if not genomes_p.exists() and not refmet_p.exists():
-        print("  (no Tier-2 tables yet — run `python src/strainscope/fetch_real.py"
+        print("  (no Tier-2 tables yet; run `python src/strainscope/fetch_real.py"
               " --source ncbi_datasets` and `--source metabolomics_wb` first)")
         return
 
@@ -128,7 +128,7 @@ def draw_data_figures():
                                 "assembly_level": True},
                     labels={"Mb": "genome length (Mb, log)",
                             "gc_percent": "GC content (%)"},
-                    title="Real genomes — hover any point (NCBI Datasets)")
+                    title="Real genomes from NCBI Datasets (hover any point)")
                 figi.update_layout(template="plotly_white", height=520)
                 figi.write_html(INT / "real_genomes.html",
                                 include_plotlyjs=True, full_html=True)
@@ -140,7 +140,7 @@ def draw_data_figures():
         r = pd.read_csv(refmet_p)
         found = r[r["status"] == "found"]
         if len(found):
-            per = found["main_class"].fillna("—").value_counts()
+            per = found["main_class"].fillna("unknown").value_counts()
             fig, ax = plt.subplots(figsize=(8, 4))
             ax.barh(per.index[::-1], per.values[::-1], color=GREEN)
             ax.set_xlabel("of our metabolites in this RefMet class")

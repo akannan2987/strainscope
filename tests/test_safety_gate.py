@@ -1,6 +1,6 @@
 """
-tests/test_safety_gate.py — offline tests for the pre-push safety gate.
-=======================================================================
+tests/test_safety_gate.py: offline tests for the pre-push safety gate.
+======================================================================
 The safety gate (check-public-safe.sh, in the project folder) is the last
 line of defence before something becomes public, so it gets tests of its own.
 Each test builds a tiny throw-away Git repository in a temporary folder,
@@ -8,21 +8,21 @@ copies the gate into it, sets up one situation, runs the gate and checks its
 verdict (exit code 0 = safe, 1 = not safe).
 
 The situations come from real events in this project:
-  * a NEW file holding a key must be caught even before `git add` — the gate
-    runs before staging, and an earlier version only looked at tracked files
+  * a NEW file holding a key must be caught even before `git add`, because the
+    gate runs before staging and an earlier version only looked at tracked files
     (fixed in v0.1.1; story in docs/01-setup.md, Part H);
-  * a key in an ignored file (.env) is fine — Git will never publish it;
+  * a key in an ignored file (.env) is fine, since Git will never publish it;
   * a key in a FORCE-added ignored file must be caught;
   * a link anchor such as "#ask-strainscope-..." contains the letters "sk-"
-    followed by many letters — the shape of a key — and must NOT raise a
+    followed by many letters (the shape of a key) and must NOT raise a
     false alarm (fixed in v0.1.0; story in docs/04-integration.md, §12).
 
 Key-shaped values are assembled while the test runs (for example
-"sk-" + "a" * 24), so this file itself never contains one — the gate scans
+"sk-" + "a" * 24), so this file itself never contains one. The gate scans
 this file too, every time you run it on the real repository.
 
 Needs `bash` and `git`; skipped on Windows, where `bash` may belong to a
-different system (WSL) — run the gate there from Git Bash, as the setup guide
+different system (WSL). There, run the gate from Git Bash, as the setup guide
 shows.
 
 Run:  pytest -q tests/test_safety_gate.py

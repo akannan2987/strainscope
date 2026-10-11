@@ -1,0 +1,4 @@
+setting,value,times_chosen,share
+C,0.05,10,0.2
+C,0.2,35,0.7
+C,1.0,5,0.1

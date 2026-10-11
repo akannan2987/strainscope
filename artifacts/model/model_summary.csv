@@ -1,0 +1,17 @@
+key,value
+model,Elastic net logistic regression
+settings,"{""C"": 0.2}"
+strains,600
+base_rate,0.2417
+features_used,48
+cv_ber,0.1275
+cv_ber_sd,0.0075
+cv_auc,0.9479
+cv_average_precision,0.8658
+ece_raw,0.0809
+ece_calibrated,0.0329
+top_n,50
+top_n_truly_effective,47
+top_n_expected_by_chance,12.1
+scikit_learn_version,1.9.0
+model_file_kb,18.9

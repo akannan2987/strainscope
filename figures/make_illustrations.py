@@ -1,6 +1,6 @@
 """
-figures/make_illustrations.py — the project's logo and the Handbook's journey map.
-==================================================================================
+figures/make_illustrations.py: the project's logo and the Handbook's journey map.
+=================================================================================
 Writes small, crisp SVG pictures (vector graphics: they stay sharp at any
 zoom, and they are plain text, so Git can track changes to them):
 
@@ -8,7 +8,7 @@ zoom, and they are plain text, so Git can track changes to them):
     docs/img/strainscope_icon.svg     the square icon (app, social preview)
     docs/img/journey_map.svg          the day-0-to-product road, with status
 
-The journey map reads its stage list from STAGES below — when a phase is
+The journey map reads its stage list from STAGES below. When a phase is
 finished, flip its status here, re-run this script, and the picture in the
 Handbook updates. (The same status lives in docs/HANDBOOK.md and
 docs/ROADMAP.md; all three are updated in the same commit.)
@@ -27,7 +27,7 @@ BLUE, GREEN, GOLD, GREY, PURPLE, RED = ("#5B8DEF", "#4CAF7D", "#C9A227",
                                         "#8A94A6", "#9C6ADE", "#D9634C")
 INK = "#1F2933"
 
-# (stage, short label, phase tag, symbol, status) — status: done / next / later
+# (stage, short label, phase tag, symbol, status); status is done / next / later
 STAGES = [
     ("0", "Understand", "why & what", "🧭", "done"),
     ("1", "Set up", "once per machine", "🧰", "done"),
@@ -37,8 +37,8 @@ STAGES = [
     ("5", "More sources", "Phase 1c", "🔑", "done"),
     ("6", "Clean + database", "Phase 2", "🧹", "done"),
     ("7", "Integrate", "Phase 3", "🔗", "done"),
-    ("8", "Predict", "Phase 4", "🎯", "next"),
-    ("9", "Knowledge graph", "Phase 5", "🕸️", "later"),
+    ("8", "Predict", "Phase 4", "🎯", "done"),
+    ("9", "Knowledge graph", "Phase 5", "🕸️", "next"),
     ("10", "The app", "Phase 6", "🖥️", "later"),
     ("11", "Ask StrainScope", "Phase 6b", "💬", "later"),
     ("12", "Deploy + AI layer", "Phase 7", "☁️", "later"),
@@ -53,8 +53,8 @@ STATUS_STYLE = {"done": (GREEN, "#E6F4EA", "built ✓"),
 
 def logo_svg() -> str:
     """Banner: a petri dish with four colonies (one per kingdom), a magnifying
-    lens joining two of them with a small network — reading several
-    fingerprints at once — and the wordmark."""
+    lens joining two of them with a small network (reading several
+    fingerprints at once), and the wordmark."""
     return f"""<svg xmlns="http://www.w3.org/2000/svg" width="720" height="200" viewBox="0 0 720 200" role="img" aria-label="StrainScope logo">
   <title>StrainScope</title>
   <rect width="720" height="200" rx="18" fill="#F5F9FF"/>
@@ -113,10 +113,10 @@ def journey_svg() -> str:
     path += " ".join(f"L {x} {y}" for x, y in points[9:])
     out = [f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" '
            f'viewBox="0 0 {width} {height}" role="img" aria-label="StrainScope journey map">',
-           "<title>StrainScope — the journey from day 0 to the product</title>",
+           "<title>StrainScope: the journey from day 0 to the product</title>",
            f'<rect width="{width}" height="{height}" rx="18" fill="#FBFCFE"/>',
            f'<text x="{width / 2}" y="44" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, '
-           f'sans-serif" font-size="22" font-weight="700" fill="{INK}">The StrainScope journey — '
+           f'sans-serif" font-size="22" font-weight="700" fill="{INK}">The StrainScope journey, '
            'from a blank laptop to a finished product</text>',
            f'<path d="{path}" fill="none" stroke="#D5DCE6" stroke-width="16" stroke-linecap="round" '
            'stroke-linejoin="round"/>']

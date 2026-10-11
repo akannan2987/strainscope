@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1180" height="470" viewBox="0 0 1180 470" role="img" aria-label="StrainScope journey map">
-<title>StrainScope — the journey from day 0 to the product</title>
+<title>StrainScope: the journey from day 0 to the product</title>
 <rect width="1180" height="470" rx="18" fill="#FBFCFE"/>
-<text x="590.0" y="44" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="22" font-weight="700" fill="#1F2933">The StrainScope journey — from a blank laptop to a finished product</text>
+<text x="590.0" y="44" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="22" font-weight="700" fill="#1F2933">The StrainScope journey, from a blank laptop to a finished product</text>
 <path d="M 90 150 L 233 150 L 376 150 L 519 150 L 662 150 L 805 150 L 948 150 L 1091 150 C 1181 150, 1181 345, 1091 345 L 948 345 L 805 345 L 662 345 L 519 345 L 376 345 L 233 345 L 90 345" fill="none" stroke="#D5DCE6" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
 <circle cx="90" cy="150" r="34" fill="#E6F4EA" stroke="#4CAF7D" stroke-width="4"/>
 <text x="90" y="160" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="28" font-weight="700" fill="#4CAF7D">0</text>
@@ -43,14 +43,14 @@
 <text x="1117" y="126" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16" font-weight="700" fill="#4CAF7D">✓</text>
 <text x="1091" y="206" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13.5" font-weight="600" fill="#1F2933">Integrate</text>
 <text x="1091" y="223" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#5f6b7a">Phase 3</text>
-<circle cx="1091" cy="345" r="34" fill="#FFF3CD" stroke="#C9A227" stroke-width="4"/>
-<text x="1091" y="355" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="28" font-weight="700" fill="#C9A227">8</text>
-<text x="1117" y="321" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16" font-weight="700" fill="#C9A227">▶</text>
+<circle cx="1091" cy="345" r="34" fill="#E6F4EA" stroke="#4CAF7D" stroke-width="4"/>
+<text x="1091" y="355" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="28" font-weight="700" fill="#4CAF7D">8</text>
+<text x="1117" y="321" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16" font-weight="700" fill="#4CAF7D">✓</text>
 <text x="1091" y="401" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13.5" font-weight="600" fill="#1F2933">Predict</text>
 <text x="1091" y="418" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#5f6b7a">Phase 4</text>
-<circle cx="948" cy="345" r="34" fill="#F5F5F5" stroke="#8A94A6" stroke-width="4"/>
-<text x="948" y="355" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="28" font-weight="700" fill="#8A94A6">9</text>
-<text x="974" y="321" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16" font-weight="700" fill="#8A94A6"></text>
+<circle cx="948" cy="345" r="34" fill="#FFF3CD" stroke="#C9A227" stroke-width="4"/>
+<text x="948" y="355" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="28" font-weight="700" fill="#C9A227">9</text>
+<text x="974" y="321" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16" font-weight="700" fill="#C9A227">▶</text>
 <text x="948" y="401" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13.5" font-weight="600" fill="#1F2933">Knowledge graph</text>
 <text x="948" y="418" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#5f6b7a">Phase 5</text>
 <circle cx="805" cy="345" r="34" fill="#F5F5F5" stroke="#8A94A6" stroke-width="4"/>

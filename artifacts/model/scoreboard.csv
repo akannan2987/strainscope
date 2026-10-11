@@ -1,0 +1,6 @@
+model_key,model,ber_mean,ber_sd,ber_base_rate_mean,ber_base_rate_sd,auc_mean,auc_sd,ap_mean,ap_sd,brier_mean,brier_sd,accuracy_mean,accuracy_sd,is_winner,n_folds_scored
+baseline,Baseline: always the base rate (no features),0.5,0.0,0.5,0.0,0.5,0.0,0.2417,0.0,0.1833,0.0,0.7583,0.0,False,50
+elastic_net,Elastic net logistic regression (tuned inside each fold),0.1275,0.0075,0.1587,0.0087,0.9479,0.0043,0.8658,0.0097,0.0916,0.0039,0.8778,0.0064,True,50
+random_forest,Random forest (200 trees),0.3632,0.0107,0.2402,0.0058,0.8634,0.0043,0.7086,0.0159,0.1331,0.0011,0.8162,0.0051,False,50
+gradient_boosting,Gradient boosting (histogram-based),0.2529,0.0128,0.2292,0.0105,0.8645,0.0113,0.7044,0.0205,0.1238,0.0043,0.8242,0.007,False,50
+control_shuffled,Control: shuffled labels (logistic regression),0.4841,0.0194,0.4964,0.0262,0.522,0.0323,0.2846,0.0219,0.2651,0.0085,0.5507,0.014,False,50

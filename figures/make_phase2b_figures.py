@@ -1,16 +1,16 @@
 """
-make_phase2b_figures.py — figures for the real-data ingestion phase.
-====================================================================
-Two kinds of figure, honestly separated:
+make_phase2b_figures.py: figures for the real-data ingestion phase.
+===================================================================
+Two kinds of figure, kept clearly apart:
 
 1. A CONCEPT ILLUSTRATION (always drawn, needs no data): the ingestion
-   framework — one "socket", many source "plugs", the evidence locker, the
+   framework, with one "socket", many source "plugs", the evidence locker, the
    provenance log, the tidy tables.
 
 2. DATA FIGURES (drawn only AFTER you run fetch_real.py, from the tables it
    produced): real compound weights, pathway counts, real strains per genus,
    plus an interactive chart. If you haven't fetched yet, the script tells you
-   and skips them — it never invents data.
+   and skips them (it never invents data).
 
 Run (from the project root, venv active):
     python figures/make_phase2b_figures.py
@@ -38,7 +38,7 @@ def footnote(fig, text="StrainScope"):
 
 
 # =============================================================================
-# 1. CONCEPT ILLUSTRATION — the ingestion framework (always drawn)
+# 1. CONCEPT ILLUSTRATION: the ingestion framework (always drawn)
 # =============================================================================
 def draw_framework():
     fig, ax = plt.subplots(figsize=(11, 5.2))
@@ -74,14 +74,14 @@ def draw_framework():
     box(6.9, 3.2, 3.6, 1.3, "#FFF3CD", "Evidence locker",
         "data/raw/real/<source>/\nraw responses, untouched")
     box(6.9, 1.7, 3.6, 1.1, "#FFF3CD", "Provenance log",
-        "fetch_log.csv — who asked what,\nwhen, and how much came back")
+        "fetch_log.csv: who asked what,\nwhen, and how much came back")
     arrow(6.15, 3.3, 6.9, 3.8)
     arrow(6.15, 2.8, 6.9, 2.25)
 
     # Tidy tables
     box(6.9, 0.2, 3.6, 1.1, "#EAECEF", "Tidy tables",
         "data/processed/real/*.csv\n→ join the database next phase")
-    # tidy() reads the EVIDENCE LOCKER (not the log) — arc the arrow around.
+    # tidy() reads the EVIDENCE LOCKER (not the log), so the arrow arcs around.
     ax.add_patch(FancyArrowPatch((6.85, 3.5), (6.85, 0.9),
                                  connectionstyle="arc3,rad=0.35",
                                  arrowstyle="-|>", mutation_scale=14,
@@ -91,26 +91,26 @@ def draw_framework():
 
     ax.set_title("Real-data ingestion: many sources, one socket, a full paper trail",
                  fontsize=12)
-    footnote(fig, "StrainScope — concept illustration")
+    footnote(fig, "StrainScope: concept illustration")
     fig.tight_layout(); fig.savefig(FIG / "ingestion_framework.png"); plt.close(fig)
     print("  drew figures/ingestion_framework.png (concept illustration)")
 
 
 # =============================================================================
-# 2. DATA FIGURES — only from tables YOUR fetch produced (never invented)
+# 2. DATA FIGURES: only from tables YOUR fetch produced (never invented)
 # =============================================================================
 def draw_data_figures():
     try:
         import pandas as pd
     except ImportError:
-        print("  pandas missing — install requirements first"); return
+        print("  pandas missing, install requirements first"); return
 
     compounds_p = REAL / "real_compounds.csv"
     edges_p = REAL / "real_compound_pathways.csv"
     strains_p = REAL / "real_strains.csv"
 
     if not compounds_p.exists() and not strains_p.exists():
-        print("  (no real tables yet — run `python src/strainscope/fetch_real.py`"
+        print("  (no real tables yet; run `python src/strainscope/fetch_real.py`"
               " first; data figures will then appear here)")
         return
 
@@ -123,7 +123,7 @@ def draw_data_figures():
             found = found.dropna(subset=["molecular_weight"]).sort_values("molecular_weight")
             fig, ax = plt.subplots(figsize=(8, 4.5))
             ax.barh(found["metabolite"], found["molecular_weight"], color=GREEN)
-            ax.set_xlabel("molecular weight (g/mol) — real values from PubChem")
+            ax.set_xlabel("molecular weight (g/mol), real values from PubChem")
             ax.set_title("Our metabolites are real molecules: verified weights from PubChem")
             footnote(fig, "data: PubChem (NIH)")
             fig.tight_layout(); fig.savefig(FIG / "real_compound_weights.png"); plt.close(fig)
@@ -173,7 +173,7 @@ def draw_data_figures():
                                 "iupac_name": True},
                     labels={"molecular_weight": "molecular weight (g/mol, PubChem)",
                             "n_pathways": "KEGG pathways"},
-                    title="Real chemistry meets real pathways — hover any compound")
+                    title="Real chemistry meets real pathways (hover any compound)")
                 figi.update_traces(textposition="top center",
                                    marker=dict(size=12, color=GREEN))
                 figi.update_layout(template="plotly_white", height=520)
@@ -181,7 +181,7 @@ def draw_data_figures():
                                 include_plotlyjs=True, full_html=True)
                 print("  drew docs/interactive/real_compounds.html (interactive)")
         except ImportError:
-            print("  plotly missing — interactive skipped")
+            print("  plotly missing, interactive skipped")
 
 
 if __name__ == "__main__":

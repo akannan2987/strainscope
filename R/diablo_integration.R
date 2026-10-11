@@ -1,12 +1,12 @@
 # =============================================================================
-# R/diablo_integration.R — StrainScope Phase 3: DIABLO multi-omics integration
+# R/diablo_integration.R: StrainScope Phase 3, DIABLO multi-omics integration
 # =============================================================================
 #
 # WHAT THIS SCRIPT DOES (in one sentence)
 #   It reads the two prepared blocks (genes, chemistry) plus the outcome, asks
-#   DIABLO — the supervised integration method from the mixOmics package — to
+#   DIABLO (the supervised integration method from the mixOmics package) to
 #   find the small set of genes AND metabolites that, together, best separate
-#   effective strains from the rest, measures how well that works with honest
+#   effective strains from the rest, measures how well that works with proper
 #   cross-validation, and saves small result tables and figures.
 #
 # HOW TO RUN IT (from the project root, so renv switches on automatically)
@@ -25,14 +25,14 @@
 #   artifacts/integration/diablo_summary.csv             the decisions and headline numbers
 #   figures/diablo_mixomics_*.png                        mixOmics' own standard plots
 #
-# THE KEY IDEA IN ONE PARAGRAPH
+# THE MAIN IDEA IN ONE PARAGRAPH
 #   A plain classifier looks at one big table. DIABLO keeps each block separate
 #   and looks for a "summary score" per block (a weighted sum of a FEW of its
 #   features) such that (a) the scores of different blocks agree with each
 #   other and (b) they separate effective from not-effective strains. The few
 #   features with non-zero weight are the "signature". `keepX` says how many
 #   features each block may use; `design` says how strongly the blocks must
-#   agree. Everything below is choosing those two things honestly.
+#   agree. Everything below is about choosing those two things carefully.
 # =============================================================================
 
 started <- Sys.time()
@@ -68,8 +68,8 @@ read_block <- function(name) as.matrix(read.csv(file.path(blocks_dir, name),
                                                 row.names = 1, check.names = FALSE))
 outcome <- read.csv(file.path(blocks_dir, "outcome.csv"), row.names = 1)
 
-# The outcome as a two-level factor. The levels are deliberately in
-# ALPHABETICAL order: mixOmics' heatmap legend sorts class names alphabetically
+# The outcome as a two-level factor. The levels are kept in ALPHABETICAL
+# order on purpose: mixOmics' heatmap legend sorts class names alphabetically
 # but colours them in factor order, so any other order makes the legend swap
 # the colours (see "Notes from the build" in docs/04-integration.md).
 Y <- factor(ifelse(outcome$is_effective == 1, "effective", "not_effective"),
@@ -100,7 +100,7 @@ design <- matrix(0.1, nrow = 2, ncol = 2,
                                  c("genomics", "metabolomics")))
 diag(design) <- 0
 
-# Honest yardstick shared by every step below:
+# The yardstick shared by every step below:
 #   5-fold cross-validation, repeated 10 times, seeded.
 #   Error = BER (balanced error rate) of the weighted vote across blocks,
 #   classifying each strain by the nearest class centre ("centroids.dist").
@@ -119,7 +119,7 @@ ber_table <- function(perf_obj) {
 # more structure, but each must EARN its place by lowering the error.
 cat("  step 1/4  comparing as-measured vs centred-within-kingdom (all features, 4 components) …\n")
 # (mixOmics prints a note about the design matrix on every fit; suppressMessages
-#  keeps the console readable — it hides notes, never errors.)
+#  keeps the console readable; it hides notes, never errors.)
 error_by_comp <- do.call(rbind, lapply(names(versions), function(vname) {
   full <- suppressMessages(block.plsda(versions[[vname]], Y, ncomp = 4, design = design))
   pf <- suppressMessages(perf(full, validation = "Mfold", folds = FOLDS, nrepeat = NREPEAT,
@@ -132,7 +132,7 @@ best_version <- error_by_comp$version[which.min(error_by_comp$ber)]
 chosen <- error_by_comp[error_by_comp$version == best_version, ]
 # The "one standard deviation" rule: the FEWEST components whose error is
 # within one standard deviation of the very best. Simpler models that are
-# statistically as good are preferred — they generalise and explain better.
+# statistically as good are preferred, as they generalise and explain better.
 best_row <- which.min(chosen$ber)
 ncomp_rule <- min(which(chosen$ber <= chosen$ber[best_row] + chosen$ber_sd[best_row]))
 ncomp <- max(2, ncomp_rule)   # at least 2, so the strains can be drawn on a 2-D map
@@ -150,7 +150,7 @@ X <- versions[[best_version]]
 # scientist can read. We try a grid of list lengths per block and keep the
 # combination with the lowest cross-validated error.
 cat("  step 2/4  tuning keepX (how many features per block) …\n")
-# The list lengths tried. The cap at 16 is a deliberate READABILITY choice: a
+# The list lengths tried. The cap at 16 is a READABILITY choice: a
 # signature a scientist can read beats a slightly better one nobody can. Step 3
 # measures exactly what the cap costs (see "cost of sparsity" in the summary).
 grid <- list(genomics = c(4, 8, 12, 16), metabolomics = c(4, 8, 12, 16))
@@ -165,7 +165,7 @@ write.csv(tune_err, file.path(out_dir, "diablo_tuning.csv"), row.names = FALSE)
 cat(sprintf("            → genomics keepX = %s · metabolomics keepX = %s (per component)\n",
             paste(keepX$genomics, collapse = ", "), paste(keepX$metabolomics, collapse = ", ")))
 
-# --- 5. The final model, and its honest score --------------------------------
+# --- 5. The final model, and its cross-validated score ------------------------
 cat("  step 3/4  fitting the final model and cross-validating it …\n")
 final <- suppressMessages(block.splsda(X, Y, ncomp = ncomp, keepX = keepX, design = design))
 pf_final <- suppressMessages(perf(final, validation = "Mfold", folds = FOLDS,
@@ -177,8 +177,8 @@ per_class <- pf_final$WeightedVote.error.rate[[DIST]]
 all_features_ber <- chosen$ber[ncomp]
 sparsity_cost <- round(final_ber$ber[ncomp] - all_features_ber, 4)
 
-# AUC per block (area under the ROC curve on the training data — an
-# optimistic, descriptive number; the cross-validated BER above is the honest one).
+# AUC per block (area under the ROC curve on the training data: an
+# optimistic, descriptive number; the cross-validated BER above is the one to trust).
 auc <- auroc(final, roc.comp = ncomp, print = FALSE, plot = FALSE)
 auc_of <- function(block) round(as.numeric(auc[[block]][[paste0("comp", ncomp)]][1, 1]), 4)
 
@@ -283,7 +283,7 @@ cat("  ────────────────────────�
 cat(sprintf("  final model: %d components · cross-validated BER %.3f ± %.3f\n",
             ncomp, final_ber$ber[ncomp], final_ber$ber_sd[ncomp]))
 n_sd <- abs(sparsity_cost) / final_ber$ber_sd[ncomp]
-cat(sprintf("  cost of sparsity: %+.3f BER vs using every feature (%.3f) = %.1f SD — %s\n",
+cat(sprintf("  cost of sparsity: %+.3f BER vs using every feature (%.3f) = %.1f SD (%s)\n",
             sparsity_cost, all_features_ber, n_sd,
             ifelse(n_sd < 0.9, "statistically free",
                    ifelse(n_sd <= 2, "a small, measurable price for a readable list",
@@ -294,4 +294,4 @@ cat(sprintf("  signature: %d distinct features · blocks agree at r = %.2f on co
             length(unique(signature$feature)), block_agreement))
 cat(sprintf("  results → %s/   figures → %s/diablo_mixomics_*.png   (%d s)\n",
             out_dir, fig_dir, elapsed))
-cat("  Reminder: the data is SIMULATED — this proves the workflow, not real-world accuracy.\n")
+cat("  Reminder: the data is SIMULATED. This proves the workflow, not real-world accuracy.\n")

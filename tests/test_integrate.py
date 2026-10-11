@@ -1,9 +1,9 @@
 """
-tests/test_integrate.py — offline tests for the Phase 3 integration code.
-=========================================================================
+tests/test_integrate.py: offline tests for the Phase 3 integration code.
+========================================================================
 
 Each test builds a TINY hand-made table, runs ONE function on it, and checks
-the result. No R, no network, no real data — they run in about a second on any
+the result. No R, no network, no real data: they run in about a second on any
 machine, which is what lets them guard every future change.
 
 One test is special: `test_r_and_python_agree_on_the_handoff_files` checks

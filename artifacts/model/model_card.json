@@ -1,0 +1,50 @@
+{
+  "model": "Elastic net logistic regression",
+  "model_key": "elastic_net",
+  "settings": {
+    "C": 0.2
+  },
+  "settings_chosen_by": "the value chosen most often by the inner cross-validation of `compare` (nested cross-validation)",
+  "wrapped_in": "CalibratedClassifierCV(method='sigmoid', cv=5)",
+  "intended_use": "rank candidate microbial strains for further testing; research use",
+  "not_for": "regulatory decisions or any real-world claim (the training data is SIMULATED)",
+  "training_data": {
+    "strains": 600,
+    "effective": 145,
+    "base_rate": 0.2417,
+    "features_used": 48,
+    "features_dropped": [
+      "ef1a",
+      "rpb1",
+      "ssu_rRNA"
+    ],
+    "source": "data/processed/strainscope.duckdb (clean Phase 2 tables)"
+  },
+  "decision_threshold": 0.2417,
+  "threshold_meaning": "flag a strain when its calibrated probability exceeds the base rate",
+  "cross_validated_performance": {
+    "folds": 5,
+    "repeats": 10,
+    "ber": 0.1275,
+    "ber_sd": 0.0075,
+    "auc": 0.9479,
+    "average_precision": 0.8658,
+    "calibration_error_raw": 0.0809,
+    "calibration_error_calibrated": 0.0329,
+    "brier_calibrated": 0.0784
+  },
+  "top_n_check": {
+    "n": 50,
+    "truly_effective": 47,
+    "expected_by_chance": 12.1
+  },
+  "input_format": "a table with a 'kingdom' column plus the raw gene and metabolite columns of the clean Phase 2 tables; gaps are allowed",
+  "versions": {
+    "python": "3.14.7",
+    "scikit-learn": "1.9.0",
+    "numpy": "2.5.2",
+    "pandas": "3.0.5"
+  },
+  "seed": 42,
+  "safety": "a joblib/pickle file runs code when loaded, so load only files you built yourself"
+}

@@ -1,0 +1,14 @@
+group_type,group,n_strains,n_errors,error_rate
+kingdom,Bacteria,267,23,0.0861
+kingdom,Fungi,183,27,0.1475
+kingdom,Yeast,95,11,0.1158
+kingdom,Oomycete,55,5,0.0909
+distance from the 65 % cut-off,within 2 points,35,12,0.3429
+distance from the 65 % cut-off,2 to 5 points,59,24,0.4068
+distance from the 65 % cut-off,5 to 10 points,108,13,0.1204
+distance from the 65 % cut-off,more than 10 points,398,17,0.0427
+missing readings,none,92,7,0.0761
+missing readings,one,196,22,0.1122
+missing readings,two or more,312,37,0.1186
+true class,effective,145,16,0.1103
+true class,not effective,455,50,0.1099

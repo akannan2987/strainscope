@@ -1,36 +1,36 @@
 """
-pubchem.py — adapter for PubChem, the world's chemistry reference (NCBI/NIH).
-=============================================================================
+pubchem.py: adapter for PubChem, the world's chemistry reference (NCBI/NIH).
+============================================================================
 
 WHAT PUBCHEM IS
 ---------------
 PubChem (https://pubchem.ncbi.nlm.nih.gov) is the US National Institutes of
-Health's open database of chemical molecules — over 100 million compounds with
+Health's open database of chemical molecules: over 100 million compounds with
 structures, formulas, and masses. Its "PUG REST" API is free, needs no key, and
 works with plain URLs.
 
-WHAT WE TAKE, HONESTLY
-----------------------
+WHAT WE TAKE
+------------
 Real chemistry for the metabolites StrainScope models: for each one, its
-PubChem ID (CID), molecular formula, molecular weight, and structure (SMILES —
+PubChem ID (CID), molecular formula, molecular weight, and structure (SMILES,
 a text notation for a molecule's shape). This *grounds* the synthetic data:
 anyone can verify that surfactin, iturin, DAPG, destruxin & co. are real
 molecules with real properties, and later the knowledge graph gets real
 chemical nodes.
 
-An honest wrinkle we keep on purpose: THREE of our "metabolite" columns are not
-small molecules at all — oligandrin and killer toxins are PROTEINS, and
+A wrinkle we keep on purpose: THREE of our "metabolite" columns are not
+small molecules at all. Oligandrin and killer toxins are PROTEINS, and
 "yeast_siderophore" is a *class* of molecules, not one compound. PubChem
 (a small-molecule database) rightly has no single entry for them. The adapter
-marks them clearly instead of pretending — because knowing what a database
-CANNOT answer is as important as what it can.
+marks them clearly instead of pretending, since what a database CANNOT answer
+is worth knowing too.
 
 HOW THE API WORKS (one step)
 ----------------------------
 GET https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/{name}/property/
     MolecularFormula,MolecularWeight,CanonicalSMILES,IUPACName/JSON
 -> {"PropertyTable": {"Properties": [{"CID": 443592, ...}]}}
-A name PubChem doesn't know returns 404 — a result to record, not an error.
+A name PubChem doesn't know returns 404: a result to record, not an error.
 Politeness: PubChem asks for at most ~5 requests/second; we stay well under.
 """
 
@@ -59,7 +59,7 @@ NAME_MAP = {
     "destruxin":    "destruxin A",
     "beauvericin":  "beauvericin",
 }
-# Not small molecules — no PubChem entry exists, and that's the honest answer.
+# Not small molecules: no PubChem entry exists, and that's the correct answer.
 NOT_SMALL_MOLECULES = {
     "oligandrin":        "a protein elicitor, not a small molecule",
     "killer_toxin":      "a protein toxin, not a small molecule",
@@ -74,13 +74,13 @@ class PubChem(Source):
     # ------------------------------------------------------------------ probe
     def probe(self) -> None:
         n = len(NAME_MAP)
-        print(f"\n[{self.name}] probe — {n} small-molecule lookups planned "
+        print(f"\n[{self.name}] probe: {n} small-molecule lookups planned "
               f"(+{len(NOT_SMALL_MOLECULES)} entries marked 'not a small molecule').")
         print("  One quick live check (aspirin) to confirm the API is reachable:")
         url = f"{BASE}/compound/name/aspirin/property/MolecularFormula/JSON"
         data = self.get(url)
         ok = bool(data and data.get("PropertyTable"))
-        print(f"  API reachable: {'yes' if ok else 'NO — see the FAQ'}")
+        print(f"  API reachable: {'yes' if ok else 'NO (see the FAQ)'}")
         self.log("probe", "aspirin", url, 1 if ok else 0, "ok" if ok else "fail")
 
     # ------------------------------------------------------------------ fetch
@@ -101,7 +101,7 @@ class PubChem(Source):
                 print(f"  {our_name:<14} -> no entry under that name (recorded)")
                 self.log("fetch", query, url, 0, "not_found")
         self.save_raw("compounds.json", results)
-        print(f"  Raw file in data/raw/real/{self.name}/ — log updated.")
+        print(f"  Raw file in data/raw/real/{self.name}/; log updated.")
 
     # ------------------------------------------------------------------- tidy
     def tidy(self) -> None:
@@ -130,4 +130,4 @@ class PubChem(Source):
         out = self.write_table("real_compounds.csv", rows)
         found = sum(1 for r in rows if r["status"] == "found")
         print(f"  wrote {out.name}  ({found} found, "
-              f"{len(NOT_SMALL_MOLECULES)} honestly marked not-a-small-molecule)")
+              f"{len(NOT_SMALL_MOLECULES)} marked not-a-small-molecule)")

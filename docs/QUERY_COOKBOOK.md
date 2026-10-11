@@ -1,10 +1,11 @@
-# The Query Cookbook — ready-to-run SQL for the StrainScope database
+# The Query Cookbook: ready-to-run SQL for the StrainScope database
 
 [← README](../README.md) · [Handbook](HANDBOOK.md) · [All docs in order](../README.md#the-tutorial-in-order) · [Glossary](GLOSSARY.md)
 
-Every query below is **tested** and runs against `data/processed/strainscope.duckdb`
+Every query below is tested and runs against `data/processed/strainscope.duckdb`
 (built in [Phase 2](03-harmonization-qc.md)). Run them with the project's own
-**SQL console** — read-only, so you can explore fearlessly:
+SQL console. It's read-only, so you can explore without any fear of breaking
+something:
 
 ```bash
 # one query, straight from the shell:
@@ -17,12 +18,13 @@ sql> .schema phenotype        --  paste them whole; ';' ends a statement)
 sql> exit
 ```
 
-*(Prefer a standalone tool? The official DuckDB CLI — `brew install duckdb`,
-then `duckdb -readonly data/processed/strainscope.duckdb` — speaks the same
-SQL. The console above needs no installation and behaves identically.)*
+*(Prefer a standalone tool? The official DuckDB CLI speaks the same SQL:
+install it with `brew install duckdb`,
+then run `duckdb -readonly data/processed/strainscope.duckdb`. The console
+above needs no installation and behaves identically.)*
 
-This file grows every phase. SQL reads almost like English — each recipe below
-tells you the sentence it's saying.
+This file grows every phase. SQL reads almost like English, so each recipe
+below is headed by the plain-English question it answers.
 
 ---
 
@@ -38,7 +40,7 @@ SELECT * FROM phenotype LIMIT 3;
 ```sql
 SELECT COUNT(*) AS n_strains FROM phenotype;
 ```
-→ `600` (the clean count — duplicates are gone). `AS n_strains` just names the output column.
+→ `600` (the clean count, with duplicates removed). `AS n_strains` just names the output column.
 
 ## 2. Filtering and sorting
 
@@ -51,10 +53,10 @@ ORDER BY suppression_score DESC
 LIMIT 5;
 ```
 `WHERE` keeps only matching rows · `ORDER BY … DESC` sorts high-to-low.
-(You'll notice scores capped at exactly 100.00 — those are the clipped
-"impossible" readings from cleaning, now honest boundary values.)
+(You'll notice scores capped at exactly 100.00. Those are the "impossible"
+readings that cleaning clipped, now stored as valid boundary values.)
 
-## 3. Grouping — one row per category
+## 3. Grouping: one row per category
 
 **"How many strains per kingdom, and what share are effective?"**
 ```sql
@@ -67,9 +69,9 @@ ORDER BY n DESC;
 ```
 → Bacteria 267 (28.1 %), Fungi 183 (21.3 %), Yeast 95 (18.9 %), Oomycete 55 (23.6 %).
 `GROUP BY` folds the table into one row per kingdom; `AVG(is_effective)` on a
-0/1 column *is* the effective rate — a classic trick.
+0/1 column *is* the effective rate (a classic trick).
 
-## 4. JOIN — the payoff of a shared key
+## 4. JOIN: the payoff of a shared key
 
 **"For the top effective strains: do they carry the iturin gene, and how much iturin do they make?"**
 ```sql
@@ -81,11 +83,12 @@ WHERE p.is_effective = 1
 ORDER BY p.suppression_score DESC
 LIMIT 5;
 ```
-`JOIN … USING (strain_id)` lines tables up on the shared key — the whole reason
-every table carries `strain_id`. Run it and look: the top strains all show
-`ituA = 1` with high iturin. **The biology is visible in five lines of SQL.**
+`JOIN … USING (strain_id)` lines tables up on the shared key, which is the whole
+reason every table carries `strain_id`. Run it and look: the top strains all show
+`ituA = 1` with high iturin, so the biology is already visible in five lines of
+SQL.
 
-## 5. NULL — the honest gaps
+## 5. NULL: the gaps left in plain sight
 
 **"How many iturin readings are missing?"**
 ```sql
@@ -94,11 +97,11 @@ FROM metabolomics
 WHERE iturin IS NULL;
 ```
 `NULL` is SQL's "no value here." Note the special grammar: `IS NULL`, never
-`= NULL` (a classic beginner trap — `= NULL` silently matches nothing).
-Cleaning kept these gaps deliberately; the modelling phases decide what to do
-about them, openly.
+`= NULL` (a common beginner trap: `= NULL` silently matches nothing).
+Cleaning kept these gaps on purpose, and the modelling phases decide what to do
+about them in the open.
 
-## 6. The real tables — same database, same SQL
+## 6. The real tables: same database, same SQL
 
 **"Which real BacDive strains did we fetch, per genus?"**
 ```sql
@@ -125,7 +128,7 @@ FROM real_compound_pathways;
 ```
 → e.g. pyrrolnitrin ↔ *Biosynthesis of secondary metabolites* (KEGG, attributed).
 
-## 7. Synthetic meets real — one query across both worlds
+## 7. Synthetic meets real: one query across both worlds
 
 **"For each metabolite our strains produce: its real formula, and how many of our clean strains produce it strongly."**
 ```sql
@@ -143,9 +146,10 @@ integration results; the knowledge-graph phase goes further.)
 ## 8. Integration results (Phase 3)
 
 These tables exist once you have run `python src/strainscope/integrate.py publish`
-(or `integrate.py all`) — see [`docs/04-integration.md` §9](04-integration.md#9-step-5--publish-to-the-database-and-ask-it-questions).
+(or `integrate.py all`); see [`docs/04-integration.md` §9](04-integration.md#9-step-5-publish-to-the-database-and-ask-it-questions).
 Every Phase 3 table starts with `int_`; `.tables` lists them. *(The data is
-simulated: these numbers prove the workflow, not real-world accuracy.)*
+simulated, so these numbers prove the workflow and make no claim about
+real-world accuracy.)*
 
 > **If a table is missing:** `src/strainscope/harmonize.py` rebuilds the database from scratch,
 > which removes the `int_*` tables on purpose. Re-run `integrate.py publish`.
@@ -160,7 +164,7 @@ ORDER BY ber_mean;
 ```
 → late integration on top (BER 0.123), then early integration (0.134) and
 PLS-DA (0.137), genomics alone (0.148), and the two controls at the bottom near
-0.5 — exactly where a coin sits. *Lower BER is better; higher AUC is better.*
+0.5, which is exactly where a coin toss sits. *Lower BER is better; higher AUC is better.*
 
 **"DIABLO's headline numbers."** (DIABLO keeps its results as key/value pairs.)
 ```sql
@@ -174,8 +178,8 @@ WHERE key IN ('mixomics_version', 'ncomp_fitted', 'keepX_genomics',
 0.145 with every feature, blocks agreeing at r ≈ 0.77. (Expect ±0.01 with other
 mixOmics versions.)
 
-**"How much did centring within kingdom help?"** — one row per component, the
-two versions side by side. `FILTER (WHERE …)` picks which rows each column
+**"How much did centring within kingdom help?"** One row per component, with
+the two versions side by side. `FILTER (WHERE …)` picks which rows each column
 summarises; `MAX` just collects the single value.
 ```sql
 SELECT component,
@@ -186,7 +190,7 @@ GROUP BY component
 ORDER BY component;
 ```
 → the error falls from about 0.22 to about 0.145 from component 2 on. (R prints
-the component-1 centred value as 0.154 and DuckDB as 0.155 — the true value is
+the component-1 centred value as 0.154 and DuckDB as 0.155; the true value is
 0.1545, and the two round halves differently.)
 
 **"Grade every signature against the planted truth."**
@@ -198,10 +202,10 @@ SELECT method, n_selected,
 FROM int_signature_report_card;
 ```
 → DIABLO's robust list: 29 picks, 29 true drivers, no decoys. The lasso: 17
-picks, 17 true drivers — perfect precision, lower recall (it keeps fewer).
+picks, 17 true drivers, so perfect precision but lower recall (it keeps fewer).
 
-**"Which features do R and Python both trust?"** — DIABLO's robust picks that the
-lasso also picked in at least 80 % of folds.
+**"Which features do R and Python both trust?"** These are DIABLO's robust picks
+that the lasso also picked in at least 80 % of folds.
 ```sql
 SELECT d.feature, d.block,
        ROUND(d.stability, 2)           AS diablo_stability,
@@ -212,8 +216,8 @@ WHERE d.component = 1 AND d.stability >= 0.8
   AND p.selection_frequency >= 0.8
 ORDER BY d.block, d.feature;
 ```
-→ 17 features — the "in both" number of `int_language_agreement`. Two
-languages, two methods, one core answer.
+→ 17 features, the same as the "in both" number of `int_language_agreement`.
+R and Python, using different methods, agree on the same core set.
 
 **"Do genes and their own products rise together?"**
 ```sql
@@ -225,9 +229,9 @@ ORDER BY rho DESC;
 → 14 producer pairs, from `prnD`/pyrrolnitrin and `pvdA`/pyoverdine (0.76) down
 to `olpA`/oligandrin (0.22, the rarest kingdom, so the noisiest estimate).
 
-**"Per kingdom, how well do the gene score and the chemistry score agree?"** —
-a table joined to *itself*: each strain appears twice (one row per block), and
-the join lines its two rows up side by side.
+**"Per kingdom, how well do the gene score and the chemistry score agree?"**
+This one joins a table to *itself*: each strain appears twice (one row per
+block), and the join lines its two rows up side by side.
 ```sql
 SELECT g.kingdom, COUNT(*) AS strains,
        ROUND(corr(g.comp1, m.comp1), 2) AS agreement
@@ -237,10 +241,10 @@ WHERE g.block = 'genomics' AND m.block = 'metabolomics'
 GROUP BY g.kingdom
 ORDER BY agreement DESC;
 ```
-→ Bacteria 0.81, Fungi 0.74, Yeast 0.69, Oomycete 0.50 — agreement is strongest
+→ Bacteria 0.81, Fungi 0.74, Yeast 0.69, Oomycete 0.50. Agreement is strongest
 where there are the most strains and weapons to learn from.
 
-**"What did preparing the blocks change?"** — the Phase 3 ledger.
+**"What did preparing the blocks change?"** This reads the Phase 3 ledger.
 ```sql
 SELECT step, block, cells, note FROM int_prepare_ledger;
 ```
@@ -265,7 +269,125 @@ ORDER BY weapons_in_signature DESC;
 → Bacteria 16, Fungi 6, Yeast 4, Cross-kingdom 2, Oomycete 1 (29 in total).
 </details>
 
+## 9. Machine-learning results (Phase 4)
+
+These tables exist once you have run `python src/strainscope/model.py publish`
+(or `model.py all`); see [`docs/05-machine-learning.md` §9](05-machine-learning.md#9-step-5-publish-to-the-database-and-ask-it-questions).
+Every Phase 4 table starts with `ml_`. *(Simulated data again: read these
+numbers as proof of the workflow, with no claim about real-world accuracy.)*
+
+> **If a table is missing:** `src/strainscope/harmonize.py` rebuilds the database
+> from scratch; re-run `python src/strainscope/model.py publish`.
+
+**"Every model, best first, with the scores side by side."**
+```sql
+SELECT model,
+       ROUND(ber_mean, 3) AS ber, ROUND(ber_base_rate_mean, 3) AS ber_at_base,
+       ROUND(auc_mean, 3) AS auc, ROUND(accuracy_mean, 3) AS accuracy, is_winner
+FROM ml_scoreboard
+ORDER BY ber_mean;
+```
+→ elastic net first (0.128, AUC 0.948); the baseline last with balanced error 0.500,
+yet with the *highest* accuracy but one (0.758). Accuracy flatters the lazy model,
+which is why the balanced error is the main score.
+
+**"The ranking a screening team would use: the top 10."**
+```sql
+SELECT rank, strain_id, kingdom, ROUND(probability, 3) AS probability, is_effective
+FROM ml_predictions
+ORDER BY rank
+LIMIT 10;
+```
+→ ten strains, all truly effective; bacteria lead, but a yeast, an oomycete and a
+fungus are already in the top 10. The probabilities are *out-of-fold*: no strain
+was ranked by a model that had seen it.
+
+**"Which kingdoms make the top 50, and how many really work?"**
+```sql
+SELECT kingdom, COUNT(*) AS in_top_50, SUM(is_effective)::INT AS truly_effective
+FROM ml_predictions
+WHERE rank <= 50
+GROUP BY kingdom
+ORDER BY in_top_50 DESC;
+```
+→ Bacteria 34 (32 effective), Fungi 11 (11), Yeast 4 (3), Oomycete 1 (1): 47 of
+50, where random picking would find about 12. `::INT` turns the sum into a whole
+number.
+
+**"The strains decided by a hair: hard cases within one point of the 65 % line."**
+```sql
+SELECT strain_id, kingdom, suppression_score, is_effective,
+       ROUND(probability, 2) AS probability, missed_by_all_models
+FROM ml_hard_strains
+WHERE distance_to_cutoff < 1
+ORDER BY distance_to_cutoff;
+```
+→ seven strains. The first, `STRAIN_0082`, shows 65.00 but is labelled *not
+effective*: its true score was a hair under 65 and was rounded when stored. All
+three models call it effective. The full story is in
+[`docs/05-machine-learning.md` §12](05-machine-learning.md#12-notes-from-the-build-kept-on-purpose).
+
+**"Did the winner lean on any decoys?"**
+```sql
+SELECT feature, arsenal, ROUND(importance_mean, 4) AS auc_drop, reliably_important
+FROM ml_feature_importance
+WHERE model_key = 'elastic_net' AND role = 'decoy'
+ORDER BY importance_mean DESC
+LIMIT 5;
+```
+→ one decoy is reliably important, `accE` (AUC drop 0.0056); the next ones drop
+the AUC by less than 0.001, which is too little to matter.
+
+**"Which of DIABLO's robust features does the winner NOT rely on?"** This joins
+the results of two phases on the feature name.
+```sql
+SELECT f.feature,
+       ROUND(f.importance_mean, 4) AS model_auc_drop,
+       ROUND(d.loading, 3) AS diablo_weight, d.stability AS diablo_stability
+FROM ml_feature_importance f
+JOIN int_diablo_signature d ON d.feature = f.feature AND d.component = 1
+WHERE f.model_key = 'elastic_net' AND NOT f.reliably_important AND d.stability >= 0.8
+ORDER BY d.stability DESC, ABS(d.loading) DESC;
+```
+→ eight features (pyoverdine, destruxin, yeast_siderophore, HCN, beaS,
+pyrrolnitrin, surfactin, killer_toxin), mostly the *chemical products* of genes
+the elastic net already uses. Gene and product are two witnesses to one story;
+DIABLO keeps both, while a penalised model keeps one. (Needs the Phase 3 tables.)
+
+**"The leak check, as a table."**
+```sql
+SELECT setup, ROUND(auc_mean, 3) AS auc FROM ml_leak_check ORDER BY setup;
+```
+→ A1 0.948 and A2 0.947 (Phase 3's leak was harmless); B1 0.594 against B2 0.528
+on *meaningless* labels, where B1 shows a real leak manufacturing signal. (The command line
+prints B2 as 0.527: the true value sits on the rounding edge, and the two round
+halves differently.)
+
+**"Does the model mean what it says?"**
+```sql
+SELECT version, ROUND(mean_predicted_mean, 3) AS says,
+       ROUND(observed_rate_mean, 3) AS happens, ROUND(ece_pooled, 3) AS calibration_error
+FROM ml_calibration_summary;
+```
+→ raw: says 0.323, happens 0.242, error 0.081; calibrated: says 0.243, error 0.033.
+
+**Try it yourself:** per kingdom, how many strains are *borderline*, with a
+probability between 0.3 and 0.7? (Hint: `ml_predictions`, `WHERE probability
+BETWEEN 0.3 AND 0.7`, `GROUP BY kingdom`.)
+
+<details>
+<summary>One answer</summary>
+
+```sql
+SELECT kingdom, COUNT(*) AS borderline
+FROM ml_predictions
+WHERE probability BETWEEN 0.3 AND 0.7
+GROUP BY kingdom
+ORDER BY borderline DESC;
+```
+</details>
+
 ---
 
-*Recipes are added as the project grows — the app's SQL console (Phase 6) will
+*Recipes are added as the project grows, and the app's SQL console (Phase 6) will
 ship with this cookbook built in.*

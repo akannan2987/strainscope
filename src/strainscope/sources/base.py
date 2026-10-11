@@ -1,41 +1,41 @@
 """
-base.py — the contract every real-data source follows.
-=======================================================
+base.py: the contract every real-data source follows.
+=====================================================
 
 THE BIG IDEA (read this first)
 ------------------------------
 StrainScope can pull real data from several public scientific databases. Rather
 than writing a separate, tangled script for each one, we define ONE common
-"shape" — a contract — that every source must follow, and then each source is a
+"shape" (a contract) that every source must follow, and then each source is a
 small "adapter" that fills in the details.
 
-Everyday analogy: a wall socket. Your house has one standard socket shape; every
+Think of a wall socket. Your house has one standard socket shape; every
 appliance (kettle, laptop, lamp) brings its own plug that fits that shape. Here,
 `Source` is the socket. Each adapter (BacDive, PubChem, KEGG, ...) is a plug.
-The rest of the project — and later the app — only ever talks to the socket, so
-adding source #8 one day means writing one new small file, nothing else changes.
+The rest of the project (and later the app) only ever talks to the socket, so
+adding source #8 one day means writing one new small file; nothing else changes.
 
-THE CONTRACT — three verbs every source implements
---------------------------------------------------
-* probe()  — "what's out there?" A few cheap requests that COUNT what a real
+THE CONTRACT: three verbs every source implements
+-------------------------------------------------
+* probe():   "what's out there?" A few cheap requests that COUNT what a real
              fetch would bring back, without downloading it. You always probe
              before you fetch (measure twice, cut once).
-* fetch()  — download the raw responses EXACTLY as the API sent them, into
-             data/raw/real/<source>/ — the untouched "evidence locker" — and
+* fetch():   download the raw responses EXACTLY as the API sent them, into
+             data/raw/real/<source>/ (the untouched "evidence locker"), and
              append one row per action to the PROVENANCE LOG (fetch_log.csv):
              what was asked, when, from which URL, how much came back. That log
              is the answer to the auditor's question: "where did this number
              come from?"
-* tidy()   — turn the saved raw responses into small, clean CSV tables in
+* tidy():    turn the saved raw responses into small, clean CSV tables in
              data/processed/real/. (Next phase, these join the project database
              alongside the synthetic tables.)
 
 Note the separation: fetch() TALKS TO THE INTERNET, tidy() only reads files
-already on disk. That means you can re-run tidy() endlessly — to fix a parsing
-bug, say — without hammering anyone's servers or needing a connection.
+already on disk. That means you can re-run tidy() endlessly (to fix a parsing
+bug, say) without hammering anyone's servers or needing a connection.
 
-POLITENESS — how to be a good API citizen
------------------------------------------
+POLITENESS: how to be a good API citizen
+----------------------------------------
 Public scientific APIs are shared, free resources. Every adapter here:
   * pauses between requests (each source declares its own polite delay),
   * sends an identifying User-Agent (who is calling, and why),
@@ -60,20 +60,20 @@ PROCESSED_REAL = ROOT / "data" / "processed" / "real"  # tidy CSV tables
 FETCH_LOG = RAW_REAL / "fetch_log.csv"              # the provenance log
 
 # Identify ourselves politely on every request.
-USER_AGENT = "StrainScope/1.0 (educational multi-omics portfolio project)"
+USER_AGENT = "StrainScope/1.0 (educational multi-omics project)"
 
 
 def load_env() -> None:
     """Read KEY=VALUE lines from the project's `.env` file into the process
     environment (without overwriting anything already set in the shell).
 
-    THE SECRETS IDEA, plainly: a key is like a house key — code needs to USE
+    THE SECRETS IDEA: a key is like a house key. Code needs to USE
     it, but it must never be PHOTOGRAPHED into the repository. So keys live in
     the ENVIRONMENT (the process's private pockets), and there are two ways to
     put one there:
 
-      home 1 — the shell, per session:   export NCBI_API_KEY=abc123
-      home 2 — a `.env` file, per project: one KEY=VALUE line, read by this
+      home 1, the shell (per session):   export NCBI_API_KEY=abc123
+      home 2, a `.env` file (per project): one KEY=VALUE line, read by this
                function at startup. `.env` is listed in .gitignore and guarded
                by check-public-safe.sh, so it physically cannot be committed.
 
@@ -125,8 +125,8 @@ class Source:
                 if resp.status_code in (400, 404):
                     # 404 = "not found"; 400 = "I reject that question" (e.g.
                     # a character the server won't accept). Both are
-                    # DETERMINISTIC — retrying the identical request cannot
-                    # help — so hand back None as a *result* for the adapter
+                    # DETERMINISTIC (retrying the identical request cannot
+                    # help), so hand back None as a *result* for the adapter
                     # to record, and keep the rest of the run alive.
                     return None
                 resp.raise_for_status()                    # error on other 4xx/5xx
@@ -154,7 +154,7 @@ class Source:
 
     def log(self, action: str, query: str, url: str, n_results, status: str,
             note: str = "") -> None:
-        """Append one row to the provenance log — the project's paper trail."""
+        """Append one row to the provenance log, the project's paper trail."""
         RAW_REAL.mkdir(parents=True, exist_ok=True)
         new_file = not FETCH_LOG.exists()
         with FETCH_LOG.open("a", newline="", encoding="utf-8") as fh:

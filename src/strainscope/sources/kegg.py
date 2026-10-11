@@ -1,6 +1,6 @@
 """
-kegg.py — adapter for KEGG, the pathway encyclopedia (Kanehisa Laboratories).
-=============================================================================
+kegg.py: adapter for KEGG, the pathway encyclopedia (Kanehisa Laboratories).
+============================================================================
 
 WHAT KEGG IS
 ------------
@@ -9,29 +9,29 @@ references: a hand-curated map of how genes, enzymes, chemical compounds, and
 metabolic pathways CONNECT. Where PubChem tells you what a molecule *is*, KEGG
 tells you where it *sits* in the web of biology.
 
-⚠ LICENCE, STATED PLAINLY: KEGG's REST API is provided for ACADEMIC USE ONLY,
+⚠ LICENCE: KEGG's REST API is provided for ACADEMIC USE ONLY,
 with a limit of 3 requests/second. This project is personal and educational,
 we attribute KEGG wherever its data appears, and we stay far below the limit.
-(Non-academic/commercial use requires a licence from Kanehisa Laboratories —
-if that ever applies to you, swap this adapter out; the framework makes that a
+(Non-academic/commercial use requires a licence from Kanehisa Laboratories.
+If that ever applies to you, swap this adapter out; the framework makes that a
 one-file change.)
 
-WHAT WE TAKE, HONESTLY
-----------------------
+WHAT WE TAKE
+------------
 For each of our real metabolites: its KEGG compound ID and the PATHWAYS it
-belongs to. These compound→pathway links are REAL edges — and they become the
+belongs to. These compound→pathway links are REAL edges, and they become the
 seed of the knowledge-graph phase later, so the graph is built on curated
 biology rather than invented connections.
 
-HOW THE API WORKS (delightfully simple — plain text, plain URLs)
-----------------------------------------------------------------
+HOW THE API WORKS (delightfully simple: plain text, plain URLs)
+---------------------------------------------------------------
 * find:  https://rest.kegg.jp/find/compound/beauvericin
          -> lines like  "cpd:C11002\tbeauvericin"
 * link:  https://rest.kegg.jp/link/pathway/C11002
          -> lines like  "cpd:C11002\tpath:map01110"
 * list:  https://rest.kegg.jp/list/pathway
          -> every pathway id + human-readable name (fetched once, reused)
-No JSON, no keys — tab-separated text a human can read in a browser.
+No JSON, no keys: tab-separated text a human can read in a browser.
 """
 
 from __future__ import annotations
@@ -43,7 +43,7 @@ from .base import Source
 BASE = "https://rest.kegg.jp"
 
 # Metabolites we look up in KEGG (protein/class entries are not compounds).
-# Query terms are deliberately COMMA-FREE: KEGG's server rejects commas in the
+# Query terms are COMMA-FREE on purpose: KEGG's server rejects commas in the
 # URL path with HTTP 400 (caught on the first live run). `find` is a keyword
 # search, so "diacetylphloroglucinol" still matches "2,4-diacetylphloroglucinol".
 QUERIES = {
@@ -77,12 +77,12 @@ class KEGG(Source):
 
     # ------------------------------------------------------------------ probe
     def probe(self) -> None:
-        print(f"\n[{self.name}] probe — {len(QUERIES)} compound lookups planned "
+        print(f"\n[{self.name}] probe: {len(QUERIES)} compound lookups planned "
               f"(then one pathway-link call per compound found).")
         url = f"{BASE}/info/kegg"
         info = self.get(url, as_json=False)
         first = (info or "").strip().splitlines()[:1]
-        print(f"  API reachable: {'yes — ' + first[0] if first else 'NO — see the FAQ'}")
+        print(f"  API reachable: {'yes, ' + first[0] if first else 'NO (see the FAQ)'}")
         self.log("probe", "info", url, 1 if info else 0, "ok" if info else "fail")
         print("  Reminder: KEGG is academic-use only; we attribute it and stay "
               "below 3 requests/second.")
@@ -115,7 +115,7 @@ class KEGG(Source):
             print(f"  {our_name:<14} -> {kegg_id}  ({len(pathways)} pathway links)")
             self.log("fetch", query, link_url, len(pathways), "ok", kegg_id)
         self.save_raw("compound_pathways.json", results)
-        print(f"  Raw files in data/raw/real/{self.name}/ — log updated.")
+        print(f"  Raw files in data/raw/real/{self.name}/; log updated.")
 
     # ------------------------------------------------------------------- tidy
     def tidy(self) -> None:
@@ -143,5 +143,5 @@ class KEGG(Source):
         out1 = self.write_table("real_kegg_compounds.csv", compounds)
         out2 = self.write_table("real_compound_pathways.csv", edges)
         print(f"  wrote {out1.name}  ({len(compounds)} compounds)")
-        print(f"  wrote {out2.name}  ({len(edges)} compound→pathway edges — "
+        print(f"  wrote {out2.name}  ({len(edges)} compound→pathway edges, "
               "the knowledge graph's first real edges)")

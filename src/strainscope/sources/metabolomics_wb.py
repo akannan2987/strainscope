@@ -1,27 +1,27 @@
 """
-metabolomics_wb.py — adapter for Metabolomics Workbench (NIH).
-==============================================================
+metabolomics_wb.py: adapter for Metabolomics Workbench (NIH).
+=============================================================
 
 WHAT METABOLOMICS WORKBENCH IS
 ------------------------------
 The US NIH's open home for metabolomics: thousands of real studies with their
-measured data, plus **RefMet** — the curated "official names register" for
+measured data, plus **RefMet**, the curated "official names register" for
 metabolites. Where PubChem answers "what *is* this molecule?" (structure,
 mass), RefMet answers "what *kind* of molecule is it, under its standard
-name?" — every entry carries a classification ladder (super-class → main class
+name?", and every entry carries a classification ladder (super-class → main class
 → sub-class), like a library's shelving system for chemistry.
 
-WHAT WE TAKE, HONESTLY
-----------------------
+WHAT WE TAKE
+------------
 1. RefMet entries for our metabolites: the standardised name, formula, exact
    mass, and the three-level classification. That classification becomes real
    structure for the knowledge graph ("beauvericin and destruxin sit on the
    same shelf" is an edge worth having).
 2. A taste of the *studies* side: for a few search words tied to our project
-   (our genera and habitats), the real studies whose titles mention them —
-   proof that actual laboratories measure this exact kind of chemistry.
+   (our genera and habitats), the real studies whose titles mention them,
+   showing that actual laboratories measure this exact kind of chemistry.
 
-The honest boundary, as ever: these complement the synthetic library. RefMet
+The boundary, as ever: these complement the synthetic library. RefMet
 classifies molecules; it does not hand us matched multi-omics with outcomes.
 
 HOW THE API WORKS (plain URL patterns, no key)
@@ -29,7 +29,7 @@ HOW THE API WORKS (plain URL patterns, no key)
 Base:  https://www.metabolomicsworkbench.org/rest/{context}/{input}/{value}/{output}
   * refmet:  /rest/refmet/name/beauvericin/all            -> JSON entry
   * studies: /rest/study/study_title/Bacillus/summary     -> JSON of studies
-A name RefMet doesn't know returns an empty/blank body — an answer, not an
+A name RefMet doesn't know returns an empty/blank body: an answer, not an
 outage (the same lesson KEGG taught with pathway links).
 """
 
@@ -56,7 +56,7 @@ REFMET_QUERIES = {
     "beauvericin":  "beauvericin",
 }
 
-# Search words for the studies side — our genera and the habitat theme.
+# Search words for the studies side: our genera and the habitat theme.
 STUDY_KEYWORDS = ["Bacillus", "Pseudomonas", "Trichoderma", "soil"]
 
 
@@ -66,12 +66,12 @@ class MetabolomicsWB(Source):
 
     # ------------------------------------------------------------------ probe
     def probe(self) -> None:
-        print(f"\n[{self.name}] probe — {len(REFMET_QUERIES)} RefMet lookups + "
+        print(f"\n[{self.name}] probe: {len(REFMET_QUERIES)} RefMet lookups + "
               f"{len(STUDY_KEYWORDS)} study searches planned.")
         url = f"{BASE}/refmet/name/alanine/all"      # a molecule RefMet surely knows
         data = self.get(url)
         ok = bool(data)
-        print(f"  API reachable: {'yes' if ok else 'NO — see the FAQ'}")
+        print(f"  API reachable: {'yes' if ok else 'NO (see the FAQ)'}")
         self.log("probe", "alanine", url, 1 if ok else 0, "ok" if ok else "fail")
 
     # ------------------------------------------------------------------ fetch
@@ -107,7 +107,7 @@ class MetabolomicsWB(Source):
                   f"{f' (keeping first {limit})' if len(hits) > limit else ''}")
             self.log("fetch", f"study_title:{kw}", url, len(hits), "ok")
         self.save_raw("studies.json", studies)
-        print(f"  Raw files in data/raw/real/{self.name}/ — log updated.")
+        print(f"  Raw files in data/raw/real/{self.name}/; log updated.")
 
     # ------------------------------------------------------------------- tidy
     def tidy(self) -> None:
@@ -125,7 +125,7 @@ class MetabolomicsWB(Source):
                 "refmet_query": item.get("query", ""),
                 "status": "found" if e else "no_entry",
                 # Live-caught: RefMet's field is "name" (docs elsewhere say
-                # refmet_name) — accept either; the live response decides.
+                # refmet_name). Accept either; the live response decides.
                 "refmet_name": e.get("name", e.get("refmet_name", "")),
                 "refmet_id": e.get("refmet_id", ""),
                 "formula": e.get("formula", ""),
@@ -149,5 +149,5 @@ class MetabolomicsWB(Source):
         out2 = self.write_table("real_mw_studies.csv", srows)
         found = sum(1 for r in rrows if r["status"] == "found")
         print(f"  wrote {out1.name}  ({found} RefMet entries found, "
-              f"{len(rrows) - found} honest no-entries)")
+              f"{len(rrows) - found} with no entry)")
         print(f"  wrote {out2.name}  ({len(srows)} real study records)")

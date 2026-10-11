@@ -1,6 +1,6 @@
 """
-make_phase1_figures.py — build the teaching figures for Phase 1 (multi-kingdom).
-================================================================================
+make_phase1_figures.py: build the teaching figures for Phase 1 (multi-kingdom).
+===============================================================================
 Reads the three raw CSVs from data/raw/ and writes:
   * static PNG figures            -> figures/*.png
   * one interactive Plotly chart  -> docs/interactive/signal_scatter.html
@@ -8,8 +8,8 @@ Reads the three raw CSVs from data/raw/ and writes:
 Run it (from the project root, venv active) AFTER generate_data.py:
     python figures/make_phase1_figures.py
 
-Every figure carries a "SIMULATED DATA" note, because honesty about the data is
-part of the project.
+Every figure carries a "SIMULATED DATA" note, so nobody mistakes these numbers
+for real lab measurements.
 """
 from pathlib import Path
 import numpy as np
@@ -50,11 +50,11 @@ phen = pd.read_csv(RAW/"phenotype.csv").drop_duplicates("strain_id")
 df = phen.merge(geno, on="strain_id").merge(metab, on="strain_id")
 
 def footnote(fig):
-    fig.text(0.99, 0.01, "StrainScope — SIMULATED data", ha="right", va="bottom",
+    fig.text(0.99, 0.01, "StrainScope: SIMULATED data", ha="right", va="bottom",
              fontsize=7, color=GREY, style="italic")
 
 # =============================================================================
-# 1. CLASS BALANCE — how rare are the effective strains?
+# 1. CLASS BALANCE: how rare are the effective strains?
 # =============================================================================
 fig, ax = plt.subplots(figsize=(6,4))
 counts = phen["is_effective"].value_counts().sort_index()
@@ -79,7 +79,7 @@ eff = phen.groupby("kingdom")["is_effective"].mean().mul(100).reindex(KINGDOM_OR
 ax2.bar(eff.index, eff.values, color=[KINGDOM_COLOURS[k] for k in eff.index])
 for i,v in enumerate(eff.values): ax2.text(i, v+0.6, f"{v:.1f}%", ha="center", fontsize=9)
 ax2.set_ylabel("% effective"); ax2.set_title("Effective rate by kingdom (mild, realistic tilt)")
-fig.suptitle("Four kingdoms of biocontrol microbes — each produces winners", fontsize=12)
+fig.suptitle("Four kingdoms of biocontrol microbes, and each produces winners", fontsize=12)
 footnote(fig); fig.tight_layout(); fig.savefig(FIG/"kingdom_mix.png"); plt.close(fig)
 
 # =============================================================================
@@ -113,7 +113,7 @@ ax.set_title("Not all genes are informative: housekeeping genes are in ~every st
 footnote(fig); fig.tight_layout(); fig.savefig(FIG/"gene_prevalence.png"); plt.close(fig)
 
 # =============================================================================
-# 4. DATASET OVERVIEW — three layers, same strains, side by side (first 40)
+# 4. DATASET OVERVIEW: three layers, same strains, side by side (first 40)
 # =============================================================================
 n = 40
 sub = df.head(n)
@@ -148,7 +148,7 @@ fig.suptitle("One dataset, several views of the same multi-kingdom strains", fon
 footnote(fig); fig.tight_layout(); fig.savefig(FIG/"dataset_overview.png"); plt.close(fig)
 
 # =============================================================================
-# 5. THE SIGNAL — a producing metabolite vs the outcome, coloured by kingdom
+# 5. THE SIGNAL: a producing metabolite vs the outcome, coloured by kingdom
 # =============================================================================
 fig, ax = plt.subplots(figsize=(6.5,4.5))
 for k in KINGDOM_ORDER:
@@ -163,19 +163,19 @@ ax.legend(fontsize=8, title="kingdom")
 footnote(fig); fig.tight_layout(); fig.savefig(FIG/"signal_scatter.png"); plt.close(fig)
 
 # =============================================================================
-# 6. MISSINGNESS — where the metabolite readings dropped out
+# 6. MISSINGNESS: where the metabolite readings dropped out
 # =============================================================================
 fig, ax = plt.subplots(figsize=(8,4.5))
 miss = metab[SIGNAL_METAB+NOISE_METAB].head(80).isna().to_numpy()
 ax.imshow(miss, aspect="auto", cmap=ListedColormap(["#EEF1F5", GOLD]))
-ax.set_title(f"Missing metabolite readings (gold = missing) — {metab[SIGNAL_METAB+NOISE_METAB].isna().sum().sum()} cells total")
+ax.set_title(f"Missing metabolite readings (gold = missing), {metab[SIGNAL_METAB+NOISE_METAB].isna().sum().sum()} cells in total")
 ax.set_xticks(range(len(SIGNAL_METAB+NOISE_METAB)))
 ax.set_xticklabels(SIGNAL_METAB+NOISE_METAB, rotation=90, fontsize=6)
 ax.set_ylabel("first 80 strains")
 footnote(fig); fig.tight_layout(); fig.savefig(FIG/"missingness.png"); plt.close(fig)
 
 # =============================================================================
-# 7. METABOLITE-OUTCOME CORRELATION — which metabolites carry signal?
+# 7. METABOLITE-OUTCOME CORRELATION: which metabolites carry signal?
 # =============================================================================
 fig, ax = plt.subplots(figsize=(9,4))
 cors = {m: df[[m,"suppression_score"]].corr().iloc[0,1] for m in SIGNAL_METAB+NOISE_METAB}
@@ -191,7 +191,7 @@ ax.set_title("The signal metabolites correlate with the outcome; the noise ones 
 footnote(fig); fig.tight_layout(); fig.savefig(FIG/"metabolite_correlation.png"); plt.close(fig)
 
 # =============================================================================
-# 8. BATCH EFFECT — systematic drift the cleaning phase must correct
+# 8. BATCH EFFECT: systematic drift the cleaning phase must correct
 # =============================================================================
 fig, ax = plt.subplots(figsize=(7,4))
 data = [df.loc[df["batch_id"]==b, "surfactin"].dropna().to_numpy() for b in range(1,7)]
@@ -201,7 +201,7 @@ ax.set_ylabel("surfactin abundance"); ax.set_title("Batch effect: the same measu
 footnote(fig); fig.tight_layout(); fig.savefig(FIG/"batch_effect.png"); plt.close(fig)
 
 # =============================================================================
-# 9. INTERACTIVE — hover any strain to see its details (Plotly -> HTML)
+# 9. INTERACTIVE: hover any strain to see its details (Plotly -> HTML)
 # =============================================================================
 plot_df = df.copy()
 plot_df["status"] = np.where(plot_df["is_effective"]==1, "Effective", "Not effective")

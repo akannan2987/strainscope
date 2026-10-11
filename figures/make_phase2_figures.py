@@ -1,8 +1,8 @@
 """
-make_phase2_figures.py — the teaching figures for Phase 2 (cleaning & QC).
-==========================================================================
-Reads BOTH the raw and the cleaned tables, so every figure is honest
-before-vs-after evidence of what cleaning did. Also draws a small schematic of
+make_phase2_figures.py: the teaching figures for Phase 2 (cleaning & QC).
+=========================================================================
+Reads BOTH the raw and the cleaned tables, so every figure is a fair
+before-vs-after record of what cleaning did. Also draws a small schematic of
 the database. Writes:
   * static PNGs                  -> figures/*.png
   * one interactive comparison   -> docs/interactive/batch_before_after.html
@@ -37,13 +37,13 @@ clean_m = pd.read_csv(PROCESSED / "metabolomics_clean.csv")
 clean_p = pd.read_csv(PROCESSED / "phenotype_clean.csv")
 
 
-def footnote(fig, text="StrainScope — SIMULATED data"):
+def footnote(fig, text="StrainScope: SIMULATED data"):
     fig.text(0.99, 0.01, text, ha="right", va="bottom",
              fontsize=7, color=GREY, style="italic")
 
 
 # =============================================================================
-# 1. THE CLEANING LEDGER, AS A PICTURE — what changed, at a glance
+# 1. THE CLEANING LEDGER, AS A PICTURE: what changed, at a glance
 # =============================================================================
 steps = [("duplicates removed", "24 rows (8 × 3 tables)", 24, RED),
          ("text cells harmonised", "657 cells", 657, BLUE),
@@ -62,7 +62,7 @@ ax.set_title("The cleaning ledger, drawn: every change counted, nothing silent")
 footnote(fig); fig.tight_layout(); fig.savefig(FIG / "cleaning_ledger.png"); plt.close(fig)
 
 # =============================================================================
-# 2. BATCH EFFECT: BEFORE vs AFTER — the drift, removed
+# 2. BATCH EFFECT: BEFORE vs AFTER (the drift, removed)
 # =============================================================================
 batch_map = raw_p.set_index("strain_id")["batch_id"]
 fig, axes = plt.subplots(1, 2, figsize=(11, 4), sharey=True)
@@ -82,7 +82,7 @@ fig.suptitle("Median-scaling removes the lab drift and keeps the biology", fonts
 footnote(fig); fig.tight_layout(); fig.savefig(FIG / "batch_before_after.png"); plt.close(fig)
 
 # =============================================================================
-# 3. OUTLIERS: what was capped — and what honestly can't be caught
+# 3. OUTLIERS: what was capped, and what can't be caught at all
 # =============================================================================
 fig, ax = plt.subplots(figsize=(8, 4.4))
 v_raw = raw_m["HCN"].dropna()
@@ -100,7 +100,7 @@ ax.legend(fontsize=8)
 footnote(fig); fig.tight_layout(); fig.savefig(FIG / "outliers_capped.png"); plt.close(fig)
 
 # =============================================================================
-# 4. TEXT HARMONISATION — many spellings in, one voice out
+# 4. TEXT HARMONISATION: many spellings in, one voice out
 # =============================================================================
 fig, axes = plt.subplots(1, 2, figsize=(11, 4.4))
 before = raw_p["genus"].value_counts()
@@ -117,7 +117,7 @@ fig.suptitle("One agreed spelling per real-world thing", fontsize=12)
 footnote(fig); fig.tight_layout(); fig.savefig(FIG / "text_harmonization.png"); plt.close(fig)
 
 # =============================================================================
-# 5. THE DATABASE, AS A PICTURE — what now lives in strainscope.duckdb
+# 5. THE DATABASE, AS A PICTURE: what now lives in strainscope.duckdb
 # =============================================================================
 fig, ax = plt.subplots(figsize=(10, 4.6))
 ax.set_xlim(0, 10); ax.set_ylim(0, 4.6); ax.axis("off")
@@ -129,7 +129,7 @@ def box(x, y, w, h, colour, title, sub):
             fontweight="bold")
     ax.text(x + w / 2, y + h / 2 - 0.22, sub, ha="center", fontsize=8)
 
-ax.text(5, 4.3, "strainscope.duckdb — one file, every table, queryable with SQL",
+ax.text(5, 4.3, "strainscope.duckdb: one file, every table, queryable with SQL",
         ha="center", fontsize=12, fontweight="bold")
 box(0.4, 2.4, 2.9, 1.3, "#E8F0FE", "genomics",
     "600 strains × 31 genes\n(clean, NULLs kept)")
@@ -145,13 +145,13 @@ box(6.8, 0.5, 2.9, 1.3, "#E6F4EA", "real_compound_pathways",
     "curated compound→pathway\nedges (KEGG, attributed)")
 ax.text(5, 2.12, "synthetic (cleaned this phase)", ha="center", fontsize=8,
         color="#5f6b7a", style="italic")
-ax.text(5, 0.22, "real (auto-loaded from data/processed/real/ — future sources join automatically)",
+ax.text(5, 0.22, "real (auto-loaded from data/processed/real/; future sources join automatically)",
         ha="center", fontsize=8, color="#5f6b7a", style="italic")
-footnote(fig, "StrainScope — schematic")
+footnote(fig, "StrainScope: schematic")
 fig.tight_layout(); fig.savefig(FIG / "database_schema.png"); plt.close(fig)
 
 # =============================================================================
-# 6. INTERACTIVE — drag between before and after batch views
+# 6. INTERACTIVE: drag between before and after batch views
 # =============================================================================
 try:
     import plotly.graph_objects as go
@@ -168,7 +168,7 @@ try:
                               visible=False, boxpoints=False))
     figi.update_layout(
         template="plotly_white", height=520, showlegend=False,
-        title="Batch effect, before vs after — use the buttons",
+        title="Batch effect, before vs after (use the buttons)",
         yaxis_title="surfactin abundance",
         updatemenus=[dict(type="buttons", x=0.5, y=1.15, xanchor="center",
                           buttons=[
@@ -181,6 +181,6 @@ try:
                     include_plotlyjs=True, full_html=True)
     print("  drew docs/interactive/batch_before_after.html (interactive)")
 except ImportError:
-    print("  plotly missing — interactive skipped")
+    print("  plotly missing, interactive skipped")
 
 print("Wrote Phase 2 figures to figures/*.png")

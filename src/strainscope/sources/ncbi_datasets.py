@@ -1,6 +1,6 @@
 """
-ncbi_datasets.py — adapter for NCBI Datasets, the genome catalogue (NIH).
-=========================================================================
+ncbi_datasets.py: adapter for NCBI Datasets, the genome catalogue (NIH).
+========================================================================
 
 WHAT NCBI DATASETS IS
 ---------------------
@@ -11,22 +11,22 @@ is, how long the genome is, its GC content, when it was released.
 
 WHY THIS SOURCE MATTERS TO STRAINSCOPE (the multi-kingdom win)
 --------------------------------------------------------------
-BacDive gave us real strain records — for BACTERIA only, because that's its
+BacDive gave us real strain records, but for BACTERIA only, because that's its
 scope. NCBI covers *everything*, so this adapter fetches real genome metadata
 for ALL FOUR of our kingdoms: bacterial genera (Bacillus, Pseudomonas…), the
 biocontrol fungi (Trichoderma, Beauveria, Metarhizium), and the oomycete
-(Pythium). Real genomes now back the entire multi-kingdom story — and their
-sizes alone teach real biology (a bacterial genome is ~4–8 million letters; a
+(Pythium). Real genomes now back the entire multi-kingdom story, and their
+sizes alone teach real biology (a bacterial genome is ~4 to 8 million letters; a
 fungal one is ~10× that).
 
 THE API-KEY LESSON (this phase's big idea)
 ------------------------------------------
 This API works WITHOUT any key at up to 5 requests/second. A free key raises
-that to 10 — useful someday, not required. That makes it the perfect low-stakes
+that to 10 (useful someday, not required). That makes it the perfect low-stakes
 vehicle for learning how secrets are handled properly:
 
   * the key lives in the ENVIRONMENT (variable `NCBI_API_KEY`), loaded from
-    the git-ignored `.env` file by `load_env()` — never in code, never in Git;
+    the git-ignored `.env` file by `load_env()`, never in code, never in Git;
   * if present, it's sent as the `api-key` request header and we speed up;
   * if absent, everything still works, just politely slower.
 
@@ -39,7 +39,7 @@ GET https://api.ncbi.nlm.nih.gov/datasets/v2/genome/taxon/{genus}/dataset_report
     "total_count": 12345}
 
 (A live-caught detail: NCBI's documentation shows camelCase field names, but the
-API itself answers in snake_case — and genome lengths arrive as STRINGS. The
+API itself answers in snake_case, and genome lengths arrive as STRINGS. The
 code below accepts either casing, because the live response decides.)
 """
 
@@ -52,7 +52,7 @@ import os
 from .base import Source, load_env
 
 def _pick(d: dict, *keys, default=""):
-    """Return the first present key — tolerant of snake_case vs camelCase."""
+    """Return the first present key (tolerant of snake_case vs camelCase)."""
     for k in keys:
         if isinstance(d, dict) and k in d and d[k] is not None:
             return d[k]
@@ -60,20 +60,20 @@ def _pick(d: dict, *keys, default=""):
 
 BASE = "https://api.ncbi.nlm.nih.gov/datasets/v2"
 
-# One entry per genus we model, tagged with its kingdom — so the tidy table
+# One entry per genus we model, tagged with its kingdom, so the tidy table
 # carries the same multi-kingdom structure as the synthetic library.
 GENERA = {
     "Bacillus": "Bacteria", "Pseudomonas": "Bacteria",
     "Streptomyces": "Bacteria", "Paenibacillus": "Bacteria",
     "Trichoderma": "Fungi", "Beauveria": "Fungi", "Metarhizium": "Fungi",
     "Pythium": "Oomycete",
-    # Yeasts — real commercial biocontrol agents (Metschnikowia fructicola,
+    # Yeasts: real commercial biocontrol agents (Metschnikowia fructicola,
     # Aureobasidium pullulans) plus the best-sequenced yeast of all. Their
     # absence was caught by tidy()'s own "N kingdoms" summary line printing 3.
     "Saccharomyces": "Yeast", "Metschnikowia": "Yeast", "Aureobasidium": "Yeast",
 }
 
-# IDs BEAT NAMES — caught live: NCBI's taxonomy holds TWO genera called
+# IDs BEAT NAMES (caught live): NCBI's taxonomy holds TWO genera called
 # "Bacillus" (the famous bacteria… and a genus of stick insects). Queried by
 # bare name, the API resolved to the insects and reported 3 genomes for one of
 # the most-sequenced genera on Earth. For ambiguous names we therefore query by
@@ -91,7 +91,7 @@ class NCBIDatasets(Source):
     delay_s = 0.25                 # ≤ 5 req/s without a key; we do ≤ 4
 
     def _headers(self) -> dict:
-        """The api-key header — only if a key exists in the environment.
+        """The api-key header, only if a key exists in the environment.
         load_env() pulls the git-ignored .env file in first; the shell wins
         if both define the variable."""
         load_env()
@@ -105,8 +105,8 @@ class NCBIDatasets(Source):
     # ------------------------------------------------------------------ probe
     def probe(self) -> None:
         has_key = bool(self._headers())
-        print(f"\n[{self.name}] probing — real genomes per genus "
-              f"(API key: {'found, 10 req/s allowed' if has_key else 'none — fine, 5 req/s'})")
+        print(f"\n[{self.name}] probing: real genomes per genus "
+              f"(API key: {'found, 10 req/s allowed' if has_key else 'none, fine at 5 req/s'})")
         print(f"  {'genus':<14} {'kingdom':<10} genomes available")
         print("  " + "-" * 44)
         total = 0
@@ -133,7 +133,7 @@ class NCBIDatasets(Source):
                   f"(of {avail:,} available)")
             self.log("fetch", genus, url, len(reports), "ok",
                      f"kingdom={kingdom}; first {limit}")
-        print(f"  Raw files in data/raw/real/{self.name}/ — log updated.")
+        print(f"  Raw files in data/raw/real/{self.name}/; log updated.")
 
     # ------------------------------------------------------------------- tidy
     def tidy(self) -> None:
@@ -147,7 +147,7 @@ class NCBIDatasets(Source):
                 stats = _pick(rep, "assembly_stats", "assemblyStats", default={}) or {}
                 org = rep.get("organism", {}) or {}
                 length = _pick(stats, "total_sequence_length", "totalLength")
-                try:                       # lengths arrive as strings — cast
+                try:                       # lengths arrive as strings: cast
                     length = int(length)
                 except (TypeError, ValueError):
                     pass

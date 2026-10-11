@@ -1,13 +1,13 @@
 """
-test_sources.py — offline tests for the real-data adapters.
-===========================================================
+test_sources.py: offline tests for the real-data adapters.
+==========================================================
 
 WHY THESE TESTS MATTER (a beginner-friendly note)
 -------------------------------------------------
 The adapters split work into fetch() (talks to the internet) and tidy() (reads
-files already on disk). That split is what makes honest testing possible: we
-save tiny, hand-made "canned" API responses to disk and run tidy() on them —
-no network needed, runs in milliseconds, works offline, and never bothers a
+files already on disk). That split is what makes reliable testing possible: we
+save tiny, hand-made "canned" API responses to disk and run tidy() on them.
+No network needed, runs in milliseconds, works offline, and never bothers a
 public server. If an API's response shape ever changes, updating the canned
 sample here documents the change forever.
 
@@ -92,7 +92,7 @@ def test_pubchem_tidy_marks_found_and_missing(tmp_path, monkeypatch):
     assert by_name["surfactin"]["status"] == "found"
     assert by_name["surfactin"]["cid"] == 443592
     assert by_name["pyoverdine"]["status"] == "no_entry"
-    # The honest not-a-small-molecule entries are always present:
+    # The explicit not-a-small-molecule entries are always present:
     assert by_name["oligandrin"]["status"] == "not_a_small_molecule"
 
 

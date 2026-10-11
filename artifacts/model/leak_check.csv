@@ -1,0 +1,5 @@
+setup,auc_mean,auc_sd,ber_mean,ber_sd
+A1 Phase 3 recipe: prepared on all strains (label-free),0.9479,0.0043,0.1338,0.0102
+A2 Leak-proof: prepared inside each fold,0.9469,0.0042,0.1326,0.0086
+"B1 Noise labels, features picked using ALL strains (a real leak)",0.5936,0.0041,0.4451,0.0091
+"B2 Noise labels, features picked inside each fold (correct)",0.5275,0.0229,0.4833,0.018

@@ -1,6 +1,6 @@
 """
-generate_data.py — StrainScope Phase 1: the synthetic multi-omics data generator.
-================================================================================
+generate_data.py (StrainScope Phase 1): the synthetic multi-omics data generator.
+=================================================================================
 
 WHAT THIS SCRIPT DOES (in one sentence)
 ---------------------------------------
@@ -12,33 +12,32 @@ phenotype table.
 WHY IT EXISTS
 -------------
 Clean, matched multi-omics data on the SAME strains (genes AND chemicals AND a
-measured outcome, all lined up) is not something you can simply download in one
+measured outcome, all lined up) is not something you can just download in one
 tidy package. So instead of pretending, we BUILD the data ourselves, in code,
 transparently. Everyone who runs this script gets the exact same data, because
 we fix the "random seed" (see below). The data is grounded in real biology, but
-it is SIMULATED — a model trained on it proves the workflow is correct, not that
-the numbers would hold on real-world microbes. We say so plainly everywhere.
+it is SIMULATED. A model trained on it proves the workflow is correct, not that
+the numbers would hold on real-world microbes. We say so everywhere.
 
 WHY "MULTI-KINGDOM"?
 -------------------
 Biological crop-protection agents ("biologicals") are not just bacteria. The real
 landscape includes bacteria (Bacillus, Pseudomonas), fungi (Trichoderma,
-Beauveria), yeasts, and oomycetes (Pythium) — and each group fights plant pests
+Beauveria), yeasts, and oomycetes (Pythium), and each group fights plant pests
 with DIFFERENT weapons: bacteria lean on antibiotics and lipopeptides; fungi on
 mycoparasitism (attacking other fungi) and toxins; yeasts on competition; and so
 on. We model those four cellular groups because they share a molecular-fingerprint
 basis (they all have genes AND produce measurable chemicals). Viruses and protozoa
 are also part of the biocontrol landscape, but they do NOT share that basis (a
-virus has no metabolome), so we deliberately leave them out of the molecular
-matrix and mention them as context in the docs. That honest scoping is itself part
-of doing this properly.
+virus has no metabolome), so we leave them out of the molecular matrix on
+purpose and mention them as context in the docs.
 
 WHAT IS A "RANDOM SEED"?
 ------------------------
 Computers make "random" numbers using a formula that starts from a chosen number
 called the seed. Give the formula the same seed and it produces the exact same
-sequence of "random" numbers every time. Everyday analogy: shuffling a deck of
-cards the exact same way every time so everyone ends up with the identical
+sequence of "random" numbers every time. It's like shuffling a deck of cards
+the exact same way every time, so everyone ends up with the identical
 shuffle. Fixing the seed is what makes this dataset reproducible.
 
 HOW TO RUN IT
@@ -62,12 +61,12 @@ from faker import Faker           # realistic fake metadata (dates, etc.).
 
 
 # =============================================================================
-# 1. SETTINGS — every knob that controls the dataset, in one place.
+# 1. SETTINGS: every knob that controls the dataset, in one place.
 # =============================================================================
 
 SEED = 42                 # The one number that makes everything reproducible.
 N_STRAINS = 600           # How many microbial strains (samples) to invent.
-N_BATCHES = 6             # Lab "batches" — groups processed together (drift source).
+N_BATCHES = 6             # Lab "batches": groups processed together (drift source).
 EFFECTIVE_THRESHOLD = 65  # A strain is "effective" if it suppresses disease >= 65%.
 N_DUPLICATE_STRAINS = 8   # How many strains to accidentally record twice.
 METAB_MISSING_RATE = 0.06 # ~6% of metabolite readings go missing.
@@ -99,10 +98,10 @@ KINGDOM_ORDER = ("Bacteria", "Fungi", "Yeast", "Oomycete")
 KINGDOM_INDEX = {k: i for i, k in enumerate(KINGDOM_ORDER)}
 
 # --- SIGNAL genes -------------------------------------------------------------
-# Each signal gene GENUINELY contributes to disease suppression. Crucially, each
+# Each signal gene REALLY contributes to disease suppression, and each one
 # has a per-kingdom PREVALENCE: a bacterial weapon (e.g. surfactin synthetase) is
 # common in bacteria and essentially absent in fungi, and vice-versa. This is
-# what makes "kingdom" a real driver of a strain's molecular profile — different
+# what makes "kingdom" a real driver of a strain's molecular profile: different
 # microbes carry different weapons. Some genes PRODUCE a measurable metabolite
 # ("metabolite": name); others are enzymes with no secreted small molecule
 # ("metabolite": None) and so contribute through the genomics layer only.
@@ -117,8 +116,8 @@ SIGNAL_GENES = {
     "fenA":  {"desc": "fengycin antifungal lipopeptide synthetase",    "metabolite": "fengycin",     "prev": (0.40, 0.02, 0.01, 0.01)},
     "pvdA":  {"desc": "pyoverdine siderophore (iron competition)",     "metabolite": "pyoverdine",   "prev": (0.40, 0.05, 0.05, 0.03)},
     # ---- Cross-kingdom cell-wall-degrading enzymes ----
-    "chiA":  {"desc": "chitinase — digests fungal cell walls",         "metabolite": None,           "prev": (0.30, 0.50, 0.10, 0.40)},
-    "glcA":  {"desc": "beta-1,3-glucanase — degrades fungal walls",    "metabolite": None,           "prev": (0.20, 0.55, 0.15, 0.45)},
+    "chiA":  {"desc": "chitinase (digests fungal cell walls)",         "metabolite": None,           "prev": (0.30, 0.50, 0.10, 0.40)},
+    "glcA":  {"desc": "beta-1,3-glucanase (degrades fungal walls)",    "metabolite": None,           "prev": (0.20, 0.55, 0.15, 0.45)},
     # ---- Fungal mycoparasitism & antifungal metabolites ----
     "ech42": {"desc": "endochitinase (Trichoderma mycoparasitism)",    "metabolite": None,           "prev": (0.03, 0.55, 0.05, 0.10)},
     "prb1":  {"desc": "mycoparasitic protease",                        "metabolite": None,           "prev": (0.03, 0.50, 0.05, 0.30)},
@@ -135,17 +134,17 @@ SIGNAL_GENES = {
 
 # --- Plant-growth-promotion (PGP) genes: a SECONDARY outcome ------------------
 PGP_GENES = {
-    "acdS": {"desc": "ACC deaminase — relieves plant stress", "prev": (0.40, 0.20, 0.10, 0.10)},
+    "acdS": {"desc": "ACC deaminase (relieves plant stress)", "prev": (0.40, 0.20, 0.10, 0.10)},
     "nifH": {"desc": "nitrogen fixation",                     "prev": (0.35, 0.03, 0.02, 0.02)},
     "gcd":  {"desc": "phosphate solubilisation",             "prev": (0.40, 0.15, 0.10, 0.10)},
-    "iaaM": {"desc": "auxin (IAA) production — boosts growth","prev": (0.30, 0.35, 0.20, 0.10)},
+    "iaaM": {"desc": "auxin (IAA) production to boost growth","prev": (0.30, 0.35, 0.20, 0.10)},
 }
 
 # --- Housekeeping genes: conserved, present in ~all microbes of EVERY kingdom -
 HOUSEKEEPING_GENES = {
-    "ssu_rRNA": "small-subunit ribosomal RNA gene — a universal marker",
-    "ef1a":     "translation elongation factor — broadly conserved",
-    "rpb1":     "largest RNA-polymerase subunit — broadly conserved",
+    "ssu_rRNA": "small-subunit ribosomal RNA gene (a universal marker)",
+    "ef1a":     "translation elongation factor (broadly conserved)",
+    "rpb1":     "largest RNA-polymerase subunit (broadly conserved)",
 }
 
 # --- Accessory "noise" genes: vary from strain to strain, NO link to outcome --
@@ -231,7 +230,7 @@ def generate() -> dict[str, pd.DataFrame]:
     # -- 3e. THE HIDDEN "TRUTH": disease-suppression, from SIGNAL features only -
     # Each kingdom reaches efficacy via its OWN weapons. Because a strain only
     # carries its kingdom's genes, the sums below are automatically kingdom-
-    # appropriate — the model must learn several "recipes", not one.
+    # appropriate, so the model must learn several "recipes", not one.
     gene_signal = genomics[list(SIGNAL_GENES)].to_numpy().sum(axis=1)
     metab_signal = np.log1p(metabolomics[list(SIGNAL_METABOLITES)].to_numpy()).sum(axis=1)
     synergy = 0.15 * gene_signal * (metab_signal / metab_signal.mean())
@@ -330,8 +329,8 @@ def main() -> None:
         print(f"  wrote {out.relative_to(ROOT)}  ({len(df):,} rows, {df.shape[1]} columns)")
 
     L = generate.ledger                        # type: ignore[attr-defined]
-    print("\n  ── StrainScope synthetic dataset — ledger ──────────────────────")
-    print(f"  strains (samples ....... {L['n_strains']:,}")
+    print("\n  ── StrainScope synthetic dataset: ledger ───────────────────────")
+    print(f"  strains (samples) ...... {L['n_strains']:,}")
     print(f"  effective strains ...... {L['n_effective']:,}  ({L['pct_effective']}%)  <- the rare winners")
     kc = "  ".join(f"{k}:{n}" for k, n in L['kingdom_counts'].items())
     print(f"  kingdoms ............... {kc}")

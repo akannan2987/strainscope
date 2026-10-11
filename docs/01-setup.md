@@ -1,34 +1,34 @@
-# 01 · Setup Runbook — From a Blank Laptop to a Real Repository
+# 01 · Setup Runbook: From a Blank Laptop to a Real Repository
 
 [← Architecture](00-architecture.md) · [Handbook](HANDBOOK.md) · [All docs in order](../README.md#the-tutorial-in-order) · [Glossary](GLOSSARY.md)
 
-**Prerequisites:** a computer (Windows, macOS, or Linux), an internet connection, and about 60–90 minutes. No prior programming setup is assumed. If you have *nothing* installed, you are in exactly the right place.
-**Learning goal:** by the end you will have every tool StrainScope needs, you'll understand *why* each one exists, and you'll have a real, version-controlled project pushed to GitHub with a `master` / `beta` / `develop` branch structure — ready to start building.
+**Prerequisites:** a computer (Windows, macOS, or Linux), an internet connection, and about 60 to 90 minutes. No prior programming setup is assumed. If you have *nothing* installed, you're in exactly the right place.
+**Learning goal:** by the end you'll have every tool StrainScope needs, you'll understand *why* each one is there, and you'll have a real, version-controlled project pushed to GitHub with a `master` / `beta` / `develop` branch structure, ready to start building.
 **Checkpoint (what "done" looks like):** running `python --version`, `git --version`, and `code --version` all print version numbers; your project folder exists with a virtual environment; and your empty repo is visible on GitHub with three branches. Every step below tells you the exact output to expect so you can confirm as you go.
 
-> **How to read this page.** Do one numbered step at a time. After each command, I show you what you should see. If you see something different, check the **"If it goes wrong"** note under that step before moving on. Never paste two commands at once until you're comfortable — one action, one result, one check.
+> **How to read this page.** Do one numbered step at a time. After each command, I show you what you should see. If you see something different, check the **"If it goes wrong"** note under that step before moving on. Until you're comfortable, paste one command at a time and check its result before running the next.
 
 ---
 
-## Part A — What we're installing, and why (read first, 3 minutes)
+## Part A: What we're installing, and why (read first, 3 minutes)
 
 We install five things. Here's the plain-language reason for each, so nothing feels like a mystery incantation:
 
-1. **Python** — the programming language the project is mostly written in. This is the engine.
-2. **VS Code** — a free text editor built for code (a "word processor for programs"). This is where you'll read and write files.
-3. **Git** — a "save-game system" for your code: it snapshots your work so you can go back in time, and it's how your project gets to GitHub. 
-4. **A GitHub account** — the online home where your project lives publicly and where others can see and clone it.
-5. **R** *(needed later, at the integration phase)* — a second language used for one specialised step. You can install it now or when you reach that phase; I'll show you now and remind you later.
+1. **Python**: the programming language most of the project is written in. Think of it as the engine.
+2. **VS Code**: a free text editor built for code (a "word processor for programs"), where you'll read and write files.
+3. **Git**: a "save-game system" for your code. It snapshots your work so you can go back in time, and it's how your project gets to GitHub. 
+4. **A GitHub account**: the online home where your project lives publicly, and where others can see and clone it.
+5. **R** *(needed later, at the integration phase)*: a second language used for one specialised step. You can install it now or when you reach that phase; I'll show you how here and remind you later.
 
-We'll also create a **virtual environment** (explained in Part F) — think of it as a clean, sealed toolbox that belongs to *this* project alone, so its tools never clash with anything else on your machine.
+We'll also create a **virtual environment** (explained in Part F). Picture it as a clean, sealed toolbox that belongs to *this* project alone, so its tools never clash with anything else on your machine.
 
-> **This project is cross-platform by design.** Everything here runs the same on **Windows**, **macOS**, and **Linux** (including enterprise **RHEL 8** / Rocky / Alma servers). Where a command differs by operating system, you'll see clearly-labelled tabs for each — do the one that matches your machine and ignore the rest. The two big Linux families you'll see are **Debian/Ubuntu** (which install software with a tool called `apt`) and **RHEL 8 / Rocky / Alma / Fedora** (which use a tool called `dnf`). Everyday analogy: `apt` and `dnf` are two different app stores that install the same apps — you just walk into whichever one your system ships with.
+> **This project is cross-platform by design.** Everything here runs the same on Windows, macOS and Linux (including enterprise RHEL 8 / Rocky / Alma servers). Where a command differs by operating system, you'll see clearly labelled tabs for each; do the one that matches your machine and ignore the rest. The two big Linux families you'll meet are **Debian/Ubuntu** (which install software with a tool called `apt`) and **RHEL 8 / Rocky / Alma / Fedora** (which use a tool called `dnf`). You can think of `apt` and `dnf` as two different app stores that sell the same apps: you just walk into whichever one your system ships with.
 >
-> **One-time setup, easy repeats.** Installing the tools below happens **once** per machine. After that, day-to-day work — editing code, committing, redeploying — is a handful of short commands you'll quickly memorise. The heavy lifting is front-loaded on purpose.
+> **One-time setup, easy repeats.** You install the tools below **once** per machine. After that, day-to-day work (editing code, committing, redeploying) comes down to a handful of short commands you'll soon know by heart. All the heavy lifting happens at the start.
 
 ---
 
-## Part B — Install Python
+## Part B: Install Python
 
 Python is the engine. We'll install a recent, stable version (3.12). Pick your operating system.
 
@@ -36,7 +36,7 @@ Python is the engine. We'll install a recent, stable version (3.12). Pick your o
 
 1. Open your web browser and go to `https://www.python.org/downloads/`.
 2. Click the yellow **"Download Python 3.12.x"** button (the exact last number doesn't matter, as long as it starts with 3.12).
-3. Open the downloaded installer. **Before clicking Install, tick the box that says "Add python.exe to PATH"** at the bottom. This one checkbox saves you hours of pain later — it tells Windows where Python lives.
+3. Open the downloaded installer. **Before clicking Install, tick the box that says "Add python.exe to PATH"** at the bottom. This one checkbox saves you hours of pain later, because it tells Windows where Python lives.
 4. Click **"Install Now"** and wait for it to finish, then click **Close**.
 5. Open a fresh terminal: press the Windows key, type `powershell`, and press Enter.
 6. Type this and press Enter:
@@ -56,7 +56,7 @@ Python is the engine. We'll install a recent, stable version (3.12). Pick your o
    ```bash
    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
    ```
-   Follow the prompts (it may ask for your password — typing shows nothing, that's normal). When it finishes, it may print two lines starting with `echo` to "add Homebrew to your PATH" — copy, paste, and run those if shown.
+   Follow the prompts (it may ask for your password; nothing appears as you type, which is normal). When it finishes, it may print two lines starting with `echo` to "add Homebrew to your PATH". If it does, copy, paste and run those.
 2. Install Python:
    ```bash
    brew install python@3.12
@@ -74,13 +74,13 @@ Python is the engine. We'll install a recent, stable version (3.12). Pick your o
 
 **If it goes wrong:** if `brew` isn't found after installing, close and reopen Terminal. If it still fails, run `echo $PATH` and confirm it contains `/opt/homebrew/bin` (Apple Silicon) or `/usr/local/bin` (Intel); if not, re-run the two `echo ...` lines Homebrew printed.
 
-### Linux — Debian / Ubuntu (uses `apt`)
+### Linux: Debian / Ubuntu (uses `apt`)
 
 1. Open a terminal and run:
    ```bash
    sudo apt update && sudo apt install -y python3 python3-venv python3-pip
    ```
-   (`sudo` means "do this as administrator"; it may ask for your password — typing shows nothing, that's normal.)
+   (`sudo` means "do this as administrator". It may ask for your password, and again nothing shows as you type. That's expected.)
 2. Verify:
    ```bash
    python3 --version
@@ -91,9 +91,9 @@ Python is the engine. We'll install a recent, stable version (3.12). Pick your o
    ```
    (An older 3.x is fine to start, but 3.11+ is recommended.)
 
-### Linux — RHEL 8 / Rocky / Alma / Fedora (uses `dnf`)
+### Linux: RHEL 8 / Rocky / Alma / Fedora (uses `dnf`)
 
-RHEL 8 and its relatives ship with an old system Python (3.6) that other system tools depend on — we must **not** disturb it. Instead we install a modern Python *alongside* it and call that one by name. This is the safe, standard practice on enterprise Linux.
+RHEL 8 and its relatives ship with an old system Python (3.6) that other system tools depend on, and we must **not** disturb it. Instead we install a modern Python *alongside* it and call that one by name, which is the safe, standard practice on enterprise Linux.
 
 1. Install a modern Python (try 3.12; if your VM's repositories don't have it, 3.11 works just as well):
    ```bash
@@ -103,7 +103,7 @@ RHEL 8 and its relatives ship with an old system Python (3.6) that other system 
    ```bash
    sudo dnf install -y python3.11 python3.11-pip
    ```
-2. Verify by calling the version explicitly (on RHEL, plain `python3` may still be the old 3.6 — so we say `python3.12`):
+2. Verify by calling the version explicitly (on RHEL, plain `python3` may still be the old 3.6, so we say `python3.12`):
    ```bash
    python3.12 --version
    ```
@@ -113,13 +113,13 @@ RHEL 8 and its relatives ship with an old system Python (3.6) that other system 
    ```
    (If you installed 3.11, use `python3.11` everywhere this guide later says `python`.)
 
-> **Why call it `python3.12` and not just `python`?** On enterprise Linux, several built-in system utilities are written for the old Python 3.6, so the generic `python3` name is deliberately left pointing at 3.6 to avoid breaking them. By calling `python3.12` explicitly, we get our modern Python without touching anything the operating system relies on. Everyday analogy: it's like keeping the building's original master key untouched and carrying your own clearly-labelled key for your own office.
+> **Why call it `python3.12` and not just `python`?** On enterprise Linux, several built-in system utilities are written for the old Python 3.6, so the generic `python3` name is left pointing at 3.6 on purpose, to avoid breaking them. By calling `python3.12` explicitly, we get our modern Python without touching anything the operating system relies on. It's a bit like leaving the building's original master key alone and carrying your own clearly labelled key for your own office.
 
-> **Corporate RHEL VM note.** On a managed RHEL VM you may not have `sudo` rights, or the software repositories may be restricted. If `dnf install` is blocked, that's an IT-permissions matter, not a mistake on your part — ask whoever administers the VM to install `python3.12` (and later `git` and `R`), or request temporary install rights. Everything after installation needs no special permissions.
+> **Corporate RHEL VM note.** On a managed RHEL VM you may not have `sudo` rights, or the software repositories may be restricted. If `dnf install` is blocked, that's down to IT permissions and isn't a mistake on your part. Ask whoever administers the VM to install `python3.12` (and later `git` and `R`), or request temporary install rights. Everything after installation needs no special permissions.
 
 ---
 
-## Part C — Install VS Code (your editor)
+## Part C: Install VS Code (your editor)
 
 VS Code is where you'll open, read, and edit the project files.
 
@@ -131,25 +131,25 @@ VS Code is where you'll open, read, and edit the project files.
    ```bash
    code --version
    ```
-   **Expected output:** three lines — a version number, a long commit hash, and a CPU architecture. Any output here means success.
+   **Expected output:** three lines: a version number, a long commit hash and a CPU architecture. Any output here means success.
 
-**If it goes wrong (Windows/Linux):** if `code` isn't recognised, you can still use VS Code normally by opening it from the Start menu / applications; the `code` command is a convenience, not a requirement.
+**If it goes wrong (Windows/Linux):** if `code` isn't recognised, you can still use VS Code normally by opening it from the Start menu / applications. The `code` command is only a convenience.
 
 > **On a headless Linux server (a RHEL 8 VM with no desktop)** there's no graphical VS Code to install. You have two good options, and the project works fully with either:
-> - **Edit remotely (recommended):** install VS Code on your *own* laptop, add its free **Remote - SSH** extension, and connect to the VM. You then edit the files on the server as if they were local — same comfortable editor, code stays on the VM. Everyday analogy: like using a remote-desktop to drive another computer, but just for files.
-> - **Edit in the terminal:** use a built-in text editor such as `nano` (beginner-friendly) or `vim`. Nothing in this project requires a graphical editor — every step is command-line driven.
+> - **Edit remotely (recommended):** install VS Code on your *own* laptop, add its free **Remote - SSH** extension, and connect to the VM. You then edit the files on the server as if they were local: the same comfortable editor, while the code stays on the VM. It's similar to using remote desktop to drive another computer, except it's only for files.
+> - **Edit in the terminal:** use a built-in text editor such as `nano` (beginner-friendly) or `vim`. Nothing in this project needs a graphical editor; every step is driven from the command line.
 
 ---
 
-## Part D — Install Git and tell it who you are
+## Part D: Install Git and tell it who you are
 
 Git is the save-game system. It also needs to know your name and email so each snapshot ("commit") is signed.
 
 1. Install Git:
    - **Windows:** download from `https://git-scm.com/download/win`; run the installer and accept all the defaults (they're sensible).
    - **macOS:** `brew install git`
-   - **Linux — Debian/Ubuntu:** `sudo apt install -y git`
-   - **Linux — RHEL 8 / Rocky / Alma / Fedora:** `sudo dnf install -y git`
+   - **Linux (Debian/Ubuntu):** `sudo apt install -y git`
+   - **Linux (RHEL 8 / Rocky / Alma / Fedora):** `sudo dnf install -y git`
 2. Verify:
    ```bash
    git --version
@@ -163,7 +163,7 @@ Git is the save-game system. It also needs to know your name and email so each s
    git config --global user.name "Your Name"
    git config --global user.email "you@example.com"
    ```
-   This prints nothing — silence means success.
+   This prints nothing, and that silence means it worked.
 4. Tell Git your preferred *default* branch name is `master` (so new repos start on `master`, matching our workflow):
    ```bash
    git config --global init.defaultBranch master
@@ -181,7 +181,7 @@ Git is the save-game system. It also needs to know your name and email so each s
 
 ---
 
-## Part E — Create your GitHub account and an *empty* repository
+## Part E: Create your GitHub account and an *empty* repository
 
 GitHub is the online home for the project.
 
@@ -191,21 +191,21 @@ GitHub is the online home for the project.
    - **Repository name:** `strainscope`
    - **Description:** *A multi-omics workflow that ranks beneficial microbial strains and explains why.*
    - **Public** (so others can see and learn from it).
-   - **Important:** leave **"Add a README file", "Add .gitignore", and "Choose a license" all UNticked.** We want a truly empty repository so our local `master` branch becomes the first thing pushed. (If GitHub creates a `main` branch for you, it complicates the `master` setup — an empty repo avoids that.)
+   - **Important:** leave **"Add a README file", "Add .gitignore", and "Choose a license" all UNticked.** We want a truly empty repository so our local `master` branch becomes the first thing pushed. (If GitHub creates a `main` branch for you, it complicates the `master` setup; an empty repo avoids that.)
 4. Click **Create repository**.
-5. On the next page, GitHub shows a URL like `https://github.com/YOUR-USERNAME/strainscope.git`. **Copy it** — you'll paste it in Part G. (Keep this browser tab open.)
+5. On the next page, GitHub shows a URL like `https://github.com/YOUR-USERNAME/strainscope.git`. **Copy it**, because you'll paste it in Part G. (Keep this browser tab open.)
 
-> **Everyday analogy:** you've just reserved an empty plot of land online (the repo). In the next parts you'll build a house locally (your project folder) and then move it onto the plot (push).
+> In building terms, you've just reserved an empty plot of land online (the repo). In the next parts you'll build a house locally (your project folder) and then move it onto the plot (push).
 
 ---
 
-## Part F — Create the project folder and a virtual environment
+## Part F: Create the project folder and a virtual environment
 
 ### What is a virtual environment, and why does it matter?
 
-When you install a Python package (a bundle of pre-written code), by default it goes into one shared pile for your whole computer. Two projects that need *different versions* of the same package will then fight. A **virtual environment** is a private, sealed toolbox for **one project** — its packages live inside the project folder and can't clash with anything else. It also means anyone who clones your repo can recreate the *exact* same toolbox, so "it works on my machine" becomes "it works on everyone's machine." Reproducibility is the entire point of this project, so this step is not optional.
+When you install a Python package (a bundle of pre-written code), by default it goes into one shared pile for your whole computer. Two projects that need *different versions* of the same package will then fight. A **virtual environment** is a private, sealed toolbox for one project: its packages live inside the project folder and can't clash with anything else. It also means anyone who clones your repo can recreate the *exact* same toolbox, so "it works on my machine" becomes "it works on everyone's machine." Reproducibility is the whole point of this project, so please don't skip this step.
 
-**Everyday analogy:** a shared kitchen where everyone dumps ingredients in one cupboard leads to chaos; a virtual environment gives each recipe its own labelled box of exactly the right ingredients.
+Picture a shared kitchen where everyone dumps their ingredients into one cupboard; it soon turns into chaos. A virtual environment gives each recipe its own labelled box of exactly the right ingredients.
 
 ### Steps
 
@@ -224,7 +224,7 @@ When you install a Python package (a bundle of pre-written code), by default it 
 
    This prints nothing and creates a hidden `.venv` folder.
 
-   > **Good news:** once the environment is *activated* in the next step, the generic command `python` works inside it on every platform — the version differences only matter for this one creation step. Everyday analogy: you pick the right key to open the toolbox once; once it's open, all the tools inside are labelled the same way for everyone.
+   > **Good news:** once the environment is *activated* in the next step, the generic command `python` works inside it on every platform. The version differences only matter for this one creation step. (You need the right key to open the toolbox once; after that, the tools inside are labelled the same way for everyone.)
 3. **Activate** it (this "steps into" the toolbox for your current terminal):
    - **Windows PowerShell:**
      ```powershell
@@ -251,7 +251,7 @@ When you install a Python package (a bundle of pre-written code), by default it 
 
 ---
 
-## Part G — Lay down the folder structure and connect to GitHub
+## Part G: Lay down the folder structure and connect to GitHub
 
 Now we create the project's skeleton and link it to the empty GitHub repo.
 
@@ -261,19 +261,19 @@ Now we create the project's skeleton and link it to the empty GitHub repo.
    mkdir -p src/strainscope R artifacts app data/raw data/processed tests docs .streamlit
    ```
 3. **Why this structure?** Each folder has one clear job, so a stranger (and future-you) can find anything instantly:
-   - `src/strainscope/` — the reusable backend code (data generation, cleaning, models, graph).
-   - `R/` — the one specialised R script (DIABLO integration).
-   - `artifacts/` — small precomputed outputs the app reads (predictions, trained model).
-   - `app/` — the Streamlit app (the frontend/website).
-   - `data/raw/` and `data/processed/` — generated data before and after cleaning.
-   - `tests/` — automated checks that prove the code works.
-   - `docs/` — this tutorial (the docs you're reading).
-   - `.streamlit/` — configuration for the app when deployed (empty until Phase 6; Git ignores empty folders, so it appears on GitHub only once it holds a file).
-4. Add a few starter files. **The three files below — `.gitignore`, `requirements.txt`, and the placeholder `README.md` — are provided with this project as ready-made files. Save each one into the project root (the folder with `docs/` in it) rather than typing them out.** Saving the files avoids copy-paste mistakes that can scramble a multi-line file in some terminals.
+   - `src/strainscope/`: the reusable backend code (data generation, cleaning, models, graph).
+   - `R/`: the one specialised R script (DIABLO integration).
+   - `artifacts/`: small precomputed outputs the app reads (predictions, trained model).
+   - `app/`: the Streamlit app (the frontend/website).
+   - `data/raw/` and `data/processed/`: generated data before and after cleaning.
+   - `tests/`: automated checks that prove the code works.
+   - `docs/`: this tutorial (the docs you're reading).
+   - `.streamlit/`: configuration for the app when deployed (empty until Phase 6; Git ignores empty folders, so it appears on GitHub only once it holds a file).
+4. Add a few starter files. **The three files below (`.gitignore`, `requirements.txt` and the placeholder `README.md`) come with this project as ready-made files. Save each one into the project root (the folder with `docs/` in it) instead of typing them out.** Saving the files avoids copy-paste mistakes that can scramble a multi-line file in some terminals.
 
-   - **`.gitignore`** — the list of files Git should never save. Save the provided `.gitignore` into the project root.
-   - **`requirements.txt`** — the project's Python "shopping list". Save the provided `requirements.txt` into the project root. (If you're curious, it currently lists: `pandas`, `numpy`, `scikit-learn`, `duckdb`, `networkx`, `streamlit`, `plotly`, `matplotlib`, `faker`, `pytest`. We grow it each phase.)
-   - **`README.md`** — the project's front page. Save the provided full `README.md` into the project root. (There's no need for a placeholder — use the real one.)
+   - **`.gitignore`**: the list of files Git should never save. Save the provided `.gitignore` into the project root.
+   - **`requirements.txt`**: the project's Python "shopping list". Save the provided `requirements.txt` into the project root. (If you're curious, it currently lists: `pandas`, `numpy`, `scikit-learn`, `duckdb`, `networkx`, `streamlit`, `plotly`, `matplotlib`, `faker`, `pytest`. We grow it each phase.)
+   - **`README.md`**: the project's front page. Save the provided full `README.md` into the project root. (There's no need for a placeholder; use the real one.)
 
    Then create the two placeholder files that keep the empty data folders visible to Git:
    ```bash
@@ -282,7 +282,7 @@ Now we create the project's skeleton and link it to the empty GitHub repo.
 
    > **Prefer to create them from the terminal instead of saving files?** You can, but on some terminals pasting a long multi-line block with comments can reflow or scramble the text. If you go that route, create each file in your editor (VS Code: New File → paste → Save) rather than pasting a `cat > file <<'EOF' … EOF` block into the shell. Saving the provided files is the safest path.
 
-   > **What is `.gitignore`?** A list of files Git should pretend it can't see. We ignore the giant `.venv` folder (anyone can rebuild it from `requirements.txt`) and, critically, any secrets file with API keys. Committing a secret to a public repo is the classic beginner mistake; this prevents it. The provided file is fully commented so you can see *why* each entry is there — and which files are deliberately **kept** (the "receipts": `requirements.txt`, `renv.lock`, `.Rprofile`, `strainscope.Rproj`).
+   > **What is `.gitignore`?** A list of files Git should pretend it can't see. We ignore the giant `.venv` folder (anyone can rebuild it from `requirements.txt`) and, most importantly, any secrets file with API keys. Committing a secret to a public repo is the classic beginner mistake, and this prevents it. The provided file is fully commented so you can see *why* each entry is there, and which files are **kept** (the "receipts": `requirements.txt`, `renv.lock`, `.Rprofile`, `strainscope.Rproj`).
 5. Install the starter packages into your environment:
    ```bash
    pip install -r requirements.txt
@@ -301,13 +301,13 @@ Now we create the project's skeleton and link it to the empty GitHub repo.
 
 ---
 
-## Part H — Initialise Git and push with the `master` / `beta` / `develop` workflow
+## Part H: Initialise Git and push with the `master` / `beta` / `develop` workflow
 
 This is the branch model you'll use for the whole project. First, the plain-language version of *why three branches*:
 
-- **`master`** — the "official, stable" version. The clean copy you're proud to show.
-- **`beta`** — a "release candidate" copy: stable enough to preview, one notch below master's caution.
-- **`develop`** — your **working** branch. This is where you actually make changes day to day.
+- **`master`**: the "official, stable" version, the clean copy you're happy to show.
+- **`beta`**: a "release candidate" copy, stable enough to preview and one notch below master's caution.
+- **`develop`**: your **working** branch, where you actually make changes day to day.
 
 The daily rhythm is: **work on `develop`, then push `develop` up to all three remote branches at once** so they stay in lock-step. You'll see the single command that does that below.
 
@@ -349,12 +349,12 @@ The daily rhythm is: **work on `develop`, then push `develop` up to all three re
    git branch develop
    ```
    (These print nothing. `git branch` on its own now lists all three, with `*` next to `master`.)
-5. Save the **`check-public-safe.sh`** script (provided with this project) into the **root** of your repo, and make it runnable — this is the pre-push safety gate, explained fully in the next section. Then run it once before your very first push:
+5. Save the **`check-public-safe.sh`** script (provided with this project) into the **root** of your repo, and make it runnable. This is the pre-push safety gate, explained fully in the next section. Then run it once before your very first push:
    ```bash
    chmod +x check-public-safe.sh    # macOS/Linux; on Windows use: bash check-public-safe.sh
    ./check-public-safe.sh
    ```
-   **Expected output:** ✓ ticks ending in `✓ SAFE TO PUSH to the public repository`. (For this first, essentially-empty project there's nothing sensitive yet — but running it now builds the habit and confirms the script works.) Then stage and commit it with the rest:
+   **Expected output:** ✓ ticks ending in `✓ SAFE TO PUSH to the public repository`. (This first, nearly empty project has nothing sensitive in it yet, but running it now builds the habit and confirms the script works.) Then stage and commit it with the rest:
    ```bash
    git add -A && git commit -m "chore: add pre-push public-safety gate"
    ```
@@ -392,17 +392,17 @@ git pull --ff-only origin master
 git switch develop
 ```
 
-The two safety commands come **first**, on purpose: there's no point staging or committing anything until you know the tests pass and nothing sensitive is about to be published. If `./check-public-safe.sh` prints **NOT SAFE TO PUSH**, stop and fix the flagged items before going any further. (`pytest -q` has nothing to run until Phase 1b adds the first tests, so you can omit it before then — it does no harm either way.)
+The two safety commands come **first**, on purpose: there's no point staging or committing anything until you know the tests pass and nothing sensitive is about to be published. If `./check-public-safe.sh` prints **NOT SAFE TO PUSH**, stop and fix the flagged items before going any further. (`pytest -q` has nothing to run until Phase 1b adds the first tests, so you can leave it out before then; running it does no harm either way.)
 
 **What each line does, in plain terms:**
 
-- `git switch develop` — make sure you're on the working branch before you touch anything. (Everyday analogy: sit down at your own desk, not someone else's.)
-- `git add -A` — stage **all** your changes (new, edited, and deleted files) so Git knows what to include in the snapshot. `-A` = "everything".
-- `git commit -m "..."` — take the snapshot, with a short note describing what changed.
-- `git push origin develop develop:beta develop:master` — send your local `develop` up to the remote `develop`, and *also* fast-forward remote `beta` and `master` to match it — all in one command. Read `develop:beta` as "send my local develop to the remote branch called beta." One line keeps all three copies on GitHub in step with your latest work.
-- `git switch master` → `git pull --ff-only origin master` → `git switch develop` — because the push just moved remote `master` forward, your *local* `master` is now behind. This trio hops onto local `master`, pulls the update, and hops back to `develop` so you're ready to keep working. `--ff-only` means "only update if it can be done cleanly, with no messy merge — otherwise stop and tell me." (Everyday analogy: after mailing three copies of a document, you update the copy in your own drawer so it matches what you sent.)
+- `git switch develop`: make sure you're on the working branch before you touch anything (the same as sitting down at your own desk before you start work).
+- `git add -A`: stage **all** your changes (new, edited, and deleted files) so Git knows what to include in the snapshot. `-A` = "everything".
+- `git commit -m "..."`: take the snapshot, with a short note describing what changed.
+- `git push origin develop develop:beta develop:master`: send your local `develop` up to the remote `develop`, and *also* fast-forward remote `beta` and `master` to match it, all in one command. Read `develop:beta` as "send my local develop to the remote branch called beta." One line keeps all three copies on GitHub in step with your latest work.
+- `git switch master` → `git pull --ff-only origin master` → `git switch develop`: because the push just moved remote `master` forward, your *local* `master` is now behind. This trio hops onto local `master`, pulls the update, and hops back to `develop` so you're ready to keep working. `--ff-only` means "only update if it can be done cleanly, with no messy merge; otherwise stop and tell me." (Compare it with mailing three copies of a document and then updating the copy in your own drawer so it matches what you sent.)
 
-> **Optional — tags.** A **tag** is a bookmark on one exact commit, named with a version number, so anyone can return to exactly that state later (everyday analogy: a dated, labelled photograph of the workshop). When a phase earns a version — the list is in [`docs/ROADMAP.md`](ROADMAP.md#version-tags) — create the tag right after the commit and add `--tags` to the push:
+> **Optional: tags.** A **tag** is a bookmark on one exact commit, named with a version number, so anyone can return to exactly that state later (rather like a dated, labelled photograph of the workshop). When a phase earns a version (the list is in [`docs/ROADMAP.md`](ROADMAP.md#version-tags)), create the tag right after the commit and add `--tags` to the push:
 > ```bash
 > git tag -a v0.1.0 -m "v0.1.0: data foundation and multi-omics integration"
 > git push origin develop develop:beta develop:master --tags
@@ -411,9 +411,9 @@ The two safety commands come **first**, on purpose: there's no point staging or 
 
 > **Make sure you're on `develop` before working.** Check with `git branch --show-current`. If it doesn't say `develop`, switch with `git switch develop`.
 
-**If it goes wrong:** if a push is *rejected* with a message about "non-fast-forward", it means the remote has a change your local branch doesn't. For a solo project this is rare; if it happens, run `git pull origin develop` to bring the changes down, resolve any conflicts your editor highlights, then push again. If `git pull --ff-only origin master` refuses because it "cannot fast-forward", it means local `master` has drifted; the safe fix is `git switch master && git reset --hard origin/master && git switch develop` (this makes local `master` an exact copy of the remote — safe here because you never edit `master` directly, only ever on `develop`).
+**If it goes wrong:** if a push is *rejected* with a message about "non-fast-forward", it means the remote has a change your local branch doesn't. For a solo project this is rare; if it happens, run `git pull origin develop` to bring the changes down, resolve any conflicts your editor highlights, then push again. If `git pull --ff-only origin master` refuses because it "cannot fast-forward", it means local `master` has drifted; the safe fix is `git switch master && git reset --hard origin/master && git switch develop` (this makes local `master` an exact copy of the remote, which is safe here because you never edit `master` directly; all your editing happens on `develop`).
 
-**If a push fails partway with `HTTP 400`, `RPC failed`, or `unexpected disconnect while reading sideband packet`:** this is a *transfer* error, not a problem with your commit — the upload was cut off mid-flight. Your commit is safe locally (confirm with `git log --oneline -1`); only the upload needs to finish. It most often appears on the first push that includes larger files (images, an interactive HTML chart), because Git's default upload buffer is only 1 MB. The fix, in order:
+**If a push fails partway with `HTTP 400`, `RPC failed`, or `unexpected disconnect while reading sideband packet`:** this is a *transfer* error and your commit itself is fine. The upload was cut off mid-flight. Your commit is safe locally (confirm with `git log --oneline -1`); only the upload needs to finish. It most often appears on the first push that includes larger files (images, an interactive HTML chart), because Git's default upload buffer is only 1 MB. The fix, in order:
 
 1. **Raise Git's HTTP buffer once**, then retry the push:
    ```bash
@@ -421,23 +421,23 @@ The two safety commands come **first**, on purpose: there's no point staging or 
    git push origin develop develop:beta develop:master
    ```
    (This only *permits* larger pushes; it doesn't force anything.)
-2. **Still failing? Push the branches one at a time** — smaller requests are less likely to drop:
+2. **Still failing? Push the branches one at a time.** Smaller requests are less likely to drop:
    ```bash
    git push origin develop
    git push origin develop:beta
    git push origin develop:master
    ```
-3. **Still failing?** It's usually a flaky or proxied connection at that moment. If you're on a corporate VPN or proxy, switch to a plain network and retry — proxies are a common cause of `HTTP 400` on larger pushes.
+3. **Still failing?** It's usually a flaky or proxied connection at that moment. If you're on a corporate VPN or proxy, switch to a plain network and retry, since proxies are a common cause of `HTTP 400` on larger pushes.
 
-> A misleading detail: after a failed multi-branch push you may see `Everything up-to-date` for `beta`/`master`. That does **not** mean your new commit landed — the `develop` push failed, so nothing was published. After a successful retry, confirm with `git branch -vv`: all three local branches should show the same latest commit, each `0 ahead` of its origin.
+> A misleading detail: after a failed multi-branch push you may see `Everything up-to-date` for `beta`/`master`. That does **not** mean your new commit landed. The `develop` push failed, so nothing was published. After a successful retry, confirm with `git branch -vv`: all three local branches should show the same latest commit, each `0 ahead` of its origin.
 
-> **This same ritual — safety checks first, then commit, push to all three, sync master — is how every phase in this project ends.** Each phase guide repeats the exact commands so it becomes second nature.
+> **Every phase in this project ends with this same ritual: safety checks first, then commit, push to all three, and sync master.** Each phase guide repeats the exact commands so it becomes second nature.
 
 ### The pre-push safety gate: `check-public-safe.sh`
 
-Because this repository is **public**, a single leaked secret — most likely an API key once we add the AI features — would be visible to the whole world the moment you push. `.gitignore` prevents *accidental* staging, but it can't catch a file you force-add, or a key you paste into a script or a doc by mistake. So the project ships a small script, `check-public-safe.sh` (in the project folder), that you run **before every push**. It looks at everything your next commit could publish and refuses to give the all-clear if anything sensitive is among it.
+Because this repository is **public**, a single leaked secret (most likely an API key, once we add the AI features) would be visible to the whole world the moment you push. `.gitignore` prevents *accidental* staging, but it can't catch a file you force-add, or a key you paste into a script or a doc by mistake. So the project ships a small script, `check-public-safe.sh` (in the project folder), that you run **before every push**. It looks at everything your next commit could publish and refuses to give the all-clear if anything sensitive is among it.
 
-> **Everyday analogy:** `.gitignore` is the lock on your front door; `check-public-safe.sh` is the guard who checks your bag on the way out. The lock stops the obvious mistakes; the guard catches the one that slipped through. You want both.
+> If `.gitignore` is the lock on your front door, `check-public-safe.sh` is the guard who checks your bag on the way out. The lock stops the obvious mistakes and the guard catches the one that slipped through, so it's worth having both.
 
 **Which files does it look at?** Every file in your project folder is one of three kinds, and the gate checks the two kinds that can become public:
 
@@ -466,15 +466,15 @@ flowchart LR
     style FOLDER fill:#F5F9FF,stroke:#B9D2FF,color:#0B2545
 ```
 
-*Everyday example:* you are posting a parcel. The tracked files are the items already in the box; the new files are the ones lying next to it that `git add -A` is about to drop in; the ignored files are on a shelf marked "never send". The guard inspects the box **and** the pile next to it — because the pile goes in too.
+Imagine you're posting a parcel. The tracked files are the items already in the box; the new files are the ones lying next to it that `git add -A` is about to drop in; the ignored files are on a shelf marked "never send". The guard inspects the box **and** the pile next to it, because the pile goes in too.
 
-What it checks, in plain terms — always for tracked files **and** new files:
+What it checks, in plain terms (always for tracked files **and** new files):
 1. **Secret / environment / data paths** would not be published (`.venv`, `.streamlit/secrets.toml`, `.env`, `.Renviron`, real data under `data/`, ...).
-2. **Sensitive file types** would not be published anywhere (`.key`, `.pem`, database files like `.duckdb`/`.sqlite`, ...). It deliberately allows the small `.csv` and `.pkl` files we *do* publish as artifacts.
-3. **Credential-shaped strings** in any of those files — it matches the actual *formats* of real keys (OpenAI `sk-...`, GitHub `ghp_...`, AWS `AKIA...`, private-key blocks), and a key must *start a word*, so ordinary text that merely contains those letters (a link such as `#ask-strainscope-...`) does not trip it.
+2. **Sensitive file types** would not be published anywhere (`.key`, `.pem`, database files like `.duckdb`/`.sqlite`, ...). It still lets through the small `.csv` and `.pkl` files we *do* publish as artifacts.
+3. **Credential-shaped strings** in any of those files. It matches the actual *formats* of real keys (OpenAI `sk-...`, GitHub `ghp_...`, AWS `AKIA...`, private-key blocks), and a key must *start a word*, so ordinary text that merely contains those letters (a link such as `#ask-strainscope-...`) doesn't trip it.
 4. **Hard-coded local machine paths** (like a real home-directory path under `/Users/...`, `/home/...`, or `C:\Users\...`) that would both leak your machine and break reproducibility for anyone who clones the repo. Use `~` or a relative path instead.
-5. **Large files** (over 5 MB) — a warning, since data and models are meant to stay small or be regenerated.
-6. **Personal attribution** — lists where your name/handle appears (README, LICENSE) so you can confirm it's the intended public credit, not a new leak.
+5. **Large files** (over 5 MB) get a warning, since data and models are meant to stay small or be regenerated.
+6. **Personal attribution**: it lists where your name/handle appears (README, LICENSE) so you can confirm it's the intended public credit and not a new leak.
 
 It prints **`✓ SAFE TO PUSH`** (and exits cleanly) or **`✗ NOT SAFE TO PUSH`** with the exact lines to fix. Its own regression tests live in `tests/test_safety_gate.py` and run with every `pytest -q` on macOS and Linux.
 
@@ -485,7 +485,7 @@ It prints **`✓ SAFE TO PUSH`** (and exits cleanly) or **`✗ NOT SAFE TO PUSH`
    ```bash
    chmod +x check-public-safe.sh
    ```
-   (`chmod +x` means "mark this file as a program I'm allowed to run". You do it once — and again whenever you replace the file with a downloaded copy, because a download does not keep that mark.)
+   (`chmod +x` means "mark this file as a program I'm allowed to run". You do it once, and again whenever you replace the file with a downloaded copy, because a download doesn't keep that mark.)
 3. Run it any time to check:
    ```bash
    ./check-public-safe.sh
@@ -502,48 +502,48 @@ It prints **`✓ SAFE TO PUSH`** (and exits cleanly) or **`✗ NOT SAFE TO PUSH`
    ```
    (Your counts differ; the second line tells you how many files it actually read.)
 
-> **On Windows**, run it through **Git Bash** (the terminal that installs alongside Git for Windows — you already have it from Part D). Open Git Bash in the project folder and run `bash check-public-safe.sh` (no `chmod` needed there). It works the same way; only the launch command differs.
+> **On Windows**, run it through **Git Bash** (the terminal that installs alongside Git for Windows; you already have it from Part D). Open Git Bash in the project folder and run `bash check-public-safe.sh` (no `chmod` needed there). It works the same way; only the launch command differs.
 
-> **Tip:** make the script *yours* — near the bottom it lists your GitHub handle so it can tell "intended attribution" apart from a real leak. If you fork or rename, update that one line to your own details.
+> **Tip:** make the script *yours*. Near the bottom it lists your GitHub handle so it can tell "intended attribution" apart from a real leak. If you fork or rename, update that one line to your own details.
 
-**If it goes wrong:** if the gate flags something you believe is safe, read the flagged line first — most "false alarms" are real (a placeholder key that looks too much like a real one, or an example path that shouldn't ship). If it's genuinely intended, the honest fix is to make the content unmistakably non-secret (use an obvious placeholder like `sk-REPLACE_ME`) rather than to weaken the check. If it flags a file you have **not added yet** — that is the gate working: the file would be added by `git add -A`, so it is checked now, before it can be published.
+**If it goes wrong:** if the gate flags something you believe is safe, read the flagged line first, because most "false alarms" turn out to be real (a placeholder key that looks too much like a real one, or an example path that shouldn't ship). If the content really is intended, the right fix is to make it unmistakably non-secret (use an obvious placeholder like `sk-REPLACE_ME`) instead of weakening the check. If it flags a file you have **not added yet**, that's the gate working: the file would be added by `git add -A`, so it's checked now, before it can be published.
 
 **Notes from the build (kept on purpose):**
-- **A false alarm made the pattern more precise (v0.1.0).** A link anchor in the documentation, `#ask-strainscope-...`, contains `sk-` followed by twenty-plus letters — exactly the shape of a key. The fix made a key *start a word*; the full story is in [`docs/04-integration.md` §12](04-integration.md#12-notes-from-the-build-kept-on-purpose).
-- **The guard that never saw the new files (v0.1.1).** The gate originally read only the files Git already tracked. But the routine runs the gate *before* `git add -A` — so a brand-new file was never checked on its first commit. Nothing leaked (a check that staged first found the Phase 3 files clean), but the hole was real. The gate now also reads every new, not-ignored file — exactly what `git add -A` is about to add — so it is correct whatever order you run things in.
-- **The fix had a hole of its own — and a test found it.** The first version of that fix searched new files with `git grep --untracked`, which turns out to skip *every* file listed in `.gitignore`, even one someone force-added with `git add -f`. A test with a force-added `.env` caught it before release; the gate now runs two searches (tracked files, then new files) and merges them. Five tests in `tests/test_safety_gate.py` keep all of these cases honest, and one of them fails on the old gate — proof that it guards the fix. **Lesson:** a safety check needs tests of its own, including the unusual cases.
+- **A false alarm made the pattern more precise (v0.1.0).** A link anchor in the documentation, `#ask-strainscope-...`, contains `sk-` followed by twenty-plus letters, which is exactly the shape of a key. The fix made a key *start a word*; the full story is in [`docs/04-integration.md` §12](04-integration.md#12-notes-from-the-build-kept-on-purpose).
+- **The guard that never saw the new files (v0.1.1).** The gate originally read only the files Git already tracked. But the routine runs the gate *before* `git add -A`, so a brand-new file was never checked on its first commit. Nothing leaked (a check that staged first found the Phase 3 files clean), but the gap was real. The gate now also reads every new, not-ignored file (exactly what `git add -A` is about to add), so it gives the right answer whatever order you run things in.
+- **The fix had a hole of its own, and a test found it.** The first version of that fix searched new files with `git grep --untracked`, which turns out to skip *every* file listed in `.gitignore`, even one someone force-added with `git add -f`. A test with a force-added `.env` caught it before release; the gate now runs two searches (tracked files, then new files) and merges them. Five tests in `tests/test_safety_gate.py` cover all of these cases, and one of them fails on the old gate, which shows the test really does guard the fix. It's a good reminder that a safety check needs tests of its own, including for the unusual cases.
 
 ### Copy commands safely: plain keyboard characters only
 
-Every command, commit message and tag message in this project's documentation uses **only characters you can type on a plain keyboard** (letters, digits and the usual punctuation — technically *ASCII*). That is deliberate.
+Every command, commit message and tag message in this project's documentation uses **only characters you can type on a plain keyboard** (letters, digits and the usual punctuation; the technical name is *ASCII*). That's on purpose.
 
-**Why.** Text written in documents and chat often contains *look-alike* characters: a long dash instead of a hyphen, curly quotes instead of straight ones, a single "..." character instead of three dots. They look harmless, but when pasted into a terminal they can be mangled — the terminal may misread a multi-byte character and shift or drop the letters around it. *Everyday example:* a word processor quietly turning your `"` into `“` — a person reads it the same, but a machine does not.
+**Why.** Text written in documents and chat often contains *look-alike* characters: a long dash instead of a hyphen, curly quotes instead of straight ones, a single "..." character instead of three dots. They look harmless, but they can get mangled when pasted into a terminal, which may misread a multi-byte character and shift or drop the letters around it. You've probably seen a word processor quietly turn your straight `"` into a curly &ldquo;. A person reads both the same way; a machine doesn't.
 
-It happened in this project: a tag message containing a long dash was pasted as `-m "v0.1.0 — data foundation…"` and arrived in Git as `v0.1. data foundation and multi-omics integration0`. The tag was correct; its description was garbled. The fix (a new tag message, re-pushed) is in [`docs/04-integration.md` §17](04-integration.md#17-save-your-work-safety-gate-then-the-commit-ritual).
+This actually happened in this project: a tag message with a long dash (&mdash;) between `v0.1.0` and `data foundation` was pasted into the terminal and arrived in Git as `v0.1. data foundation and multi-omics integration0`. The tag itself was correct, but its description was garbled. The fix (a new tag message, re-pushed) is in [`docs/04-integration.md` §17](04-integration.md#17-save-your-work-safety-gate-then-the-commit-ritual).
 
 | Looks like | Typed character to use instead | Name |
 |---|---|---|
-| `—` or `–` | `-` | long dash / en dash → hyphen |
-| `“ ”` | `"` | curly double quotes → straight quotes |
-| `‘ ’` | `'` | curly single quotes → apostrophe |
+| &mdash; or &ndash; | `-` | long dash / en dash → hyphen |
+| &ldquo; &rdquo; | `"` | curly double quotes → straight quotes |
+| &lsquo; &rsquo; | `'` | curly single quotes → apostrophe |
 | `…` | `...` | ellipsis character → three dots |
 | `→` | `->` | arrow → hyphen + greater-than |
 | `✓` | `OK` | tick mark → plain word |
 
-**The rule for your own commands, commit messages and tag messages:** type them, or copy them only from code blocks in this repository's documentation (which follow the rule). In *expected output* blocks the program's own ticks and arrows (`✓`, `→`) are fine — you read those, you never paste them.
+**The rule for your own commands, commit messages and tag messages:** type them, or copy them only from code blocks in this repository's documentation (which follow the rule). In *expected output* blocks the program's own ticks and arrows (`✓`, `→`) are fine, since you only read those and never paste them.
 
 ---
 
-## Part I — Install R (needed at the integration phase)
+## Part I: Install R (needed at the integration phase)
 
-You can do this now, or skip it and come back when you reach the integration guide ([`docs/04-integration.md`](04-integration.md)) — it reminds you. R is a second language used for one specialised, high-value step (the DIABLO multi-omics integration). Everything else in the project runs without it.
+You can do this now, or skip it and come back when you reach the integration guide ([`docs/04-integration.md`](04-integration.md)), which will remind you. R is a second language used for one specialised, high-value step (the DIABLO multi-omics integration). Everything else in the project runs without it.
 
-> **One habit for every R command in this project: `Rscript -e '...'`.** `Rscript` means "start R, run this, quit" and behaves the same on Windows, macOS and Linux. Avoid a bare `R` in Windows PowerShell: PowerShell already uses `r` as a shortcut for *repeat the last command*, so `R --version` or `R -e ...` silently does something else. In **PowerShell**, also swap the quote marks — outer double, inner single: `Rscript -e "renv::status()"` — because PowerShell can strip double quotes nested inside single ones.
+> **One habit for every R command in this project: `Rscript -e '...'`.** `Rscript` means "start R, run this, quit" and behaves the same on Windows, macOS and Linux. Avoid a bare `R` in Windows PowerShell: PowerShell already uses `r` as a shortcut for *repeat the last command*, so `R --version` or `R -e ...` silently does something else. In **PowerShell**, also swap the quote marks (outer double, inner single), as in `Rscript -e "renv::status()"`, because PowerShell can strip double quotes nested inside single ones.
 
 1. Install R:
    - **Windows/macOS:** download the installer from `https://cran.r-project.org/` and run it with defaults. (On macOS you can instead run `brew install r`.)
-   - **Linux — Debian/Ubuntu:** `sudo apt install -y r-base`
-   - **Linux — RHEL 8 / Rocky / Alma:** R lives in the community **EPEL** repository, which in turn needs the **CodeReady Builder** (CRB / PowerTools) repository enabled. Run these three commands in order:
+   - **Linux (Debian/Ubuntu):** `sudo apt install -y r-base`
+   - **Linux (RHEL 8 / Rocky / Alma):** R lives in the community **EPEL** repository, which in turn needs the **CodeReady Builder** (CRB / PowerTools) repository enabled. Run these three commands in order:
      ```bash
      # 1. Enable the CodeReady Builder repo (R depends on packages here).
      #    On true RHEL:
@@ -557,24 +557,24 @@ You can do this now, or skip it and come back when you reach the integration gui
      # 3. Install R itself.
      sudo dnf install -y R
      ```
-     > **What just happened, plainly:** enterprise Linux keeps "extra" software in optional add-on catalogues you switch on when needed. Step 1 unlocks a catalogue of building-block libraries R relies on; step 2 adds the catalogue that actually contains R; step 3 installs it. Everyday analogy: to buy a specialist ingredient you first get a membership to two extra stores, then do the shopping. You only do this once.
+     > **What just happened:** enterprise Linux keeps "extra" software in optional add-on catalogues you switch on when needed. Step 1 unlocks a catalogue of building-block libraries R relies on, step 2 adds the catalogue that actually contains R, and step 3 installs it. It's like buying a specialist ingredient: first you sign up to two extra stores, then you do the shopping. You only do this once.
 2. Verify (open a **new** terminal first, so it sees the freshly installed program):
    ```bash
    Rscript --version
    ```
    **Expected output:** one line like `Rscript (R) version 4.x.x`.
 
-   **Windows — `Rscript` "is not recognized"?** R's installer does not add itself to PATH. Add it once: Start → *Edit environment variables for your account* → `Path` → *Edit* → *New* → `C:\Program Files\R\R-4.x.x\bin` (use the version folder you actually have) → OK; then open a fresh PowerShell. Until then you can call it by its full path: `& "C:\Program Files\R\R-4.x.x\bin\Rscript.exe" --version`.
+   **Windows: `Rscript` "is not recognized"?** R's installer doesn't add itself to PATH. Add it once: Start → *Edit environment variables for your account* → `Path` → *Edit* → *New* → `C:\Program Files\R\R-4.x.x\bin` (use the version folder you actually have) → OK; then open a fresh PowerShell. Until then you can call it by its full path: `& "C:\Program Files\R\R-4.x.x\bin\Rscript.exe" --version`.
 
-3. **Do not install mixOmics yet.** mixOmics (the package that provides DIABLO) is installed **into the project's own R library** in Phase 3 — [`docs/04-integration.md` §6](04-integration.md#6-step-2--install-mixomics-into-the-projects-r-library-once-per-machine) — one command, after `renv` (below) is switched on. Installing it globally now is harmless but does not help: once `renv` is active, R inside this project sees only the project's own library — "installed, but invisible", a trap described in that section.
+3. **Do not install mixOmics yet.** mixOmics (the package that provides DIABLO) is installed **into the project's own R library** in Phase 3 ([`docs/04-integration.md` §6](04-integration.md#6-step-2-install-mixomics-into-the-projects-r-library-once-per-machine)) with one command, after `renv` (below) is switched on. Installing it globally now is harmless but doesn't help: once `renv` is active, R inside this project sees only the project's own library. That section describes the resulting "installed, but invisible" trap.
 
 ### Lock the R toolbox with `renv` (R's virtual environment)
 
-Just as Python has a virtual environment (`.venv`) plus a `requirements.txt` shopping list, R has **`renv`** — its own sealed, per-project toolbox that records the *exact* package versions this project used. Without it, the Python half of the project would be reproducible and the R half wouldn't, which is an inconsistency we don't want in a project whose whole point is that a stranger can rebuild it identically.
+Just as Python has a virtual environment (`.venv`) plus a `requirements.txt` shopping list, R has **`renv`**: its own sealed, per-project toolbox that records the *exact* package versions this project used. Without it, the Python half of the project would be reproducible and the R half wouldn't, which is an inconsistency we don't want in a project whose whole point is that a stranger can rebuild it identically.
 
-**Everyday analogy:** `renv` is the R-language twin of `.venv` + `requirements.txt` — a labelled box of exactly the right R ingredients that ships with the project, plus a receipt (`renv.lock`) listing every version so anyone can recreate the identical box.
+Going back to the kitchen picture from Part F, `renv` is the R-language twin of `.venv` + `requirements.txt`: a labelled box of exactly the right R ingredients that ships with the project, plus a receipt (`renv.lock`) listing every version so anyone can recreate the identical box.
 
-Do this once, from your project folder (the `(.venv)` prefix is fine — `renv` is about R, and lives happily alongside the Python environment). Each command shows the macOS/Linux form; the PowerShell form follows it.
+Do this once, from your project folder (the `(.venv)` prefix is fine; `renv` is about R and lives happily alongside the Python environment). Each command shows the macOS/Linux form; the PowerShell form follows it.
 
 1. Install `renv`:
    ```bash
@@ -582,13 +582,13 @@ Do this once, from your project folder (the `(.venv)` prefix is fine — `renv` 
    ```
    PowerShell: `Rscript -e "install.packages('renv', repos = 'https://cloud.r-project.org')"`
    **Expected output:** download messages ending with `* DONE (renv)` (Windows and macOS print `package 'renv' successfully unpacked` instead).
-2. Initialise `renv` for this project. `bare = TRUE` sets up renv's scaffolding **without** trying to auto-discover and install packages — fast, and nothing to discover yet:
+2. Initialise `renv` for this project. `bare = TRUE` sets up renv's scaffolding **without** trying to auto-discover and install packages. That's quick, and there's nothing to discover yet anyway:
    ```bash
    Rscript -e 'renv::init(bare = TRUE)'
    ```
    PowerShell: `Rscript -e "renv::init(bare = TRUE)"`
    **Expected output:** a line like `- Project '.../strainscope' loaded. [renv 1.2.4]`. This creates an `renv/` folder (the sealed R library), an `.Rprofile` file (which auto-activates renv whenever R starts in this folder), and `renv/activate.R` (the script `.Rprofile` calls).
-3. Switch on renv's **Bioconductor** support (mixOmics comes from Bioconductor, a specialist biology package shop, not the ordinary CRAN shop) and write the first receipt:
+3. Switch on renv's **Bioconductor** support (mixOmics comes from Bioconductor, a specialist biology package shop, rather than the ordinary CRAN shop) and write the first receipt:
    ```bash
    Rscript -e 'options(renv.config.bioconductor.enabled = TRUE); renv::snapshot()'
    ```
@@ -609,35 +609,35 @@ Do this once, from your project folder (the `(.venv)` prefix is fine — `renv` 
    PowerShell: `Rscript -e "renv::status()"`
    **Expected output:** `No issues found -- the project is in a consistent state.`
 
-> **Why is the lockfile almost empty?** `renv::snapshot()` records a package only once the project's **code uses it** — it scans the R scripts for `library(...)` calls. There are no R scripts yet. In Phase 3, `R/diablo_integration.R` arrives with `library(mixOmics)`; you install mixOmics into the project and snapshot again, and it joins the receipt with its exact version ([`docs/04-integration.md` §6](04-integration.md#6-step-2--install-mixomics-into-the-projects-r-library-once-per-machine)).
+> **Why is the lockfile almost empty?** `renv::snapshot()` records a package only once the project's **code uses it**: it scans the R scripts for `library(...)` calls. There are no R scripts yet. In Phase 3, `R/diablo_integration.R` arrives with `library(mixOmics)`; you install mixOmics into the project and snapshot again, and it joins the receipt with its exact version ([`docs/04-integration.md` §6](04-integration.md#6-step-2-install-mixomics-into-the-projects-r-library-once-per-machine)).
 
 > **What each new file is for:**
-> - `renv.lock` — the receipt of exact R package versions (this **is** committed to Git; it's how others rebuild your R toolbox).
-> - `renv/` — the sealed R library itself (mostly **not** committed — like `.venv`, it's rebuildable from the lockfile; renv adds its own `.gitignore` inside this folder automatically). `renv/activate.R` and `renv/settings.json` *are* committed: they are the switch, not the toolbox.
-> - `.Rprofile` — a one-line file that switches renv on automatically every time R runs in this project.
+> - `renv.lock`: the receipt of exact R package versions (this **is** committed to Git; it's how others rebuild your R toolbox).
+> - `renv/`: the sealed R library itself (mostly **not** committed; like `.venv`, it can be rebuilt from the lockfile, and renv adds its own `.gitignore` inside this folder automatically). `renv/activate.R` and `renv/settings.json` *are* committed, because they're the switch rather than the toolbox.
+> - `.Rprofile`: a one-line file that switches renv on automatically every time R runs in this project.
 >
 > **Later, on any machine**, a person restores your exact R setup with one command from inside the project: `Rscript -e 'renv::restore()'` (PowerShell: `Rscript -e "renv::restore()"`). That's the R equivalent of `pip install -r requirements.txt`.
 
 **If it goes wrong:**
-- **`failed to resolve remote 'mixOmics' -- package 'mixOmics' is not available`** — renv looked for it in CRAN; mixOmics lives in Bioconductor. Use the `bioc::mixOmics` form shown in [`docs/04-integration.md` §6](04-integration.md#6-step-2--install-mixomics-into-the-projects-r-library-once-per-machine). You do **not** need `renv::record()`.
-- **renv says it "found no packages to record"** — correct at this stage; the integration phase adds the first R script.
-- **`Error: object 'renv' not found` on Windows** — PowerShell stripped the inner double quotes; use the PowerShell form with the quote marks swapped.
-- **A package fails to compile on Linux, naming a missing system library** — install its development version, then retry. Debian/Ubuntu: `sudo apt install -y libcurl4-openssl-dev libssl-dev libxml2-dev`; RHEL 8 / Rocky / Alma: `sudo dnf install -y libcurl-devel openssl-devel libxml2-devel`. (For mixOmics on RHEL 8, [`docs/04-integration.md` §6](04-integration.md#6-step-2--install-mixomics-into-the-projects-r-library-once-per-machine) shows how to use ready-made binaries and skip compiling.)
-- **Behind a corporate proxy** — `renv` respects the same proxy settings as base R; setting the `https_proxy` environment variable before running `Rscript` usually resolves it.
+- **`failed to resolve remote 'mixOmics' -- package 'mixOmics' is not available`**: renv looked for it in CRAN, but mixOmics lives in Bioconductor. Use the `bioc::mixOmics` form shown in [`docs/04-integration.md` §6](04-integration.md#6-step-2-install-mixomics-into-the-projects-r-library-once-per-machine). You do **not** need `renv::record()`.
+- **renv says it "found no packages to record"**: that's correct at this stage; the integration phase adds the first R script.
+- **`Error: object 'renv' not found` on Windows**: PowerShell stripped the inner double quotes. Use the PowerShell form with the quote marks swapped.
+- **A package fails to compile on Linux, naming a missing system library**: install its development version, then retry. Debian/Ubuntu: `sudo apt install -y libcurl4-openssl-dev libssl-dev libxml2-dev`; RHEL 8 / Rocky / Alma: `sudo dnf install -y libcurl-devel openssl-devel libxml2-devel`. (For mixOmics on RHEL 8, [`docs/04-integration.md` §6](04-integration.md#6-step-2-install-mixomics-into-the-projects-r-library-once-per-machine) shows how to use ready-made binaries and skip compiling.)
+- **Behind a corporate proxy**: `renv` respects the same proxy settings as base R; setting the `https_proxy` environment variable before running `Rscript` usually resolves it.
 
 ### Optional: open the project in RStudio (`strainscope.Rproj`)
 
-Everything in this project runs fine from the terminal (`R`, `Rscript`) — you do **not** need RStudio. But if you'd prefer a friendly graphical environment for the R work, RStudio is the standard choice, and a small **project file** makes it open cleanly with the right settings.
+Everything in this project runs fine from the terminal (`R`, `Rscript`), and you do **not** need RStudio. But if you'd prefer a friendly graphical environment for the R work, RStudio is the standard choice, and a small **project file** makes it open cleanly with the right settings.
 
-**What a `.Rproj` file is, plainly:** a tiny text file that tells RStudio "this folder is a project." Opening it makes RStudio (a) set the working directory to the project root, so R always finds files by the same relative paths; (b) **auto-activate `renv`** (via the `.Rprofile` you just created), so you're always in the sealed R toolbox; and (c) apply consistent settings (UTF-8 encoding, spaces-for-tabs, and — importantly — *not* saving or restoring a hidden `.RData` workspace, so your scripts stay the single source of truth). Think of it as a shortcut that opens your workshop with the tools already laid out.
+**What a `.Rproj` file is:** a tiny text file that tells RStudio "this folder is a project." Opening it makes RStudio (a) set the working directory to the project root, so R always finds files by the same relative paths; (b) **auto-activate `renv`** (via the `.Rprofile` you just created), so you're always in the sealed R toolbox; and (c) apply consistent settings (UTF-8 encoding, spaces-for-tabs, and, importantly, *not* saving or restoring a hidden `.RData` workspace, so your scripts stay the single source of truth). It works like a shortcut that opens your workshop with the tools already laid out.
 
-1. *(If you don't have RStudio)* install **RStudio Desktop** — it's free and needs the R you already installed. Download it from `https://posit.co/download/rstudio-desktop/` and run the installer (on macOS you can instead run `brew install --cask rstudio`; on RHEL 8 / Rocky / Alma, download the `.rpm` from the same page and install it with `sudo dnf install ./rstudio-*.rpm`).
-2. Save the **`strainscope.Rproj`** file (provided with this project) into the **root** of your repo — the same folder as `README.md`. It's plain text; here's what it contains and why:
+1. *(If you don't have RStudio)* install **RStudio Desktop**. It's free and needs the R you already installed. Download it from `https://posit.co/download/rstudio-desktop/` and run the installer (on macOS you can instead run `brew install --cask rstudio`; on RHEL 8 / Rocky / Alma, download the `.rpm` from the same page and install it with `sudo dnf install ./rstudio-*.rpm`).
+2. Save the **`strainscope.Rproj`** file (provided with this project) into the **root** of your repo (the same folder as `README.md`). It's plain text; here's what it contains and why:
    ```
    Version: 1.0
 
-   RestoreWorkspace: No      # don't reload a hidden .RData on open — start clean
-   SaveWorkspace: No         # don't save one on exit — scripts are the source of truth
+   RestoreWorkspace: No      # don't reload a hidden .RData on open; start clean
+   SaveWorkspace: No         # don't save one on exit; scripts are the source of truth
    AlwaysSaveHistory: No     # don't keep an .Rhistory file
 
    EnableCodeIndexing: Yes   # let RStudio navigate your code
@@ -648,15 +648,15 @@ Everything in this project runs fine from the terminal (`R`, `Rscript`) — you 
    RnwWeave: knitr
    LaTeX: pdfLaTeX
    ```
-3. Open it: double-click `strainscope.Rproj` (or, in RStudio, **File → Open Project…**). The title bar will show *strainscope*, and the Console should print an renv line like `- Project '.../strainscope' loaded. [renv 1.2.4]` — that confirms renv activated automatically.
+3. Open it: double-click `strainscope.Rproj` (or, in RStudio, **File → Open Project…**). The title bar will show *strainscope*, and the Console should print an renv line like `- Project '.../strainscope' loaded. [renv 1.2.4]`, which confirms renv activated automatically.
 
-> **Commit the `.Rproj`, ignore the junk.** `strainscope.Rproj` is part of the project, so it **is** committed to Git (OrthoWatch does the same). But RStudio also creates a hidden `.Rproj.user/` folder and may create `.RData` / `.Rhistory` files — those are personal session clutter and are already in your `.gitignore`, so they never reach the public repo.
+> **Commit the `.Rproj`, ignore the junk.** `strainscope.Rproj` is part of the project, so it **is** committed to Git (OrthoWatch does the same). But RStudio also creates a hidden `.Rproj.user/` folder and may create `.RData` / `.Rhistory` files. Those are personal session clutter and are already in your `.gitignore`, so they never reach the public repo.
 
-**If it goes wrong:** if opening the `.Rproj` doesn't activate renv (no renv line in the Console), make sure the `.Rprofile` file from the renv step is present in the project root — that's the file that switches renv on. Reopening the project after confirming `.Rprofile` exists resolves it.
+**If it goes wrong:** if opening the `.Rproj` doesn't activate renv (no renv line in the Console), make sure the `.Rprofile` file from the renv step is present in the project root, since that's the file that switches renv on. Reopening the project after confirming `.Rprofile` exists resolves it.
 
 ---
 
-## Part J — Final checkpoint
+## Part J: Final checkpoint
 
 Run these four checks. All four passing means your environment is fully ready.
 
@@ -683,31 +683,31 @@ Run these four checks. All four passing means your environment is fully ready.
    ```
    → `Rscript (R) version 4.x.x`, then `renv.lock`
 
-If all four (or five) pass — congratulations, the hardest part for most beginners (setup) is behind you. You have a real, reproducible, version-controlled project on the internet, with nothing built yet but every foundation in place.
+If all four (or five) pass, congratulations: for most beginners setup is the hardest part, and it's now behind you. You have a real, reproducible, version-controlled project on the internet, with nothing built yet but every foundation in place.
 
 ---
 
 ## Concepts you just learned (glossary for this page)
 
-- **Python / R** — programming languages; Python is the engine, R handles one specialist step.
-- **VS Code** — the editor where you read and write code.
-- **Terminal / PowerShell** — the text window where you type commands.
-- **PATH** — the list of places your computer looks for programs; "adding to PATH" makes a tool runnable by name.
-- **Git** — snapshots your code so you can go back in time and share it.
-- **Repository (repo)** — the project as Git tracks it; lives locally and on GitHub.
-- **Branch** — a parallel copy of the project (`master`, `beta`, `develop`).
-- **Local vs origin** — your laptop's copy vs GitHub's copy.
-- **Commit** — one saved snapshot, with a message describing it.
-- **Push** — send your local snapshots up to GitHub.
-- **Virtual environment (`.venv`)** — a sealed, per-project toolbox of Python packages.
-- **`requirements.txt`** — the shopping list of Python packages that recreates the toolbox.
-- **`renv`** — R's equivalent of a virtual environment: a sealed, per-project R toolbox.
-- **`renv.lock`** — the receipt of exact R package versions; the R twin of `requirements.txt`.
-- **`.gitignore`** — the list of files Git should never save (secrets, the giant `.venv`).
-- **Package** — a reusable bundle of pre-written code you install and import.
+- **Python / R**: programming languages; Python is the engine, R handles one specialist step.
+- **VS Code**: the editor where you read and write code.
+- **Terminal / PowerShell**: the text window where you type commands.
+- **PATH**: the list of places your computer looks for programs; "adding to PATH" makes a tool runnable by name.
+- **Git**: snapshots your code so you can go back in time and share it.
+- **Repository (repo)**: the project as Git tracks it; lives locally and on GitHub.
+- **Branch**: a parallel copy of the project (`master`, `beta`, `develop`).
+- **Local vs origin**: your laptop's copy vs GitHub's copy.
+- **Commit**: one saved snapshot, with a message describing it.
+- **Push**: send your local snapshots up to GitHub.
+- **Virtual environment (`.venv`)**: a sealed, per-project toolbox of Python packages.
+- **`requirements.txt`**: the shopping list of Python packages that recreates the toolbox.
+- **`renv`**: R's equivalent of a virtual environment, a sealed, per-project R toolbox.
+- **`renv.lock`**: the receipt of exact R package versions; the R twin of `requirements.txt`.
+- **`.gitignore`**: the list of files Git should never save (secrets, the giant `.venv`).
+- **Package**: a reusable bundle of pre-written code you install and import.
 
 ---
 
 ## What's next
 
-Next is **`docs/02-data-generation.md`** — Box 1 of the architecture. You'll write the generator that invents a realistic, biologically-grounded library of microbial strains with three omics layers and a performance score, learn what a "random seed" is and why reproducibility depends on it, and end the phase with real data on disk and your first meaningful commit pushed to all three branches.
+Next is **`docs/02-data-generation.md`**, Box 1 of the architecture. You'll write the generator that invents a realistic, biologically grounded library of microbial strains with three omics layers and a performance score. Along the way you'll learn what a "random seed" is and why reproducibility depends on it, and you'll finish the phase with real data on disk and your first meaningful commit pushed to all three branches.

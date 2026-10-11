@@ -1,6 +1,6 @@
 """
-fetch_real.py — the one command for real-data ingestion.
-========================================================
+fetch_real.py: the one command for real-data ingestion.
+=======================================================
 
 WHAT THIS IS
 ------------
@@ -50,7 +50,7 @@ def main() -> None:
     args = parser.parse_args()
 
     chosen = list(SOURCES) if args.source == "all" else [args.source]
-    print(f"Real-data ingestion — sources: {', '.join(chosen)}"
+    print(f"Real-data ingestion. Sources: {', '.join(chosen)}"
           f"{'  (probe only)' if args.probe else ''}")
 
     for key in chosen:
@@ -65,7 +65,7 @@ def main() -> None:
         print("\nDone. Evidence locker: data/raw/real/   "
               "Provenance log: data/raw/real/fetch_log.csv   "
               "Clean tables: data/processed/real/")
-        print("Reminder: real tables COMPLEMENT the synthetic library — no "
+        print("Reminder: real tables COMPLEMENT the synthetic library. No "
               "public source provides matched multi-omics with an outcome.")
 
 

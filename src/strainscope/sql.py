@@ -1,5 +1,5 @@
 """
-sql.py — the StrainScope SQL console: ask the database questions, directly.
+sql.py (the StrainScope SQL console): ask the database questions, directly.
 ===========================================================================
 
 WHAT THIS IS
@@ -11,7 +11,7 @@ Three ways to use it (from the project root, venv active):
 
        python src/strainscope/sql.py "SELECT COUNT(*) FROM phenotype"
 
-2. INTERACTIVE — a prompt where you paste queries one after another:
+2. INTERACTIVE, a prompt where you paste queries one after another:
 
        python src/strainscope/sql.py
        sql> SELECT kingdom, COUNT(*) FROM phenotype GROUP BY kingdom;
@@ -25,7 +25,7 @@ Three ways to use it (from the project root, venv active):
 SAFE BY DEFAULT
 ---------------
 The console opens the database READ-ONLY. You can look at anything and break
-nothing — and it can't collide with a pipeline run holding the file. (This is
+nothing, and it can't collide with a pipeline run holding the file. (This is
 also why the "database is locked" worry doesn't apply here.)
 
 If the database file doesn't exist yet, the console says so and tells you the
@@ -43,9 +43,9 @@ import duckdb
 ROOT = Path(__file__).resolve().parents[2]
 DB_PATH = ROOT / "data" / "processed" / "strainscope.duckdb"
 
-BANNER = """StrainScope SQL console — read-only, break-nothing mode.
+BANNER = """StrainScope SQL console: read-only, break-nothing mode.
 Multi-line statements welcome: keep typing (or paste), and the query runs when
-a line ends with ';' — or just press Enter on an empty line to run what's there.
+a line ends with ';'. Or press Enter on an empty line to run what's there.
 Helpers: .tables   .schema TABLE   exit
 Recipes to paste: docs/QUERY_COOKBOOK.md
 """
@@ -79,7 +79,7 @@ def _handle(sql: str, db_path: Path) -> None:
         # long results with "...". For very long results, LIMIT is your friend.
         print(df.to_string(index=False) if len(df) else "(no rows)")
     except Exception as err:                                   # noqa: BLE001
-        # One bad query should never end your session — print and continue.
+        # One bad query should never end your session: print and continue.
         print(f"  ! {err}")
 
 
@@ -106,8 +106,8 @@ def main() -> None:
     else:                                            # mode 2: interactive
         print(BANNER)
         # A STATEMENT BUFFER, because SQL doesn't fit on one line. Lines
-        # accumulate here until the statement is complete — signalled by a
-        # trailing ';' or by an empty line — and only then does it run. This is
+        # accumulate here until the statement is complete (signalled by a
+        # trailing ';' or by an empty line), and only then does it run. This is
         # how every serious SQL shell behaves, and it's what makes pasting the
         # multi-line cookbook recipes Just Work.
         buffer: list[str] = []

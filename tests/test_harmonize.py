@@ -1,9 +1,9 @@
 """
-test_harmonize.py — offline tests for the Phase 2 cleaning functions.
-=====================================================================
+test_harmonize.py: offline tests for the Phase 2 cleaning functions.
+====================================================================
 
 Each test builds a TINY hand-made dirty table, runs ONE cleaning function on
-it, and checks the outcome — including the ledger counts, because "the ledger
+it, and checks the outcome, including the ledger counts, because "the ledger
 tells the truth" is itself behaviour worth guarding. (It was the ledger that
 caught this phase's biggest bug: a textbook outlier fence that would have
 flattened real biology. See cap_outliers' docstring.)
@@ -98,8 +98,8 @@ def test_load_to_duckdb_is_idempotent(tmp_path):
 
 
 def test_sql_console_run_query_reads_the_database(tmp_path):
-    # The console's engine must answer a query against a freshly built DB —
-    # read-only, so it can never modify or lock what the pipeline builds.
+    # The console's engine must answer a query against a freshly built DB
+    # (read-only, so it can never modify or lock what the pipeline builds).
     from strainscope.sql import run_query
     clean = {"phenotype": pd.DataFrame({"strain_id": ["S1", "S2"],
                                         "is_effective": [1, 0]})}
