@@ -63,9 +63,9 @@ Phase 6b built one assistant, Ask StrainScope, for questions about the project. 
 
 | Feature | Without a model (always) | A model, if switched on, is sent | Never sent |
 |---|---|---|---|
-| Ask StrainScope | the passages that answer, word for word | the question and up to three documentation passages | everything else |
+| Ask StrainScope | the passages that answer, word for word | the question and up to three documentation passages (only those that match nearly as well as the best one), with the fixed rules and their worked example (a made-up pump) | everything else |
 | Ask the data | a tested recipe, run through four guards | the question, the table and column names, a few notes on what the columns hold, three tested recipes | **any row of data** |
-| Ask the graph | numbered facts with their sources, and the route | the question and the facts about concepts (from the domain model, public references and the published findings of Phases 3 and 4) | **anything about a strain**: a strain question is answered by rules |
+| Ask the graph | numbered facts with their sources, and the route | the question and the facts about concepts (from the domain model, public references and the published findings of Phases 3 and 4), with the same rules and worked example | **anything about a strain**: a strain question is answered by rules |
 | In plain words | the paragraph, by rules | nothing: no model is used | everything |
 
 Uploads and keys never travel in a request body (a hosted key goes in the request's header, where the provider expects it). The first three rows are checked by tests that run each assistant against a stand-in model server on your computer and read what it would have been sent; the last by a test that every number in the paragraphs comes from the results (§15).
@@ -542,7 +542,7 @@ Write down how long the first start took and your app's address; §19 part B put
 
 ## 10. Step 6 (optional): a language model for the three assistants
 
-Everything works without a model. With one, Ask StrainScope and Ask the graph write a short answer that cites what they found, and Ask the data writes a new query when no recipe fits. Try it at home first. This section is the short version; [`docs/LANGUAGE_MODEL.md`](LANGUAGE_MODEL.md) has every setup step by step, how to switch a model off again, and a table of what can go wrong.
+Everything works without a model. With one, Ask StrainScope and Ask the graph write a short answer that cites what they found, and Ask the data writes a new query when no recipe fits. Try it at home first. This section is the short version; [`docs/LANGUAGE_MODEL.md`](LANGUAGE_MODEL.md) has every setup step by step, how to switch a model off again, a table of what can go wrong, and the model check (`python src/strainscope/service.py check-model`), which tells you whether your model cites its sources.
 
 **At home, with Ollama.** If you set it up in [Phase 6b §8](07b-docs-assistant.md#8-step-4-optional-written-answers-from-a-model-on-your-own-computer), nothing more is needed: `STRAINSCOPE_ASK_BACKEND=local` in `.env` (or `export` it). Then:
 
@@ -624,11 +624,12 @@ Phase 7 figures:
   drew figures/five_guards.png
   drew figures/graphrag_walk.png
   drew figures/plain_words.png
+  drew figures/written_answer_check.png
   drew figures/assistant_golden_scores.png
   drew docs/interactive/assistants_explorer.html (interactive, 3 charts)
 ```
 
-The second redraws the Phase 6 figures, among them the app map with its eleven pages. The third redraws Phase 6b's, because their numbers come from the documentation, which this guide has made larger (990 sections now). The last one redraws the journey map with Stage 12 done. Afterwards `git status` may also list a picture or two that looks exactly the same as before (`figures/ask_gate.png`, say): the drawing library can write the same picture with slightly different bytes. Committing them is harmless. The first five pictures are the concept figures of §1, §6, §7 and below; `graphrag_walk.png` and `plain_words.png` are computed by the code itself, so they stay true when the results change.
+One picture in that list came later: `figures/written_answer_check.png`, from the fix of [Handbook Stage 12.1](HANDBOOK.md#stage-121-fix-for-small-language-models-the-model-check-and-clearer-suggestions), shows what a model is sent for a written answer and is explained in [`docs/LANGUAGE_MODEL.md` §9](LANGUAGE_MODEL.md#9-how-a-written-answer-is-asked-for-and-checked). The second command redraws the Phase 6 figures, among them the app map with its eleven pages. The third redraws Phase 6b's, because their numbers come from the documentation, which this guide has made larger (1002 sections now). The last one redraws the journey map with Stage 12 done. Afterwards `git status` may also list a picture or two that looks exactly the same as before (`figures/ask_gate.png`, say): the drawing library can write the same picture with slightly different bytes. Committing them is harmless. The first five pictures are the concept figures of §1, §6, §7 and below; `graphrag_walk.png` and `plain_words.png` are computed by the code itself, so they stay true when the results change.
 
 ![In plain words: how a strain's rank becomes a paragraph](../figures/plain_words.png)
 

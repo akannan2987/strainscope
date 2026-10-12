@@ -8,6 +8,8 @@ What they protect, in plain words:
     another, and a used-up cap means no request at all;
   * the checks that run on every written answer: it must cite what it was
     given, and it may not bring numbers of its own;
+  * the request for a written answer asks for citations three ways, and its
+    worked example brings no number and nothing from StrainScope with it;
   * a request goes where the settings say and carries the key only in its
     header.
 
@@ -74,3 +76,18 @@ def test_numbers_an_answer_brings_with_it_are_found():
     assert llm.invented_numbers("fengycin at 7.6 times [1], 47 of 50 [2]", source) == set()
     assert llm.invented_numbers("about 90 % of strains [1]", source) == {"90"}
     assert llm.numbers("see [12] and 3.5") == {"3.5"}
+
+
+def test_a_written_answer_is_asked_for_citations_three_ways():
+    m = llm.cited_messages("RULES.", "Question: q\n\nFacts:\n[1] a fact.", "facts", "fact", "Facts")
+    assert [x["role"] for x in m] == ["system", "user", "assistant", "user"]
+    assert m[0]["content"].startswith("RULES. End every sentence with the numbers of the facts it uses")
+    assert m[1]["content"].startswith("Question: What does the pump do?\n\nFacts:\n[1] ")
+    assert m[3]["content"].startswith("Question: q") and m[3]["content"].endswith("such as [3] or [3][4].")
+
+
+def test_the_worked_example_follows_the_rules_and_brings_nothing_along():
+    assert llm.citation_problem(llm.EXAMPLE_ANSWER, 2) is None           # it shows a correct answer
+    assert llm.numbers(llm.EXAMPLE_ANSWER + " " + llm.EXAMPLE_QUESTION) == set()   # no number a model could copy
+    for word in ("strain", "gene", "iturin", "disease", "StrainScope"):
+        assert word.lower() not in (llm.EXAMPLE_QUESTION + llm.EXAMPLE_ANSWER).lower()

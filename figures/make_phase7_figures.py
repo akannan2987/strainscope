@@ -12,6 +12,11 @@ figures/make_phase7_figures.py: the teaching figures for Phase 7 (deployment and
                                      numbered facts with their sources (computed)
     figures/plain_words.png          how a strain's rank becomes a paragraph: results in, rules,
                                      sentences out, every number traceable (computed)
+    figures/written_answer_check.png what a model is sent for a written answer (the rules, a worked
+                                     example, the material, a reminder), the checks before it's
+                                     shown, and the test on llama3.2:3b that led to this request
+                                     (the request is read from src/strainscope/llm.py; the test
+                                     results are the ones recorded in docs/LANGUAGE_MODEL.md section 9)
 
   RESULTS (computed from the golden questions, never invented):
     figures/assistant_golden_scores.png
@@ -137,6 +142,67 @@ def draw_three_assistants():
     ax.text(0.3, 0.3, "Plain-language explanations (Strain and Ranking pages) are written by rules from the results: "
             "no model, so nothing to invent and nothing sent.", fontsize=8.4, color=SOFT)
     save(fig, "three_assistants.png")
+
+
+# =============================================================================
+# 2b. A written answer: asked for clearly, checked before it's shown
+# =============================================================================
+
+# The test of October 2026 (docs/LANGUAGE_MODEL.md, section 9): four wordings of
+# the request, the same four questions, llama3.2:3b with Ollama on an Intel Mac.
+# Each list holds whether the four answers would be shown (they cited the
+# material correctly and added no number).
+WORDING_TEST = [("A", "the request before the fix: \"Cite the facts you use as [1], [2]\"", [False] * 4),
+                ("B", "+ the rule with an example sentence", [True] * 4),
+                ("C", "+ a reminder at the very end", [True] * 4),
+                ("D", "+ one worked example (a made-up pump): the request used now", [True] * 4)]
+
+
+def draw_written_answer_check():
+    from matplotlib.patches import Circle
+    from strainscope import llm
+    fig, ax = canvas(11.5, 7.8, "A written answer: asked for clearly, checked before it's shown",
+                     "Ask StrainScope and Ask the graph, with a language model switched on. The same request "
+                     "goes to every model, at home or online.")
+    ax.text(0.3, 13.95, "1. What the model is sent, in this order", fontsize=10, fontweight="bold", color=INK)
+    parts = [(BLUE, "the rules: use ONLY the numbered material,\nand end every sentence with its numbers, like [1]"),
+             (GOLD, "one worked example: a question about a made-up\npump, and an answer that cites it, "
+                    + " and ".join(re.findall(r"\[\d\]", llm.EXAMPLE_ANSWER))),
+             (PURPLE, "the question, then the numbered material: the strong\nmatches among the 3 passages, or the graph's facts"),
+             (BLUE, "a reminder at the very end: end every sentence\nwith its numbers, such as [3] or [3][4]")]
+    for i, (colour, text) in enumerate(parts):
+        box(ax, 0.3, 12.1 - i * 1.6, 8.6, 1.35, colour, text, fs=8.2)
+    box(ax, 9.65, 9.3, 3.35, 1.9, TEAL, "language model\n(Ollama, or a\nhosted provider)", fs=8.2, bold=True)
+    arrow(ax, 8.95, 10.25, 9.6, 10.25)
+    ax.text(13.6, 13.95, "2. Checked before it's shown", fontsize=10, fontweight="bold", color=INK)
+    checks = ["does it cite at least one number?", "does it cite only numbers it was given?",
+              "Ask the graph: does it add no number\nthe facts don't hold?"]
+    for i, text in enumerate(checks):
+        box(ax, 13.6, 11.95 - i * 1.55, 6.2, 1.25, GREY, text, fs=8.2, fill=tint(GREY, 0.9))
+    arrow(ax, 13.05, 10.25, 13.55, 10.25)
+    box(ax, 13.6, 6.85, 3.0, 1.6, DARK_GREEN, "✓ all yes:\nshown above\nthe material", fs=8.2)
+    box(ax, 16.8, 6.85, 3.0, 1.6, GREY, "✗ any no: hidden;\nthe material\nstill answers", fs=8.2,
+        fill=tint(GREY, 0.9))
+    ax.text(20.2, 10.9, "In the test, the\nexample sentence\nwas enough (B).\nThe worked example\n(D) gave the\nshortest answers.",
+            fontsize=8.2, color=SOFT, va="center", linespacing=1.35)
+
+    ax.text(0.3, 6.05, "3. The test that chose this request: the same 4 questions, llama3.2:3b on an Intel Mac",
+            fontsize=10, fontweight="bold", color=INK)
+    for r, (letter, label, shown) in enumerate(WORDING_TEST):
+        y = 4.95 - r * 1.1
+        ax.text(0.3, y, letter, fontsize=10, fontweight="bold", color=INK, va="center")
+        ax.text(1.0, y, label, fontsize=8.6, color=INK, va="center")
+        for k, ok in enumerate(shown):
+            colour = DARK_GREEN if ok else GREY
+            cx = 13.7 + k * 0.95
+            ax.add_patch(Circle((cx, y), 0.36, facecolor=tint(colour, 0.75), edgecolor=colour, lw=1.4))
+            ax.text(cx, y - 0.02, "✓" if ok else "✗", ha="center", va="center", fontsize=10, color=colour,
+                    fontweight="bold")
+        ax.text(17.8, y, f"{sum(shown)} of 4 answers shown", fontsize=8.6, color=INK, va="center")
+    ax.text(0.3, 0.35, "Before the fix every answer was hidden: the model wrote correct sentences but cited nothing. "
+            "A hidden answer does no harm: in the app, the passages or facts still answer the question.",
+            fontsize=8, color=SOFT)
+    save(fig, "written_answer_check.png")
 
 
 # =============================================================================
@@ -424,6 +490,7 @@ if __name__ == "__main__":
     draw_five_guards()
     draw_graphrag_walk(graph)
     draw_plain_words()
+    draw_written_answer_check()
     d_rows, g_rows = data_results(), graph_results(graph)
     draw_golden(d_rows, g_rows)
     write_explorer(d_rows, g_rows)

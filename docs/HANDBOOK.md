@@ -2,7 +2,7 @@
 
 # The StrainScope Handbook: from day 0 to the finished product
 
-**Handbook version:** 1.9 · **Last updated:** 2026-10-12 · **Repository state it describes:** version **v0.3.0** and Phase 7 (not yet tagged: v1.0.0 comes with Phase 8). Phases 0 → 7 are built and tested (data, real sources, cleaning, database, multi-omics integration, machine learning, the knowledge graph, the app, Ask StrainScope, and the online copy with the AI layer: plain-language explanations, Ask the data and Ask the graph), along with the v0.1.1 fix release. The app is online at [strainscope.streamlit.app](https://strainscope.streamlit.app). Phase 7b (the MCP server) is next. 355 automated tests.
+**Handbook version:** 1.10 · **Last updated:** 2026-10-12 · **Repository state it describes:** version **v0.3.0** and Phase 7 (not yet tagged: v1.0.0 comes with Phase 8). Phases 0 → 7 are built and tested (data, real sources, cleaning, database, multi-omics integration, machine learning, the knowledge graph, the app, Ask StrainScope, and the online copy with the AI layer: plain-language explanations, Ask the data and Ask the graph), along with the v0.1.1 fix release and the Stage 12.1 fix (small language models cite their sources; the model check). The app is online at [strainscope.streamlit.app](https://strainscope.streamlit.app). Phase 7b (the MCP server) is next. 369 automated tests.
 
 **This is the one document to read first, and the one to come back to.** It walks the whole journey in order (understanding the project, preparing a blank computer, building every phase, releasing, and what lies beyond), explaining *why* at every step and linking to the specialised guide that holds the detail. You should never have to hunt through the repository to find out what to do next; if you ever do, that's a defect in this Handbook.
 
@@ -91,6 +91,7 @@ flowchart TB
 | 10 | App | Phase 6: the app | [`docs/07-app.md`](07-app.md) | 3-4 h (2 sittings) | ✅ |
 | 11 | Assistant | Phase 6b: Ask StrainScope, the documentation assistant | [`docs/07b-docs-assistant.md`](07b-docs-assistant.md) | 2-3 h (2 sittings) | ✅ |
 | 12 | Cloud + AI | Phase 7: deployment and the AI layer | [`docs/08-deployment-ai.md`](08-deployment-ai.md) | 3-4 h (2 sittings) | ✅ |
+| 12.1 | Fix | Small models cite their sources, the model check, clearer suggestions | [`docs/LANGUAGE_MODEL.md` §9](LANGUAGE_MODEL.md#9-how-a-written-answer-is-asked-for-and-checked), [`CHANGELOG.md`](../CHANGELOG.md) | ~30 min | ✅ |
 | 13 | MCP | Phase 7b: the MCP server | `docs/08b-mcp-server.md` | 2 h | ⏳ next |
 | 14 | Release | Phase 8: packaging and release 1.0 | `docs/09-packaging.md` | 2-3 h | ⏳ |
 | 15 | Product | Beyond the repository: the product | [`docs/PRODUCT_ROADMAP.md`](PRODUCT_ROADMAP.md) | reading | ✅ plan exists |
@@ -353,7 +354,7 @@ Check the result with `git tag -n1`: both `v0.1.0` and `v0.1.1` are listed, each
 
 **Why.** By this stage the documentation is large; a newcomer's most frequent question is "where is that explained?". Ask StrainScope answers it with the passage itself and its link, and refuses rather than guesses when the documents don't cover something. You'll learn how a word search ranks passages (TF-IDF weighs rare words more; cosine similarity compares a question with a passage), why a search needs a gate before it shows anything, how a golden question set turns "does it still work?" into a test, and what retrieval-augmented generation, hallucinations and prompt injection are, with the rules that keep an optional language model fenced in: only answered questions reach it, it sees only its rules, the question and the passages, and it must cite them. Eight real lessons from the build are kept in the guide's §12.
 
-**Checkpoint.** `python src/strainscope/ask.py --stats` reports 990 sections from 54 files (427 document sections, 319 glossary entries, 244 code docstrings). "What is a balanced error rate?" is answered with the glossary's *Balanced error rate (BER)* (match 0.47); "What is the capital of France?" is refused because no document uses either word; "How do I run StrainScope in a Jupyter notebook?" gets the *closest* sections, marked as not a direct answer. `--golden` passes 61 of 61 (41 answered from a right section, 4 undocumented ones not answered, 16 off-topic questions and instructions refused) and reports the one known limitation. `pytest -q` → **207 passed, 1 skipped** (104 new: 98 in `tests/test_ask.py`, including a check that every link between the documents resolves, 5 for the new page in `tests/test_app.py`, and 1 for the `.env` reading in `tests/test_sources.py`; the skipped one is the known limitation).
+**Checkpoint.** `python src/strainscope/ask.py --stats` reports 1002 sections from 54 files (432 document sections, 322 glossary entries, 248 code docstrings). "What is a balanced error rate?" is answered with the glossary's *Balanced error rate (BER)* (match 0.47); "What is the capital of France?" is refused because no document uses either word; "How do I run StrainScope in a Jupyter notebook?" gets the *closest* sections, marked as not a direct answer. `--golden` passes 63 of 63 (43 answered from a right section, 4 undocumented ones not answered, 16 off-topic questions and instructions refused) and reports the one known limitation. `pytest -q` → **207 passed, 1 skipped** (104 new: 98 in `tests/test_ask.py`, including a check that every link between the documents resolves, 5 for the new page in `tests/test_app.py`, and 1 for the `.env` reading in `tests/test_sources.py`; the skipped one is the known limitation).
 **Commit message:** `feat: add Ask StrainScope, answers from the project's own documents with links and a golden question set`. **Tag:** `v0.3.0` ("usable by anyone"), with the ritual in [`docs/07b-docs-assistant.md` §17](07b-docs-assistant.md#17-save-your-work-safety-gate-the-commit-ritual-and-the-v030-release).
 
 ---
@@ -377,8 +378,67 @@ Check the result with `git tag -n1`: both `v0.1.0` and `v0.1.1` are listed, each
 
 ![Ask the graph in the app: the route and the numbered facts](img/app_ask_graph.png)
 
-**Checkpoint.** `narrate.py STRAIN_0485` says *at rank 1 of 600*, *over 99 %*, *47 of those 50 strains were effective* and *10 routes like these*; `narrate.py --top 50` adds the chances up to **46.2**, against 47 effective in the simulated trial. `ask_data.py --golden` passes **37 of 37** (24 answered by the right recipe, 6 with no recipe that fits, 7 refused) and `ask_graph.py --golden` **23 of 23** (17 answered, 2 not covered, 4 refused); Ask StrainScope's golden set still passes 61 of 61. "How many strains are there in each kingdom?" runs the cookbook's section 3 recipe (Bacteria 267, Fungi 183, Yeast 95, Oomycete 55); "How are ituA and fenA connected?" walks `ituA -acts_by-> lipopeptide membrane attack <-acts_by- fenA`. The rehearsal builds the database on the first start and *About this copy* says *shared copy*. `pytest -q` → **353 passed, 1 skipped** (146 new: 69 in `tests/test_ask_data.py`, 43 in `tests/test_ask_graph.py`, 8 in `tests/test_narrate.py`, 7 in `tests/test_llm.py`, 6 in `tests/test_deploy.py`, 12 app test runs and 1 graph test). The online copy runs at [strainscope.streamlit.app](https://strainscope.streamlit.app) (deployed on 2026-10-12 with Python 3.14; 2 to 5 minutes from pressing *Deploy* to the Home page, installing the packages and the first start included): *About this copy* says *StrainScope v0.3.0 with the changes listed under [Unreleased]* and *shared copy*, with every required line ✓; *Which strains are borderline?* gives the same table as at home (Bacteria 41, Fungi 33, Yeast 20, Oomycete 9); *How does iturin suppress disease?* gives the same 7 facts; and *Build the database* is greyed out. The interactive figures are published with GitHub Pages at [akannan2987.github.io/strainscope](https://akannan2987.github.io/strainscope/).
+**Checkpoint.** `narrate.py STRAIN_0485` says *at rank 1 of 600*, *over 99 %*, *47 of those 50 strains were effective* and *10 routes like these*; `narrate.py --top 50` adds the chances up to **46.2**, against 47 effective in the simulated trial. `ask_data.py --golden` passes **37 of 37** (24 answered by the right recipe, 6 with no recipe that fits, 7 refused) and `ask_graph.py --golden` **23 of 23** (17 answered, 2 not covered, 4 refused); Ask StrainScope's golden set still passes in full. "How many strains are there in each kingdom?" runs the cookbook's section 3 recipe (Bacteria 267, Fungi 183, Yeast 95, Oomycete 55); "How are ituA and fenA connected?" walks `ituA -acts_by-> lipopeptide membrane attack <-acts_by- fenA`. The rehearsal builds the database on the first start and *About this copy* says *shared copy*. `pytest -q` → **353 passed, 1 skipped** (146 new: 69 in `tests/test_ask_data.py`, 43 in `tests/test_ask_graph.py`, 8 in `tests/test_narrate.py`, 7 in `tests/test_llm.py`, 6 in `tests/test_deploy.py`, 12 app test runs and 1 graph test). The online copy runs at [strainscope.streamlit.app](https://strainscope.streamlit.app) (deployed on 2026-10-12 with Python 3.14; 2 to 5 minutes from pressing *Deploy* to the Home page, installing the packages and the first start included): *About this copy* says *StrainScope v0.3.0 with the changes listed under [Unreleased]* and *shared copy*, with every required line ✓; *Which strains are borderline?* gives the same table as at home (Bacteria 41, Fungi 33, Yeast 20, Oomycete 9); *How does iturin suppress disease?* gives the same 7 facts; and *Build the database* is greyed out. The interactive figures are published with GitHub Pages at [akannan2987.github.io/strainscope](https://akannan2987.github.io/strainscope/).
 **Commit messages:** `feat: add the online copy, plain-language explanations, Ask the data and Ask the graph`, then, after deploying, `docs: link the online app and the interactive figures`. No tag (v1.0.0 arrives with Phase 8; the ritual is in [`docs/08-deployment-ai.md` §19](08-deployment-ai.md#19-save-your-work-two-commits-before-and-after-deploying)).
+
+---
+
+## Stage 12.1: Fix for small language models, the model check and clearer suggestions
+
+**What.** A small fix between phases, found by using the project: switching on a language model on an Intel Mac with Ollama ([`docs/LANGUAGE_MODEL.md`](LANGUAGE_MODEL.md) setup A) showed no written answers at all. One commit, no tag, with four changes:
+
+1. **The request for a written answer says how to cite three ways.** First the rule with an example sentence, then one worked example (a question about a made-up pump and an answer that cites it), and last a reminder after the question and its material. It lives in `cited_messages()` in `src/strainscope/llm.py`, and both `src/strainscope/ask.py` (Ask StrainScope) and `src/strainscope/ask_graph.py` (Ask the graph) build their requests with it.
+2. **A model check.** `python src/strainscope/service.py check-model` asks the switched-on model four questions through the real assistants, with exactly the requests the app sends, and says how many written answers would be shown. Without a model it sends nothing.
+3. **Clearer suggestions.** Under an answer, Ask StrainScope's *You might also ask about* used to offer a button that read only *Steps*, a heading that `docs/01-setup.md` uses twice. Clicking it asked the question "Steps", which helps nobody. A heading a guide uses more than once is now suggested as the part of the guide it belongs to, for example *Part F: Create the project folder and a virtual environment*, with that part's link.
+4. **Only strong matches go to the model.** Once written answers showed up, the starter question "How do I set up my laptop?" got one about choosing a language model. The search had put the right guide first (match 0.22), but the next two matches (0.15 each) only shared two of the question's words, and the model summarised all three. Ask StrainScope now gives the model the best passage and, of the next two, only those whose match is at least three quarters of the best one's (`model_hits()` in `src/strainscope/ask.py`). The screen still shows all three.
+
+Two golden questions came with it, about switching a model on and about checking it, so Ask StrainScope keeps finding the how-to ([`docs/LANGUAGE_MODEL.md`](LANGUAGE_MODEL.md)).
+
+```mermaid
+flowchart TB
+    subgraph BEFORE["Before: the rule said once"]
+        direction LR
+        B1["rules: cite the facts<br/>as [1], [2]"] --> B2["question +<br/>numbered facts"] --> B3["small model"] --> B4["correct sentences,<br/>no citations"] --> B5["hidden by the<br/>citation check"]
+    end
+    subgraph AFTER["After: the rule said three ways"]
+        direction LR
+        A1["rules + an example<br/>sentence"] --> A2["a worked example<br/>(a made-up pump)"] --> A3["question +<br/>numbered facts<br/>+ a reminder"] --> A4["small model"] --> A5["cites the facts<br/>as [n]: shown"]
+    end
+    BEFORE -->|"the fix"| AFTER
+
+    classDef laptop fill:#E8F0FE,stroke:#5B8DEF,color:#0B2545;
+    classDef cloud fill:#E6F4EA,stroke:#4CAF7D,color:#0B3D2E;
+    classDef roadmap fill:#F5F5F5,stroke:#B0B0B0,color:#555555,stroke-dasharray:4 3;
+    class B1,B2,B3,A1,A2,A3,A4 laptop
+    class B4,B5 roadmap
+    class A5 cloud
+    style BEFORE fill:#FAFAFA,stroke:#B0B0B0,color:#555555,stroke-dasharray:4 3
+    style AFTER fill:#F2FBF5,stroke:#B7E4C7,color:#0B3D2E
+```
+
+**Why.** The citation check of Stages 11 and 12 did its job: llama3.2:3b wrote correct sentences but cited nothing, so every answer was hidden and the passages and facts were shown alone. The tests couldn't notice: the stand-in model they use replies with whatever each test sets. A new colleague told only to "cite your sources" may still forget; shown one sentence with its footnote, they know what's wanted. The small model behaved the same way: once the rule came with an example sentence, it cited. The request also gained one finished example of the whole task (a technique called *few-shot prompting*), which gave the shortest answers. To choose the request, the same four questions were asked with four versions of it, on the same Mac: the old one got **0 of 4** answers shown, and each of the three stricter ones **4 of 4**. The full test, and why the version with the worked example won, is in [`docs/LANGUAGE_MODEL.md` §9](LANGUAGE_MODEL.md#9-how-a-written-answer-is-asked-for-and-checked). The model check turns that one-off test into a command anyone can rerun after switching models. Visible answers then showed a second weakness, one the citation check can't see: a correctly cited summary of a passage that doesn't answer the question. Sending only strong matches keeps such passages away from the model ([`docs/LANGUAGE_MODEL.md` §9](LANGUAGE_MODEL.md#only-strong-matches-go-to-the-model)).
+
+![What a model is sent, the checks, and the test that chose the request](../figures/written_answer_check.png)
+
+**Checkpoint.** With Ollama and llama3.2:3b switched on: `python src/strainscope/ask_graph.py "How does iturin suppress disease?"` shows a block `Written answer (llama3.2:3b, from the facts below):` that cites the facts by number, such as `[3][4]`, and `python src/strainscope/service.py check-model` ends with `4 of 4 written answers would be shown.` (on an Intel MacBook Pro, 5 to 15 seconds per answer). Without a model, `check-model` says that none is switched on and sends nothing. `python src/strainscope/ask.py "How do I set up my laptop?"` suggests *Part F: Create the project folder and a virtual environment* and no *Steps*; with the model on, its written answer (when shown) can only cite [1], the setup guide. `python src/strainscope/ask.py --golden` passes 63 of 63. `pytest -q` → **368 passed, 1 skipped** (14 new: 6 in `tests/test_ask.py` for the suggestions, the request and the strong matches, 2 in `tests/test_llm.py` for the request and its worked example, 4 in `tests/test_service.py` for the model check, and 2 golden questions).
+**Save it**: tests and gate first, then the commit ritual (no tag: this fix arrives with v1.0.0):
+
+```bash
+pytest -q                     # 368 passed, 1 skipped
+./check-public-safe.sh        # must end with: SAFE TO PUSH
+
+git switch develop
+git add -A
+git commit -m "fix: small models cite their sources, strong matches only, the model check, clearer suggestions"
+git push origin develop develop:beta develop:master
+
+## --tags is optional, only when required: none for this fix
+
+## then switch back to local master and pull in the remote changes
+git switch master
+git pull --ff-only origin master
+git switch develop
+```
 
 ---
 
@@ -481,6 +541,11 @@ python figures/make_phase7_figures.py
 python figures/make_phase6b_figures.py                 # again: its numbers grow with the documentation
 # then: commit and push (docs/08 section 19, part A), deploy on share.streamlit.io (section 9), second commit (part B)
 
+# Stage 12.1, the fix: small models cite their sources, the model check, clearer suggestions     (docs/LANGUAGE_MODEL.md section 9)
+python src/strainscope/ask.py "How do I set up my laptop?"      # Part F, not Steps, under "You might also ask about"
+python src/strainscope/service.py check-model                  # only with a language model switched on (docs/LANGUAGE_MODEL.md section 3)
+python figures/make_phase7_figures.py                          # adds figures/written_answer_check.png
+
 # Every stage ends with
 pytest -q
 ./check-public-safe.sh                                 # Windows: bash check-public-safe.sh in Git Bash
@@ -511,7 +576,7 @@ Then the end-of-phase ritual (Stage 2) when the stage is complete. Since Stage 1
 
 **Why.** A written answer is easier to read than three passages, and a model can write a query no recipe covers. It stays optional because a model can be wrong and, unless it runs on your computer, it means sending text to someone else; the rules around it (what may be sent, citations, five guards for SQL) are explained in [Phase 7 §1](08-deployment-ai.md#what-a-model-may-see-and-what-it-never-sees).
 
-**Checkpoint.** *About this copy* says *AI features (optional): on, ...* with your model's name, and each Ask page shows a switch such as *Also write a short answer*. Switching off: `STRAINSCOPE_ASK_BACKEND=none` and a restart.
+**Checkpoint.** *About this copy* says *AI features (optional): on, ...* with your model's name, and each Ask page shows a switch such as *Also write a short answer*. `python src/strainscope/service.py check-model` asks the model four questions and says how many of its written answers would be shown (4 of 4 with llama3.2:3b on an Intel MacBook Pro since Stage 12.1). Switching off: `STRAINSCOPE_ASK_BACKEND=none` and a restart.
 
 ## When something goes wrong
 
@@ -532,6 +597,8 @@ Then the end-of-phase ritual (Stage 2) when the stage is complete. Since Stage 1
 | Ask StrainScope refuses a question you think the documents answer | use the words the documents would use; the search matches words, not meaning ([`docs/07b-docs-assistant.md` §16](07b-docs-assistant.md#16-what-could-go-wrong-mini-faq)) |
 | `ollama: command not found` | Ollama isn't installed, or (on macOS) it was never started, which is when it adds the command: [`docs/LANGUAGE_MODEL.md` §8](LANGUAGE_MODEL.md#8-when-something-goes-wrong) |
 | no written answer appears, or `Couldn't reach the model` | Ollama isn't running, or `STRAINSCOPE_ASK_BACKEND` isn't set in this terminal or in `.env` (restart the app after setting it); refused and *closest* questions never get one ([`docs/07b-docs-assistant.md` §8](07b-docs-assistant.md#8-step-4-optional-written-answers-from-a-model-on-your-own-computer)) |
+| a note says the model's answer *cites nothing* or *didn't cite the sections correctly* | the model broke the citation rule, so its answer is hidden and the passages or facts still answer; if most answers are hidden, `git pull` (Stage 12.1 made small models cite) and run `python src/strainscope/service.py check-model` ([`docs/LANGUAGE_MODEL.md` §8](LANGUAGE_MODEL.md#8-when-something-goes-wrong) and [§9](LANGUAGE_MODEL.md#9-how-a-written-answer-is-asked-for-and-checked)) |
+| `check-model` says `No language model is switched on`, or marks a question with · | no model is set up (`STRAINSCOPE_ASK_BACKEND` in `.env` or this terminal), or that question never reached the model; the line under it says why, for example Ollama not running ([`docs/LANGUAGE_MODEL.md` §3 step 5](LANGUAGE_MODEL.md#3-setup-a-ollama-on-your-computer)) |
 | a golden question fails after you edited a guide | a heading was renamed or a passage moved; the scorecard says which question and where its section ended up ([`docs/07b-docs-assistant.md` §7](07b-docs-assistant.md#7-step-3-the-golden-questions)) |
 | `streamlit` is "not recognized" / "command not found" | start the app with `python -m streamlit run app/streamlit_app.py` ([`docs/07-app.md` §16](07-app.md#16-what-could-go-wrong-mini-faq)) |
 | `Port 8501 is already in use` | another copy of the app is running: Ctrl+C in its terminal, or add `--server.port 8502` |
@@ -578,9 +645,9 @@ Nothing in this repository is undocumented magic. Paths are relative to the proj
 | `src/strainscope/model.py` | machine learning: compare, calibrate, explain, final, publish; `load_model()` and `score_strains()` for the app | [`docs/05-machine-learning.md`](05-machine-learning.md) |
 | `src/strainscope/ontology.py` | the domain model: node types, relations, modes of action, the edge checker | [`docs/06-knowledge-graph.md`](06-knowledge-graph.md) §1, §3 |
 | `src/strainscope/graph.py` | the knowledge graph: build, analyse, explain, publish; the questions `why`, `path` and `show` | [`docs/06-knowledge-graph.md`](06-knowledge-graph.md) |
-| `src/strainscope/service.py` | the service layer behind the app: status, safe SQL, cookbook recipes, uploads (template, checks, scores, explanations), a strain's graph neighbourhood, the pipelines, `ask_docs`, and since Phase 7 `ask_data`, `ask_graph`, `explain_in_words` and `release_info`; the commands `status`, `template`, `score` | [`docs/07-app.md`](07-app.md) §1, §3, §8, [`docs/08-deployment-ai.md`](08-deployment-ai.md) §4 |
+| `src/strainscope/service.py` | the service layer behind the app: status, safe SQL, cookbook recipes, uploads (template, checks, scores, explanations), a strain's graph neighbourhood, the pipelines, `ask_docs`, and since Phase 7 `ask_data`, `ask_graph`, `explain_in_words` and `release_info`, and since Stage 12.1 `check_model`; the commands `status`, `template`, `score`, `check-model` | [`docs/07-app.md`](07-app.md) §1, §3, §8, [`docs/08-deployment-ai.md`](08-deployment-ai.md) §4, [`docs/LANGUAGE_MODEL.md`](LANGUAGE_MODEL.md) §9 |
 | `src/strainscope/ask.py` | Ask StrainScope: split, weigh, compare, decide; optional written answers; the golden questions; the command | [`docs/07b-docs-assistant.md`](07b-docs-assistant.md) |
-| `src/strainscope/llm.py` | the one connection to a language model for all three assistants: settings, one request, citation and number checks, the daily cap | [`docs/08-deployment-ai.md`](08-deployment-ai.md) §1, §3, §10 |
+| `src/strainscope/llm.py` | the one connection to a language model for all three assistants: settings, one request, the request for a cited answer (`cited_messages`, Stage 12.1), citation and number checks, the daily cap | [`docs/08-deployment-ai.md`](08-deployment-ai.md) §1, §3, §10, [`docs/LANGUAGE_MODEL.md`](LANGUAGE_MODEL.md) §9 |
 | `src/strainscope/narrate.py` | results in plain words, by rules: one strain, and the "test the best N" shortlist; the command | [`docs/08-deployment-ai.md`](08-deployment-ai.md) §5 |
 | `src/strainscope/ask_data.py` | Ask the data: the recipe finder, a model's query behind the fifth guard, the golden questions, the command | [`docs/08-deployment-ai.md`](08-deployment-ai.md) §6 |
 | `src/strainscope/ask_graph.py` | Ask the graph (GraphRAG): finding names, walking the graph, numbered facts, the optional written answer, the golden questions, the command | [`docs/08-deployment-ai.md`](08-deployment-ai.md) §7 |
@@ -599,7 +666,7 @@ Nothing in this repository is undocumented magic. Paths are relative to the proj
 | `artifacts/model/*.csv`, `artifacts/model/model_card.json`, `artifacts/model/strainscope_model.joblib` | Phase 4's result tables, the saved model and its card (committed; the app and the MCP server will read them) | [`docs/05-machine-learning.md`](05-machine-learning.md) §2, §8 |
 | `artifacts/graph/nodes.csv`, `artifacts/graph/edges.csv`, `artifacts/graph/knowledge_layer.graphml`, `artifacts/graph/*.csv` | Phase 5's graph (two plain tables, plus a GraphML copy of the knowledge layer) and its result tables: hubs, communities, knowledge vs data, explanations (committed; the app will read them) | [`docs/06-knowledge-graph.md`](06-knowledge-graph.md) §2, §5 to 9 |
 | `docs/*.md` | the tutorial, glossary, cookbook, roadmaps and this Handbook | this table |
-| `docs/LANGUAGE_MODEL.md` | every way to switch a language model on and off, at home and online, and what to do when something goes wrong | [Switching on a language model](#switching-on-a-language-model-optional) |
+| `docs/LANGUAGE_MODEL.md` | every way to switch a language model on and off, at home and online, what to do when something goes wrong, and how a written answer is asked for and checked (the model check) | [Switching on a language model](#switching-on-a-language-model-optional), Stage 12.1 |
 | `docs/img/*.svg` | the logo, icon, wordmark (the app's sidebar) and journey map | `figures/make_illustrations.py` |
 | `docs/img/app_*.png`, `docs/img/app_tour.gif` | screenshots of the running app | `figures/take_app_screenshots.py`, [`docs/07-app.md`](07-app.md) §11 |
 | `docs/interactive/*.html`, `docs/interactive/plotly.min.js` | the interactive charts (open in a browser; work offline) | each phase guide's *figures* section |

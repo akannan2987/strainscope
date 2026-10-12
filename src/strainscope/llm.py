@@ -38,6 +38,18 @@ queries (Ask the data), and facts from the knowledge layer of the graph, which
 come from the domain model and public references (Ask the graph). Never a
 row of data, a strain's measurements, an upload or a key. The callers build
 their messages; the tests check each one.
+
+ASKING FOR CITATIONS (written answers)
+--------------------------------------
+Ask StrainScope and Ask the graph need an answer that cites its material as
+[1], [2]. A small model on a laptop (llama3.2:3b) ignored a rule that only
+said "Cite the facts you use as [1], [2] and so on.": on an Intel Mac, 0 of 4
+test answers cited anything, so all four were hidden. Spelling the rule out
+with an example sentence was enough for all 4 to cite. cited_messages() adds
+two more things, which gave the shortest answers in the same test: one worked
+example exchange about a made-up pump (no numbers, nothing from StrainScope)
+and a reminder at the very end. The test is described in
+docs/LANGUAGE_MODEL.md (section 9).
 """
 from __future__ import annotations
 
@@ -194,6 +206,28 @@ def chat(messages: list[dict], cfg: Settings, timeout: float = TIMEOUT_S,
 # =============================================================================
 
 NO_ANSWER = "doesn't cover this"      # the sentence every prompt asks for when the material has no answer
+
+# How a written answer must cite, said three ways (see "Asking for citations"
+# at the top). {items} and {item} are "facts"/"fact" or "sections"/"section".
+CITE_RULE = ("End every sentence with the numbers of the {items} it uses, in square brackets, like this: "
+             "The pump runs on solar power [1]. It moves water to the tank [2][3].")
+CITE_REMINDER = "\n\nAnswer now. End every sentence with its {item} numbers in square brackets, such as [3] or [3][4]."
+EXAMPLE_QUESTION = ("Question: What does the pump do?\n\n{label}:\n[1] the pump runs on solar power. (source: manual)\n"
+                    "[2] the pump moves water to the tank. (source: manual)")
+EXAMPLE_ANSWER = "The pump moves water to the tank [2], and it runs on solar power [1]."
+
+
+def cited_messages(system: str, user: str, items: str, item: str, label: str) -> list[dict]:
+    """The request for a written answer that must cite its material: the
+    rules with the citation rule added, one worked example (a question and a
+    cited answer about a made-up pump), then the real question and its
+    numbered material, ending with a reminder. `items`, `item` and `label`
+    name the material: "facts", "fact", "Facts" or "sections", "section",
+    "Sections"."""
+    return [{"role": "system", "content": system + " " + CITE_RULE.format(items=items)},
+            {"role": "user", "content": EXAMPLE_QUESTION.format(label=label)},
+            {"role": "assistant", "content": EXAMPLE_ANSWER},
+            {"role": "user", "content": user + CITE_REMINDER.format(item=item)}]
 
 
 def citation_problem(text: str, given: int) -> str | None:

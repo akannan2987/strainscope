@@ -246,7 +246,9 @@ scikit-learn), and a set of golden questions checks its answers with every test
 run. If you like, a language model can also write a short answer from the
 passages found, either on your own computer (Ollama) or through a hosted
 provider; it's off by default, and all it ever sees is its rules, the question and the
-passages. How to switch one on and off, at home or online:
+passages. The answer must cite the passages, or it isn't shown, and
+`python src/strainscope/service.py check-model` tells you whether your model does.
+How to switch one on and off, at home or online, and how the check works:
 [`docs/LANGUAGE_MODEL.md`](docs/LANGUAGE_MODEL.md). The guide is [`docs/07b-docs-assistant.md`](docs/07b-docs-assistant.md).
 
 ## Ask the data, Ask the graph, and plain words
@@ -341,7 +343,7 @@ means, matching the build log below. Nothing is shown before it exists.*
   ![A strain's page: the reasons behind its rank, and its corner of the knowledge graph](docs/img/app_strain.png)
 
   An uploaded copy of a library strain gets exactly the explanation of the original (a test checks every strain of a hand-made project), and a slightly different score, because the ranking uses out-of-fold predictions while an upload is scored by the final model. Run it with `python -m streamlit run app/streamlit_app.py`; the guide is [`docs/07-app.md`](docs/07-app.md).
-- **Phase 6b (Ask StrainScope):** ✅ a documentation assistant that searches every guide, glossary entry and docstring (990 sections) and answers with the matching passages, word for word, with links. Before anything is shown, a gate of four checks decides between *answered*, *closest* and *refused*, and 62 golden questions keep it in check: every in-scope one is answered from a right section, every off-topic question and instruction is refused, and one known limitation is reported rather than hidden. No single score threshold separates the two groups; the extra checks do:
+- **Phase 6b (Ask StrainScope):** ✅ a documentation assistant that searches every guide, glossary entry and docstring (1002 sections) and answers with the matching passages, word for word, with links. Before anything is shown, a gate of four checks decides between *answered*, *closest* and *refused*, and 64 golden questions keep it in check: every in-scope one is answered from a right section, every off-topic question and instruction is refused, and one known limitation is reported rather than hidden. No single score threshold separates the two groups; the extra checks do:
 
   ![The golden questions: how well each one matched](figures/golden_scores.png)
 
@@ -351,6 +353,9 @@ means, matching the build log below. Nothing is shown before it exists.*
   ![The golden questions of Ask the data and Ask the graph](figures/assistant_golden_scores.png)
 
   Building it also caught a flaw from Phase 6: the path picture assumed every edge points along the walk, so a route between two genes lost one of them. Explore the scores in `docs/interactive/assistants_explorer.html`; the guide is [`docs/08-deployment-ai.md`](docs/08-deployment-ai.md).
+- **Fix after Phase 7 (Handbook Stage 12.1):** ✅ switching on a small language model (llama3.2:3b with Ollama, on an Intel Mac) showed that it wrote correct answers without citing anything, so the citation check hid every one. The request now shows the model what a citation looks like (a rule with an example sentence, one worked example, a reminder at the end): with the same four questions, 0 of 4 answers were shown before and 4 of 4 after. `python src/strainscope/service.py check-model` runs the same check on any model. Ask StrainScope also gives the model only the strong matches, after a weak third match steered one written answer off the question, and it no longer suggests a bare *Steps* heading. The test is described in [`docs/LANGUAGE_MODEL.md` §9](docs/LANGUAGE_MODEL.md#9-how-a-written-answer-is-asked-for-and-checked).
+
+  ![What a model is sent, the checks, and the test that chose the request](figures/written_answer_check.png)
 - **Phase 7b (MCP server):** *(planned)* an AI assistant using StrainScope's tools.
 - **Phase 8 (release 1.0):** *(planned)* the one-command pipeline and tests passing
   on Windows, macOS and Linux at every push.
@@ -375,6 +380,7 @@ means, matching the build log below. Nothing is shown before it exists.*
 | 6 | [The app: ranking, strain pages, the graph, uploads, a safe SQL console](docs/07-app.md) | ✅ |
 | 6b | [Ask StrainScope: answers from the project's own documents, a gate, golden questions](docs/07b-docs-assistant.md) | ✅ **v0.3.0** |
 | 7 | [Deployment and the AI layer: the online copy, plain words, Ask the data, Ask the graph](docs/08-deployment-ai.md) | ✅ |
+| 7.1 | [Fix: small language models cite their sources, the model check, clearer suggestions](docs/HANDBOOK.md#stage-121-fix-for-small-language-models-the-model-check-and-clearer-suggestions) | ✅ |
 | 7b | The MCP server (`docs/08b-mcp-server.md`) | ⏳ next |
 | 8 | Packaging & release 1.0 (`docs/09-packaging.md`) | ⬜ planned (**v1.0.0**) |
 
@@ -575,7 +581,7 @@ strainscope/
 │                                     ask_graph, ranking, strain, knowledge_graph,
 │                                     integration, data, sql_console                ✅
 │
-├── tests/                         ← automated checks (pytest): 355 today           ✅
+├── tests/                         ← automated checks (pytest): 369 today           ✅
 │   ├── test_sources.py            ← ingestion parsers, offline
 │   ├── test_harmonize.py          ← cleaning rules and the database loader
 │   ├── test_integrate.py          ← integration, grading, the R ↔ Python contract
@@ -643,6 +649,7 @@ python src/strainscope/graph.py all       # Phase 5  - build the knowledge graph
 
 # Look at the results
 python src/strainscope/service.py status  # what the app can read, and how to fix what's missing
+python src/strainscope/service.py check-model   # with a language model on: does it cite its sources?
 python -m streamlit run app/streamlit_app.py   # the app (Phase 6): opens in your browser, Ctrl+C stops it
 python src/strainscope/ask.py "How do I start the app?"   # Ask StrainScope (Phase 6b), also a page in the app
 python src/strainscope/ask.py --golden    # the golden questions, scored
@@ -659,7 +666,7 @@ python figures/make_phase7_figures.py     # redraw the Phase 7 figures + assista
 python src/strainscope/graph.py why STRAIN_0485   # why does this strain rank first?
 
 # Check everything
-pytest -q                                 # 354 passed, 1 skipped
+pytest -q                                 # 368 passed, 1 skipped
 ```
 
 To put your own copy online, follow [`docs/08-deployment-ai.md`](docs/08-deployment-ai.md) §9

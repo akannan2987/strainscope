@@ -10,9 +10,9 @@ Everything in StrainScope works without a language model. The three assistants f
 - **Ask the graph** writes a short answer above the numbered facts, citing them, and may not add a number of its own.
 - **Ask the data** writes a new SQL query when no tested recipe fits. The query passes five guards before it runs, and it's shown so you can check it.
 
-*In plain words* (the Strain and Ranking pages) never uses a model. What each assistant may send to a model, and what it never sends, is the table in [Phase 7 §1](08-deployment-ai.md#what-a-model-may-see-and-what-it-never-sees). The short version: the question you typed, documentation passages, table and column names, a few example recipes and facts about concepts may go; a row of data, a strain's results, an upload or anything else on your computer never does.
+*In plain words* (the Strain and Ranking pages) never uses a model. What each assistant may send to a model, and what it never sends, is the table in [Phase 7 §1](08-deployment-ai.md#what-a-model-may-see-and-what-it-never-sees). The short version: the question you typed, documentation passages, table and column names, a few example recipes and facts about concepts may go, along with StrainScope's fixed rules for the model; a row of data, a strain's results, an upload or anything else on your computer never does.
 
-This page collects every way to switch a model on and off in one place. The two guides linked above explain the ideas behind it.
+This page collects every way to switch a model on and off in one place, and how to check that your model follows the rules (§9). The two guides linked above explain the ideas behind it.
 
 ---
 
@@ -91,9 +91,37 @@ This downloads about 2 GB and works best with 8 GB of memory or more.
    python src/strainscope/ask_graph.py "How does iturin suppress disease?"
    ```
 
-   **You should see** a block called `Written answer (llama3.2:3b, from the facts below):` above the seven facts of [Phase 7 §7](08-deployment-ai.md#7-step-3-ask-the-graph). The wording comes from the model, so it differs from computer to computer; what stays the same is that it cites the facts as `[3]` or `[3][4]`. The first answer takes longest, because Ollama loads the model into memory.
+   **You should see** a block called `Written answer (llama3.2:3b, from the facts below):` between the first line and the route, with the seven facts of [Phase 7 §7](08-deployment-ai.md#7-step-3-ask-the-graph) under it. On an Intel MacBook Pro it looked like this (the answer is one long line in the terminal; it's wrapped here so you can read it):
 
-5. **Restart the app**, if it's running, and continue with §6.
+   ```
+     ✓ From the knowledge graph: 7 facts about iturin, each with its source.
+
+     Written answer (llama3.2:3b, from the facts below):
+
+       Iturin suppresses disease by working through lipopeptide membrane attack [3][4], but the exact
+       mechanism is not known [5]. Iturin is a product of the ituA gene [7], and its chemical structure
+       is C48H74N12O14 with a molecular weight of 1043.2 [2].
+
+     Route: iturin -acts_by-> lipopeptide membrane attack -contributes_to-> disease suppression
+   ```
+
+   Your wording may differ, because it comes from the model (a newer version of the model, or another computer, can change it). What stays the same is the request: it asks for every sentence to end with the numbers of the facts it uses, such as `[3]` or `[3][4]`, and the checks make sure a shown answer cites at least one fact and only facts it was given (§9). Read the answer as a summary to check against the facts under it. In the one above, *the exact mechanism is not known [5]* misreads fact 5, because facts 3 and 4 give the mechanism. The checks can tell that a sentence cites a fact, but not whether it reads the fact correctly, so when the two disagree, the facts win. Each answer took 5 to 15 seconds on that Mac; the first one after Ollama starts can take longer, because Ollama loads the model into memory first. If you see `(written answer: The model's answer wasn't shown because it cites nothing. ...)` instead, see §8.
+
+5. **Check that your model cites its sources** (optional, a minute or two):
+
+   ```bash
+   python src/strainscope/service.py check-model
+   ```
+
+   It asks the model four questions, two through Ask the graph and two through Ask StrainScope, with exactly the requests the app sends, and says for each one whether the written answer would be shown. **You should see** a heading, the model's name, four results that each start with ✓ (with the model's answer under it), ✗ (with the reason it would be hidden) or · (the question never reached the model, for example because Ollama isn't running, with the reason), and at the end:
+
+   ```
+     4 of 4 written answers would be shown.
+   ```
+
+   Fewer than four isn't an error, because a hidden answer leaves the passages or facts on screen. §9 explains what the check looks for.
+
+6. **Restart the app**, if it's running, and continue with §6.
 
 ## 4. Setup B: a hosted provider at home
 
@@ -111,7 +139,7 @@ Any provider with an **OpenAI-compatible interface** works ([what that is](GLOSS
    ```
 
    with your key in place of `your-key`. Being the last lines, they win over any earlier line with the same name.
-4. **Check it** with the two commands of §3 step 4 (in a terminal where `(.venv)` shows). The status line now starts `on, hosted: gemini-3.5-flash-lite at https://generativelanguage.googleapis.com/v1beta/openai (hosted)`, and the answer's block says `Written answer (gemini-3.5-flash-lite, from the facts below):`.
+4. **Check it** with the two commands of §3 step 4 (in a terminal where `(.venv)` shows). The status line now starts `on, hosted: gemini-3.5-flash-lite at https://generativelanguage.googleapis.com/v1beta/openai (hosted)`, and the answer's block says `Written answer (gemini-3.5-flash-lite, from the facts below):`. `python src/strainscope/service.py check-model` (§3 step 5) works the same way; its four requests count towards the provider's limits like any others.
 
 ## 5. Setup C: an online copy
 
@@ -148,6 +176,7 @@ With a model switched on, each Ask page shows a switch under the question box, o
 Turn a switch off to get the answer without a model for that page. What a model is asked stays narrow either way:
 
 - On Ask StrainScope and Ask the graph, the model writes only when the search has already found the answer, and the passages or facts stay under what it writes.
+- On Ask StrainScope the model is given only the strong matches: the best passage, and the next ones only if they match nearly as well (§9). The screen still shows all three.
 - On Ask the data, a tested recipe that fits always runs without the model; the model is asked only when none fits.
 - A question about a strain on Ask the graph is always answered by rules.
 
@@ -177,9 +206,62 @@ Read a written answer as a summary of what's under it. If the two disagree, the 
 | `The model service answered with HTTP 404` | The model name is wrong or no longer offered: look it up on the provider's models page. With Ollama, the model hasn't been downloaded: `ollama list` shows what you have, and `ollama pull` plus the name gets it. |
 | `The model service answered with HTTP 429` | The provider's own limit for your key was reached. Wait, or lower `STRAINSCOPE_AI_DAILY_LIMIT`. |
 | `This copy has used its 200 model requests for today` | The daily cap was reached. The assistants carry on without written answers until midnight (UTC). |
-| A note that the model's answer *didn't cite the sections correctly* (Ask StrainScope), or *wasn't shown because it cites nothing*, *cites something it wasn't given* or *used a number the facts don't hold* (Ask the graph) | The model broke a rule, so its answer isn't shown. The passages or facts underneath still answer the question. |
+| A note that the model's answer *didn't cite the sections correctly* (Ask StrainScope), or *wasn't shown because it cites nothing*, *cites something it wasn't given* or *used a number the facts don't hold* (Ask the graph) | The model broke a rule, so its answer isn't shown, and the passages or facts underneath still answer the question. Once in a while that's normal. If it happens to most answers, bring your copy up to date (`git pull`: the request described in §9 arrived in [Handbook Stage 12.1](HANDBOOK.md#stage-121-fix-for-small-language-models-the-model-check-and-clearer-suggestions)), then run `python src/strainscope/service.py check-model`. If the check shows most answers hidden, a larger model usually follows the rules better, if your computer has the memory for it: `ollama pull llama3.1:8b` (a 4.9 GB download that needs at least 8 GB of free memory), then `STRAINSCOPE_ASK_MODEL=llama3.1:8b` in `.env` and a restart. |
+| `check-model` says `No language model is switched on` | `STRAINSCOPE_ASK_BACKEND` isn't set to `local` or `hosted` in `.env` or in this terminal (§2). |
 | A model's query fails with a DuckDB message | The model guessed a column that isn't there. Open the query in the SQL console and fix it, or rephrase the question. |
 
-## 9. What's planned
+## 9. How a written answer is asked for, and checked
 
-A model already serves all three assistants; what's left is in the [roadmap](ROADMAP.md#deferred-items-and-their-triggers), each item with the event that would bring it forward: a model on the public online copy (setup C, whenever its owner chooses), follow-up questions in a conversation, model-written wording for the plain-language explanations (only with a model on the same computer), and a model that summarises the rows a query returns (the same condition). [Phase 7b](HANDBOOK.md#stage-13-phase-7b-the-mcp-server) turns things around: instead of StrainScope asking a model, an AI assistant you already use will be able to call StrainScope's tools through an MCP server.
+Ask StrainScope and Ask the graph send a model the material they found, numbered, and ask for a short answer that cites it. A citation is a number in square brackets, such as `[3]`, that points at one passage or fact; with it, you can check every sentence against its source. Before an answer reaches the screen, three checks run in `src/strainscope/llm.py`:
+
+1. Does it cite at least one number?
+2. Does it cite only numbers it was given? (An answer citing `[7]` when there were three passages is hidden.)
+3. Ask the graph only: does it add no number of its own? A formula or a weight the facts hold is fine; a percentage the facts don't hold isn't.
+
+An answer that fails any of them is hidden, with a short note saying why, and the passages or facts stay on screen. If the model ignores the rules, you lose the summary and keep everything else.
+
+![What a model is sent, the checks, and the test that chose the request](../figures/written_answer_check.png)
+
+### Why the request says it three ways
+
+The first version of the request said it once, in the rules: *Cite the facts you use as [1], [2] and so on.* The tests passed: they use a stand-in model whose replies the tests write themselves, so a real model's habits never came up. llama3.2:3b, the small model of setup A, didn't: on an Intel MacBook Pro it wrote correct sentences, for example *Iturin suppresses disease by working through lipopeptide membrane attack, which contributes to disease suppression*, without a single citation, so every answer was hidden.
+
+To find out what a small model needs, I asked the same four questions (two for each assistant) with four versions of the request, using the same model on the same Mac:
+
+| Version | What the request adds | Answers shown |
+|---|---|---|
+| A | nothing: the rules say *cite* once | 0 of 4 |
+| B | the rule spelled out with an example sentence: *End every sentence with the numbers of the facts it uses, in square brackets, like this: The pump runs on solar power [1]. It moves water to the tank [2][3].* | 4 of 4 |
+| C | B, plus a reminder at the very end, after the material | 4 of 4 |
+| D | C, plus one worked example: a question about a made-up pump, and an answer that cites it | 4 of 4 |
+
+B, C and D all passed. I chose D because its answers were the shortest overall and padded the least: with B and C the model sometimes added a claim no passage makes (that the simulated data "helps to improve its performance and accuracy"). A worked example like this is called **few-shot prompting** (one shot here): the model is shown a finished example of the task, not only a description of it. In this test it wasn't what made the model cite (B already did, with the example sentence alone), but it kept the answers shortest. It's about a pump on purpose: nothing from StrainScope and no numbers, so the model can't copy a fact or a number from it into a real answer.
+
+So since the fix in [Handbook Stage 12.1](HANDBOOK.md#stage-121-fix-for-small-language-models-the-model-check-and-clearer-suggestions), every written-answer request has four parts, in this order: the rules (with the citation rule), the worked example (as one question and one answer), the real question with its numbered material, and the reminder. You can see it in `cited_messages()` in `src/strainscope/llm.py`, and the tests in `tests/test_llm.py`, `tests/test_ask.py` and `tests/test_ask_graph.py` check every part.
+
+A larger model may well have cited with version A. The test only shows what one small model needed, which is why the check below exists.
+
+### Only strong matches go to the model
+
+Citations make an answer checkable, but they can't make it right when the material is off the point. With llama3.2:3b switched on, the first starter question, "How do I set up my laptop?", got a written answer about choosing a language model. It cited correctly, and it was no help: the passage it leaned on, [2], was the table in §1 of this page. The search had put the right guide first (match 0.22), but the next two matches (0.15 each) only shared two of the question's words, and the model summarised all three. Ask someone to sum up three pages and they'll sum up the third as well, even if it's about something else, so it's better to hand over only the pages that answer the question.
+
+So Ask StrainScope now gives the model the best passage and, of the next two, only those whose match is at least three quarters of the best one's (`STRONG_MATCH` and `model_hits()` in `src/strainscope/ask.py`). The numbers stay the ones on the screen, so an answer citing a passage the model wasn't given is hidden. Two examples from the golden questions:
+
+| Question | Matches of the three passages shown | Given to the model |
+|---|---|---|
+| "What is a balanced error rate?" | 0.47, 0.27, 0.20 | [1] only |
+| "Why is the data simulated?" | 0.17, 0.16, 0.15 | all three |
+
+Of the 43 starter and golden questions the search answers, 21 now send one passage and 22 send two or three. (Three quarters of the best *match* is a different rule from the gate's 75 % of the question's *words*, described in [Phase 6b §1](07b-docs-assistant.md#the-gate-answered-closest-or-refused); they just happen to use the same share.)
+
+### Check your own model
+
+```bash
+python src/strainscope/service.py check-model
+```
+
+It asks the four questions of the test above through the real assistants, so the requests are exactly the ones the app sends, and runs the three checks on each answer. Run it after switching to a new model or provider, or after updating Ollama. It sends four requests, which count towards a hosted provider's limits. `STRAINSCOPE_AI_DAILY_LIMIT` counts from 0 in every program that starts, so the check never uses up the app's allowance, but a limit below 4 stops it partway. A question that never reaches the model (Ollama not running, a used-up limit, a missing key) is marked with · and the reason, and doesn't count as hidden. With no model switched on, it sends nothing and says so.
+
+## 10. What's planned
+
+A model already serves all three assistants; what's left is in the [roadmap](ROADMAP.md#deferred-items-and-their-triggers), each item with the event that would bring it forward: a model on the public online copy (setup C, whenever its owner chooses), follow-up questions in a conversation, model-written wording for the plain-language explanations (only with a model on the same computer), a model that summarises the rows a query returns (the same condition), and a button on *About this copy* that runs the model check of §9, for the owner of an online copy, who can't run a terminal command there. [Phase 7b](HANDBOOK.md#stage-13-phase-7b-the-mcp-server) turns things around: instead of StrainScope asking a model, an AI assistant you already use will be able to call StrainScope's tools through an MCP server.

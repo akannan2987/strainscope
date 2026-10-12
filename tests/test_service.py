@@ -12,7 +12,9 @@ What they protect, in plain words:
     knowledge graph gives the original;
   * the drawing of a strain's corner of the graph only uses real nodes and
     edges, and marks a compound made without its gene;
-  * the pipeline runner stops at a failing step and never runs twice at once.
+  * the pipeline runner stops at a failing step and never runs twice at once;
+  * the model check asks nothing when no model is on, and otherwise reports,
+    for each of its four questions, whether the written answer would be shown.
 
 None of them needs the network. The upload explanations use the 40-strain
 hand-made project of tests/test_graph.py; the scoring uses the committed model.
@@ -30,7 +32,9 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+from conftest import stand_in  # noqa: E402
 from strainscope import graph as kg  # noqa: E402
+from strainscope import llm  # noqa: E402
 from strainscope import service as sv  # noqa: E402
 from test_graph import _small_project  # noqa: E402
 
@@ -278,3 +282,32 @@ def test_only_one_pipeline_runs_at_a_time():
         assert out == [(None, "failed", "Another build is running. Wait for it to finish, then try again.")]
     finally:
         sv._PIPELINE_LOCK.release()
+
+
+# =============================================================================
+# The model check (python src/strainscope/service.py check-model)
+# =============================================================================
+
+def test_the_model_check_asks_nothing_without_a_model(model):
+    assert sv.check_model(llm.Settings("none")) == [] and model.calls == []
+
+
+@pytest.mark.skipif(not REAL_DB, reason="needs data/processed/strainscope.duckdb (python src/strainscope/harmonize.py)")
+@pytest.mark.parametrize("reply, shown", [("It works this way [1].", 4), ("It works this way.", 0)])
+def test_the_model_check_reports_each_answer(reply, shown, model):
+    model.reply = reply
+    seen = []
+    rows = sv.check_model(stand_in(model), report=seen.append)
+    assert [r["question"] for r in rows] == [q for _, q in sv.MODEL_CHECK] and seen == rows
+    assert sum(r["shown"] for r in rows) == shown and len(model.calls) == 4
+    assert all(r["answered"] for r in rows)                                 # the model replied every time
+    assert all(len(c["body"]["messages"]) == 4 for c in model.calls)        # the same request the app sends
+    if not shown:
+        assert all("cite" in r["note"] for r in rows)
+
+
+@pytest.mark.skipif(not REAL_DB, reason="needs data/processed/strainscope.duckdb (python src/strainscope/harmonize.py)")
+def test_the_model_check_tells_an_unreachable_model_from_a_broken_rule():
+    rows = sv.check_model(llm.Settings("local", "http://127.0.0.1:9/v1", "stand-in"))   # port 9: nothing listens
+    assert len(rows) == 4 and not any(r["answered"] or r["shown"] for r in rows)
+    assert all("Couldn't reach the model" in r["note"] for r in rows)

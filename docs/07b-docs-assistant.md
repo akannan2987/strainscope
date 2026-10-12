@@ -33,7 +33,7 @@ Ask StrainScope is a librarian first. Every answer is a passage quoted **word fo
 
    ![A word found everywhere tells you little](../figures/word_weights.png)
 
-   In StrainScope's documents, "data" appears in 527 of the 1,357 passages and gets a weight of 1.9; "winsorise" appears in 3 and gets 6.8. Common little words ("the", "is", "how") are dropped altogether; they're called **stop words**. Words are also reduced to the form the documents use, so "strains" finds "strain", "scoring" finds "score" and "ranked" finds "rank". A section's heading counts three times, because a heading says what its section is about.
+   In StrainScope's documents, "data" appears in 529 of the 1,386 passages and gets a weight of 2.0; "winsorise" appears in 3 and gets 6.8. Common little words ("the", "is", "how") are dropped altogether; they're called **stop words**. Words are also reduced to the form the documents use, so "strains" finds "strain", "scoring" finds "score" and "ranked" finds "rank". A section's heading counts three times, because a heading says what its section is about.
 3. **Compare.** The question gets word weights the same way, and each passage gets a **match** score from 0 (no words in common) to 1 (the same words in the same proportions). The measure is **cosine similarity**. Two shopping lists match well when they're mostly about the same things, however long each list is. The best passage of each section stands for that section, and the three best sections are shown.
 4. **Decide**, before anything is shown (next part).
 
@@ -72,7 +72,7 @@ A **language model** (an *LLM*) is a program trained on large amounts of text to
 The safe pattern has a name: **RAG**, *retrieval-augmented generation*. Search first, then give the model only the passages found, and require it to answer from them and cite them. It's an open-book exam with the page numbers written down. The search on its own is Ask StrainScope's *level 1*; a written answer on top of it is *level 2*, and it follows RAG with four extra rules of its own:
 
 - **Only an answered question reaches the model.** Refused and "closest" questions never do, so an off-topic question can't come back with an invented answer.
-- **Only the question and up to three passages are sent**, with the fixed rules the model must follow. The data, your uploads and your keys stay out of the text.
+- **Only the question and up to three passages are sent**, with the fixed rules the model must follow. Since [Handbook Stage 12.1](HANDBOOK.md#stage-121-fix-for-small-language-models-the-model-check-and-clearer-suggestions) the rules include one worked example, about a made-up pump, that shows a small model what a citation looks like, and a passage is sent only if its match is at least three quarters of the best one's ([why](LANGUAGE_MODEL.md#only-strong-matches-go-to-the-model)). The data, your uploads and your keys stay out of the text.
 - **The answer must cite the passages** as [1], [2]. An answer that cites nothing, or cites a passage it wasn't given, isn't shown.
 - **The passages stay on screen**, so you can check the answer against them.
 
@@ -236,7 +236,7 @@ python src/strainscope/ask.py "What is a balanced error rate?"
       docs/GLOSSARY.md#phase-3-multi-omics-integration-doc-04
       - **Balanced error rate (BER)**: the average of the error on each outcome group. Unlike plain accuracy it can't be gamed by always guessing the common group: that lazy strategy scores 0.50, exactly like a coin.
 
-  [2] The scoreboard   (match 0.26)
+  [2] The scoreboard   (match 0.27)
       docs/05-machine-learning.md#the-scoreboard
       (picture: The model scoreboard)
 
@@ -252,7 +252,7 @@ python src/strainscope/ask.py "What is a balanced error rate?"
     - Stage 7: Phase 3, multi-omics integration   (docs/HANDBOOK.md)
 ```
 
-**What it means.** The ✓ line is the verdict. Under it come the three best sections, each with its match score, its link (the file, then after `#` the heading's *anchor*, GitHub's name for a heading's place in the page; for code, `#L99` means line 99) and the passage that matched, word for word. A long passage is cut after 12 lines; `--full` prints the whole section instead. *You might also ask about* lists sections that resemble the best one, from other parts of the documentation; ask about any of them by typing its heading as the question.
+**What it means.** The ✓ line is the verdict. Under it come the three best sections, each with its match score, its link (the file, then after `#` the heading's *anchor*, GitHub's name for a heading's place in the page; for code, `#L99` means line 99) and the passage that matched, word for word. A long passage is cut after 12 lines; `--full` prints the whole section instead. *You might also ask about* lists sections that resemble the best one, from other parts of the documentation; ask about any of them by typing its heading as the question. A heading that one guide uses more than once (the setup guide has two called *Steps*) would tell you nothing on its own, so that section is suggested under the heading of the part it belongs to, such as *Part F: Create the project folder and a virtual environment*.
 
 Two more, to see the other verdicts:
 
@@ -285,8 +285,8 @@ python src/strainscope/ask.py --stats
 **You should see** the typo corrected on the first line (`✓ Reading "calibraton" as "calibration". Best match: "Calibration" in docs/GLOSSARY.md.`), and then:
 
 ```
-  990 sections from 54 files: 427 document sections, 319 glossary entries, 244 code docstrings.
-  3,964 different words. Written answers: off (search only; nothing leaves this computer).
+  1002 sections from 54 files: 432 document sections, 322 glossary entries, 248 code docstrings.
+  3,985 different words. Written answers: off (search only; nothing leaves this computer).
 ```
 
 **If instead:**
@@ -325,16 +325,16 @@ python src/strainscope/ask.py --golden
 
 ```
   ── Ask StrainScope: the golden questions ──────────────────────
-  ✓ 41/41 answered from the right section
-           (34 of them with an expected section first)
+  ✓ 43/43 answered from the right section
+           (36 of them with an expected section first)
   ✓  4/4  not documented: no confident answer
   ✓ 16/16 off-topic or instructions: refused
   · known limitation: "Does the app have a dark mode?" (now passes: it can become a 'closest' question)
 
-  61 of 61 passed.
+  63 of 63 passed.
 ```
 
-**What it means.** Every in-scope question was answered with a right section among the three shown (34 of the 41 with a right one first); every question about something undocumented was refused or marked *closest*; every off-topic question and instruction was refused. The known limitation is reported but doesn't count; §12 explains it, and why it passes for now.
+**What it means.** Every in-scope question was answered with a right section among the three shown (36 of the 43 with a right one first); every question about something undocumented was refused or marked *closest*; every off-topic question and instruction was refused. The known limitation is reported but doesn't count; §12 explains it, and why it passes for now.
 
 **Add a question of your own.** Open `tests/golden_questions.csv` and add a line at the end, for example:
 
@@ -395,7 +395,7 @@ The wording comes from the model, so it differs from computer to computer and fr
 - `(written answer: Couldn't reach the model at http://localhost:11434/v1. Is Ollama running? (ollama -v) The sections below still answer.)`: Ollama isn't running. Start it (open the app on Windows or macOS, `sudo systemctl start ollama` on Linux) and ask again. The search results are shown either way.
 - `(written answer: The model service answered with HTTP 404. ...)`: the model isn't downloaded under that name. `ollama list` shows what you have.
 - `(written answer: The model at http://localhost:11434/v1 took longer than 120 seconds to answer. ...)`: the computer is slow for this model (common on a VM without a graphics card). Try `llama3.2:1b` (step 2).
-- `(written answer: The model's answer didn't cite the sections correctly, so it isn't shown. ...)`: the model answered without citing the passages, and the rule kept the answer off the screen. A larger model follows the instruction more reliably.
+- `(written answer: The model's answer didn't cite the sections correctly, so it isn't shown. ...)`: the model answered without citing the passages, and the rule kept the answer off the screen. llama3.2:3b did this to every answer until the request spelled out how to cite, with an example sentence ([`docs/LANGUAGE_MODEL.md` §9](LANGUAGE_MODEL.md#9-how-a-written-answer-is-asked-for-and-checked)); if it happens often, update your copy (`git pull`) and run `python src/strainscope/service.py check-model`. A larger model follows the instruction more reliably.
 
 To switch written answers off again: `unset STRAINSCOPE_ASK_BACKEND` (PowerShell: `Remove-Item Env:STRAINSCOPE_ASK_BACKEND`), or remove the line from `.env`.
 
@@ -412,7 +412,7 @@ STRAINSCOPE_ASK_MODEL=the-model-name
 STRAINSCOPE_ASK_KEY=your-key
 ```
 
-Then ask as in §8 (and restart the app if it's running). **What leaves your computer:** the fixed rules, the question and up to three passages (each with its heading and file name, cut at 1,500 characters), in the body of the request; the key travels in the request's header, where the provider expects it. The data, your uploads and the rest of your files stay where they are. A test checks this against a stand-in server (§13).
+Then ask as in §8 (and restart the app if it's running). **What leaves your computer:** the fixed rules (with their worked example), the question and up to three passages (each with its heading and file name, cut at 1,500 characters), in the body of the request; the key travels in the request's header, where the provider expects it. The data, your uploads and the rest of your files stay where they are. A test checks this against a stand-in server (§13).
 
 Behind a company *proxy* (a go-between some networks route web traffic through), the hosted request uses the proxy your system is set up with, through the `HTTPS_PROXY` environment variable, as a browser would; if your company gives you a proxy address, set that variable to it.
 

@@ -33,12 +33,14 @@ How do I run the app on a RHEL 8 virtual machine?,answer,docs/07-app.md::virtual
 Why can't the SQL console change the database?,answer,docs/07-app.md::SQL console | docs/07-app.md::decisions | docs/GLOSSARY.md::Read-only
 What is the service layer?,answer,docs/07-app.md::kitchen | docs/GLOSSARY.md::Service layer | src/strainscope/service.py::
 What is session state in Streamlit?,answer,docs/07-app.md::How Streamlit runs a page | docs/GLOSSARY.md::Session state
-When will the app be online?,answer,docs/ROADMAP.md:: | docs/HANDBOOK.md::Stage 12 | docs/07-app.md::data flow | docs/00-architecture.md::Streamlit App | docs/08-deployment-ai.md::
+What is the address of the online copy?,answer,docs/GLOSSARY.md::App address | docs/HANDBOOK.md::Only want to use the app | docs/08-deployment-ai.md::
 What is an MCP server?,answer,docs/HANDBOOK.md::Stage 13 | docs/00-architecture.md::MCP | docs/GLOSSARY.md::MCP | docs/PRODUCT_ROADMAP.md::MCP
 Which function scores uploaded strains?,answer,src/strainscope/service.py::score_upload | src/strainscope/service.py::score_and_explain
 How does Ask StrainScope decide to refuse a question?,answer,docs/07b-docs-assistant.md::gate | docs/GLOSSARY.md::gate | docs/GLOSSARY.md::Out-of-scope refusal
 What is TF-IDF?,answer,docs/GLOSSARY.md::TF-IDF | docs/07b-docs-assistant.md::How a word search ranks
 How do I use a local model with Ollama?,answer,docs/07b-docs-assistant.md::Step 4 | docs/GLOSSARY.md::Ollama | docs/LANGUAGE_MODEL.md::Setup A | docs/HANDBOOK.md::Switching on a language model
+How do I switch on the language model?,answer,docs/LANGUAGE_MODEL.md:: | docs/HANDBOOK.md::Switching on a language model
+How do I check that my language model cites its sources?,answer,docs/HANDBOOK.md::Stage 12.1 | docs/LANGUAGE_MODEL.md::How a written answer | docs/LANGUAGE_MODEL.md::Setup A
 What is a hallucination?,answer,docs/GLOSSARY.md::Hallucination | docs/07b-docs-assistant.md::Written answers
 What is the capital of France?,refuse,
 Who won the football World Cup in 2022?,refuse,

@@ -83,8 +83,12 @@ def test_a_written_answer_cites_the_facts(model, G):
     model.reply = "Iturin works by lipopeptide membrane attack [3], which contributes to disease suppression [4]."
     a = Q.ask("How does iturin suppress disease?", G, cfg=stand_in(model))
     assert a.written == model.reply and a.written_by == "stand-in"
-    user = model.calls[0]["body"]["messages"][1]["content"]
+    messages = model.calls[0]["body"]["messages"]
+    user = messages[-1]["content"]
     assert user.startswith("Question: How does iturin suppress disease?") and "[1] " in user
+    assert "End every sentence with the numbers of the facts it uses" in messages[0]["content"]
+    assert messages[1]["content"].startswith("Question: What does the pump do?\n\nFacts:")
+    assert user.endswith("End every sentence with its fact numbers in square brackets, such as [3] or [3][4].")
 
 
 @pytest.mark.parametrize("reply, why", [

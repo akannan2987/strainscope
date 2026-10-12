@@ -39,8 +39,9 @@ write = False
 if cfg.on:
     write = None if st.toggle(f"Also write a short answer ({cfg.model})", value=True, key="graph_write",
                               help="A language model writes a few sentences from the numbered facts and must "
-                                   "cite them. It sees only those facts, which come from the domain model and "
-                                   "public references; questions about a strain never reach it.") else False
+                                   "cite them. It sees only the question, those facts (from the domain model and "
+                                   "public references) and StrainScope's fixed rules; questions about a strain never "
+                                   "reach it.") else False
 
 if not question.strip():
     st.markdown("**Try one of these:**")

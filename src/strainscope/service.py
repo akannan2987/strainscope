@@ -29,6 +29,8 @@ WHAT IT OFFERS
                            Phase 7: a question about the data (src/strainscope/ask_data.py),
                            a question about how things connect (src/strainscope/ask_graph.py)
                            and a strain's rank in plain words (src/strainscope/narrate.py)
+  check_model()            does the switched-on language model cite its sources? Four
+                           questions through the real assistants, each answer shown or not
   release_info()           which version this copy is (from CHANGELOG.md)
   PIPELINES, run_pipeline()
                            the scripts of Phases 1 to 5, run in order, with live output
@@ -38,6 +40,7 @@ THE COMMAND LINE (the manual path; the app is the automatic one)
     python src/strainscope/service.py status
     python src/strainscope/service.py template my_strains.csv
     python src/strainscope/service.py score my_strains.csv
+    python src/strainscope/service.py check-model      (only with a language model switched on)
 
 SQL SAFETY (the SQL console in the app runs through query_database)
 -------------------------------------------------------------------
@@ -903,6 +906,49 @@ def ask_graph(question: str, write: bool | None = False, G=None) -> dict:
     }
 
 
+# The questions check_model() asks: two for each assistant that writes an
+# answer from what it found. They are starter questions, so the search always
+# answers them and the model is always asked.
+MODEL_CHECK = (("Ask the graph", "How does iturin suppress disease?"),
+               ("Ask the graph", "What does pyrrolnitrin do?"),
+               ("Ask StrainScope", "What is a balanced error rate?"),
+               ("Ask StrainScope", "Why is the data simulated?"))
+
+
+def check_model(cfg=None, G=None, report=None) -> list[dict]:
+    """Does the switched-on language model follow the rules? Asks the four
+    questions of MODEL_CHECK through Ask the graph and Ask StrainScope, with
+    exactly the requests the app sends, and says for each whether the model
+    answered ("answered") and whether that answer would be shown ("shown": it
+    cites only what it was given and, for Ask the graph, adds no number), or
+    why not ("note"). That's four requests, which count towards a hosted
+    provider's limits. STRAINSCOPE_AI_DAILY_LIMIT counts from 0 in every
+    program that starts, so this check never uses up the app's allowance,
+    but a limit below 4 stops it partway. No model switched on: nothing is
+    sent and the result is []. `report`, if given, is called with each
+    result as soon as it's ready."""
+    from strainscope import ask as docs, ask_graph as graph_qa, llm
+    cfg = cfg or llm.settings()
+    if not cfg.on:
+        return []
+    G = G if G is not None else load_full_graph()
+    rows = []
+    for assistant, question in MODEL_CHECK:
+        start = time.time()
+        if assistant == "Ask the graph":
+            a = graph_qa.ask(question, G, write=True, cfg=cfg)
+        else:
+            a = docs.ask(question, write=True, settings=cfg)
+        row = {"assistant": assistant, "question": question,
+               "answered": a.written_by is not None,      # the model replied (shown or not)
+               "shown": a.written is not None, "written": a.written,
+               "note": a.note or a.message, "seconds": time.time() - start}
+        rows.append(row)
+        if report:
+            report(row)
+    return rows
+
+
 def explain_in_words(strain_id: str, artifacts_dir: Path = ARTIFACTS) -> dict:
     """One library strain's rank and reasons in plain words
     (src/strainscope/narrate.py), from the committed results only."""
@@ -1033,6 +1079,38 @@ def _score_file(path: Path, out: Path | None) -> None:
     print("  Reminder: the model was trained on SIMULATED data. Treat these scores as a demonstration.")
 
 
+def _print_model_check() -> None:
+    import textwrap
+    from strainscope import llm
+    cfg = llm.settings()
+    print("  ── StrainScope: does the language model cite its sources? ──────")
+    if not cfg.on:
+        print("  No language model is switched on (STRAINSCOPE_ASK_BACKEND is none or not set),")
+        print("  so there's nothing to check. docs/LANGUAGE_MODEL.md shows how to switch one on.")
+        return
+
+    def show(r: dict) -> None:
+        mark = "✓" if r["shown"] else ("✗" if r["answered"] else "·")
+        print(f"\n  {mark} {r['assistant']}: {r['question']}   ({r['seconds']:.0f} s)")
+        # a note's last sentence points at the passages or facts "below", which this list doesn't show
+        text = r["written"] if r["shown"] else " ".join(t for t in re.split(r"(?<=[.?)])\s+", r["note"] or "")
+                                                         if " below " not in t)
+        print(textwrap.fill(text, width=96, initial_indent="      ", subsequent_indent="      "))
+
+    print(f"  Model: {cfg.describe()}")
+    print("  Four questions, asked the way the app asks them. This can take a minute or two.")
+    rows = check_model(cfg, report=show)
+    shown, answered = sum(r["shown"] for r in rows), sum(r["answered"] for r in rows)
+    print(f"\n  {shown} of {len(rows)} written answers would be shown.")
+    if answered < len(rows):
+        print(f"  {len(rows) - answered} question(s) never reached the model; the line under each one says why.")
+    if answered > shown:
+        print("  A hidden answer does no harm: in the app, the passages or facts still answer the question.")
+        if (answered - shown) * 2 > answered:
+            print("  Most answers broke a rule. A larger model usually follows the rules better")
+            print("  (docs/LANGUAGE_MODEL.md, section 8).")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="StrainScope Phase 6: the service layer behind the app.")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -1043,9 +1121,12 @@ def main() -> None:
     s = sub.add_parser("score", help="check, score and explain your own strains (CSV)")
     s.add_argument("path", type=Path)
     s.add_argument("--out", type=Path, default=None, help="where to write the scores (default: NAME_scored.csv)")
+    sub.add_parser("check-model", help="ask the switched-on language model four questions: does it cite its sources?")
     args = parser.parse_args()
     if args.command == "status":
         _print_status()
+    elif args.command == "check-model":
+        _print_model_check()
     elif args.command == "template":
         table = example_upload() if args.example else upload_template()
         table.to_csv(args.path, index=False)

@@ -43,8 +43,9 @@ question = st.text_input("Your question", key="ask_question", placeholder="e.g. 
 write = None
 if settings.backend != "none":
     write = None if st.toggle(f"Also write a short answer ({settings.model})", value=True, key="ask_write",
-                              help="A language model writes a few sentences from the passages found, and "
-                                   "must cite them. Only the question and those passages are sent.") else False
+                              help="A language model writes a few sentences from the passages that match best, and "
+                                   "must cite them. Only the question, those passages and StrainScope's fixed rules "
+                                   "(with one made-up example of a cited answer) are sent.") else False
 
 if not question.strip():
     st.markdown("**Try one of these:**")

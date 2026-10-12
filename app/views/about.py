@@ -61,6 +61,8 @@ with st.expander("How to switch a language model on or off"):
         "and the provider's address, model name and key (`STRAINSCOPE_ASK_URL`, `STRAINSCOPE_ASK_MODEL`, "
         "`STRAINSCOPE_ASK_KEY`) in `.env`, or for an online copy in the host's Secrets box; then restart or "
         "reboot the app.\n"
+        "- **To check that it cites its sources:** `python src/strainscope/service.py check-model` asks it four "
+        "questions the way the app does and says how many written answers would be shown.\n"
         "- **To switch it off:** set `STRAINSCOPE_ASK_BACKEND=none` (or remove the lines) and restart.\n\n"
         f"Every step, with what you should see and what to do when something goes wrong: "
         f"{ui.doc('LANGUAGE_MODEL.md', 'docs/LANGUAGE_MODEL.md')}.")
@@ -73,6 +75,9 @@ with st.expander("What may leave this copy, and what never does"):
         "columns hold and three tested recipes as examples. **Never a row of data.**\n"
         "- **Ask the graph:** your question and the numbered facts, which come from the domain model, public "
         "references and the published findings of Phases 3 and 4. Questions about a strain never reach a model.\n\n"
+        "A request for a written answer (Ask StrainScope, Ask the graph) also carries StrainScope's fixed rules "
+        "for the model, with one made-up example of a cited answer (about a pump), so the model sees what a "
+        "citation looks like.\n\n"
         "Never sent: the database's rows, your uploaded strains (this copy keeps them in memory for your "
         "browser tab only and never writes them to disk) and usage statistics (switched off in "
         "`.streamlit/config.toml`). A hosted key goes only in each request's header, where the provider "

@@ -323,10 +323,11 @@ SYSTEM_PROMPT = (
 
 
 def build_messages(question: str, facts: list[Fact]) -> list[dict]:
-    """The request for the model: the rules, the question, the numbered facts."""
+    """The request for the model: the rules (with how to cite), one worked
+    example about a made-up pump, then the question, the numbered facts and a
+    reminder to cite them (llm.cited_messages explains why all three)."""
     listed = "\n".join(f"[{n}] {f.text}. (source: {f.source})" for n, f in enumerate(facts, start=1))
-    return [{"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": f"Question: {question}\n\nFacts:\n{listed}"}]
+    return llm.cited_messages(SYSTEM_PROMPT, f"Question: {question}\n\nFacts:\n{listed}", "facts", "fact", "Facts")
 
 
 def write_answer(question: str, facts: list[Fact], cfg: llm.Settings) -> tuple[str | None, str | None, str | None]:
