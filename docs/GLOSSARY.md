@@ -365,6 +365,26 @@ first appears. If a term is missing, that's a documentation bug worth fixing.
 - **Plain words (template text)**: a short paragraph written by rules from computed results, with no language model, so every number in it can be traced to a file (`src/strainscope/narrate.py`).
 - **Suggest a fix**: the link under every answer in the app that opens a new GitHub issue with the question filled in. Nothing is sent unless you press Submit on GitHub, and issues there are public.
 
+## Phase 7b: the MCP server (doc 08b)
+
+- **MCP (Model Context Protocol)**: an open standard through which AI assistant apps use other programs' tools in one agreed way, so a program written once works with every app that speaks it (one plug standard, many appliances).
+- **MCP server**: a program that offers tools through MCP. StrainScope's is `src/strainscope/mcp_server.py`, with nine read-only tools.
+- **Assistant app (host)** and **MCP client**: the app you chat with (Claude Desktop, Claude Code and many others) is the host; the part of it that starts servers and talks to them is the client.
+- **Claude Desktop** / **Claude Code**: two assistant apps that speak MCP: a desktop chat app for macOS and Windows, and an assistant that works in a terminal on macOS, Windows and Linux. Claude Desktop reads its servers from a settings file, `claude_desktop_config.json`; Claude Code adds them with `claude mcp add`.
+- **Tool (MCP)**: one function a server offers, with a name, a description in words and an input schema. The app's model reads the descriptions to decide which tool to call, with which inputs. `rank_strain(strain_id)` is one.
+- **Input schema**: the machine-readable list of a tool's inputs: their names, their kinds (text, whole number) and which ones may be left out. The MCP package builds it from the Python function's inputs (`n: int = 50` becomes "a whole number, 50 if not given").
+- **Tool annotations**: labels a server puts on each tool, such as *read-only* or *destructive*. Apps can use them to decide whether to ask you before a call. StrainScope marks all nine tools read-only and not destructive.
+- **Refusal (tool error)**: what a tool sends back instead of a result when an input isn't acceptable: one sentence saying why ("There's no STRAIN_0601 in the library ..."), marked as an error, so the app's model can correct itself.
+- **stdio (standard input, standard output, standard error)**: the three channels every terminal program has: one it reads from, one for its results and one for notes and errors (stdin, stdout, stderr). An app talks to a local MCP server through the first two, which is why a server must never `print` to stdout; StrainScope's notes go to stderr.
+- **Transport**: how MCP messages travel. **stdio** is for a server on the same computer, started by the app; **streamable HTTP** is for a server other people reach over the internet (a deferred item in the roadmap).
+- **JSON-RPC**: the small message format MCP uses: a JSON object that names a function and its inputs ("call `rank_strain` with `strain_id` STRAIN_0485"), and a JSON object that carries the result back.
+- **Handshake (protocol version)**: the first exchange between client and server, in which they agree which version of the protocol to speak (dated versions, such as `2025-11-25`) and the server introduces itself and its tools.
+- **Call log**: `data/processed/mcp_calls.log`, one JSON line per tool call (the time, the tool, its inputs, the outcome and how long it took), never the result. Git never commits it.
+- **UTC (`+00:00`)**: Coordinated Universal Time, the world's reference clock, which ignores time zones and summer time. The call log writes times in UTC, because an app starts the server without your time zone setting.
+- **MCP Inspector**: the MCP project's own web page for trying a server by hand: list its tools, fill in inputs, see the raw results. Optional; it runs with Node.js.
+- **Node.js** and **npx**: a program that runs JavaScript outside a browser, and its command for running a published tool without installing it first (`npx @modelcontextprotocol/inspector ...`). StrainScope needs neither, except for the optional Inspector.
+- **Absolute path**: a file's full address from the top of the computer (`/Users/<you>/projects/strainscope/.venv/bin/python`, or `C:\Users\<you>\...` on Windows), as opposed to a path relative to the folder you're in. Assistant apps need absolute paths, because they start the server from their own folder.
+
 ## The Handbook, releases and the planned phases (docs HANDBOOK, ROADMAP, PRODUCT_ROADMAP)
 
 - **Handbook**: [`docs/HANDBOOK.md`](HANDBOOK.md), the one living document that walks the whole journey from a blank laptop to the finished product and links every specialised guide. Read it first; it's updated in the same commit as every change. [`docs/interactive/journey.html`](interactive/journey.html) is the same journey as a clickable page, built from the Handbook.
@@ -373,7 +393,6 @@ first appears. If a term is missing, that's a documentation bug worth fixing.
 - **Tag (Git)**: a bookmark on one exact commit, named with a version number (`v0.1.0`), so anyone can return to that state. *Annotated* tags (`git tag -a`) also record who, when and why.
 - **Semantic versioning**: version numbers as `MAJOR.MINOR.PATCH`: MINOR for a new usable level, PATCH for fixes, MAJOR 1 for the first complete release.
 - **Changelog**: [`CHANGELOG.md`](../CHANGELOG.md), the human-readable list of what changed in each version.
-- **MCP (Model Context Protocol)** *(Phase 7b)*: an open standard that lets AI assistants call a program's tools in a uniform way (a USB port for AI assistants, more or less).
 - **Continuous integration (CI)** *(Phase 8)*: a service (here GitHub Actions) that runs the tests automatically on fresh Windows, macOS and Linux machines at every push.
 - **Container** *(Phase 8, optional)*: a sealed, portable box holding a program plus everything it needs to run (Python, R, packages), so it runs the same anywhere.
 

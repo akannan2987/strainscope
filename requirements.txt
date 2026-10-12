@@ -9,3 +9,4 @@ matplotlib
 faker
 pytest
 requests
+mcp>=2,<3

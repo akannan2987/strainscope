@@ -31,6 +31,10 @@ matter twice since Phase 7: the app's **Ask the data** page (and
 `python src/strainscope/ask_data.py "..."`) answers a question in words by
 finding the recipe whose question matches it, and runs that recipe
 ([`docs/08-deployment-ai.md` §6](08-deployment-ai.md#6-step-2-ask-the-data)).
+Since Phase 7b, an AI assistant app can do the same through the MCP server's
+`ask_data` tool, or write its own query with `query_database`, which accepts one
+`SELECT` and returns at most 200 rows
+([`docs/08b-mcp-server.md` §18](08b-mcp-server.md#18-same-task-two-ways-the-sql-console-and-asking-your-assistant-optional-10-min)).
 
 ---
 

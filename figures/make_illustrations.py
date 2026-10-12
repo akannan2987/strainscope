@@ -55,8 +55,8 @@ STAGES = [
     ("10", "The app", "Phase 6", "🖥️", "done"),
     ("11", "Ask StrainScope", "Phase 6b", "💬", "done"),
     ("12", "Deploy + AI layer", "Phase 7", "☁️", "done"),
-    ("13", "MCP server", "Phase 7b", "🔌", "next"),
-    ("14", "Release 1.0", "Phase 8", "🚀", "later"),
+    ("13", "MCP server", "Phase 7b", "🔌", "done"),
+    ("14", "Release 1.0", "Phase 8", "🚀", "next"),
     ("15", "The product", "beyond the repo", "🏭", "later"),
 ]
 STATUS_STYLE = {"done": (GREEN, "#E6F4EA", "built ✓"),

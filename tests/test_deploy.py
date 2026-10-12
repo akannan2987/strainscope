@@ -3,9 +3,10 @@ tests/test_deploy.py: what the online copy relies on (Phase 7).
 ===============================================================
 What they protect, in plain words:
   * the online copy's packing list (app/requirements.txt) has the same
-    packages as the project's own (requirements.txt, apart from pytest),
-    every one at an exact version, and scikit-learn at the version the
-    saved model was built with;
+    packages as the project's own (requirements.txt), apart from pytest and
+    mcp (the MCP server of Phase 7b runs on your own computer, never on the
+    online copy), every one at an exact version, and scikit-learn at the
+    version the saved model was built with;
   * the secrets template holds no secret and switches shared mode on;
   * a real secrets file can never be committed;
   * the GitHub Pages front page links only to files that exist;
@@ -25,19 +26,25 @@ from strainscope import service as sv  # noqa: E402
 
 
 def packages(path: Path) -> dict[str, str]:
-    """{name: version or ''} from a requirements file (comments skipped)."""
+    """{name: exact version or ''} from a requirements file (comments
+    skipped; a range such as mcp>=2,<3 counts as no exact version)."""
     out = {}
     for line in path.read_text(encoding="utf-8").splitlines():
         line = line.split("#")[0].strip()
         if line:
-            name, _, version = line.partition("==")
+            name = re.split(r"[<>=!~;\[ ]", line, maxsplit=1)[0]
+            _, _, version = line.partition("==")
             out[name.strip().lower()] = version.strip()
     return out
 
 
+NOT_ONLINE = {"pytest", "mcp"}      # the tests, and the MCP server of Phase 7b, run on your own computer only
+
+
 def test_the_online_copy_installs_the_same_packages_at_exact_versions():
     local, online = packages(ROOT / "requirements.txt"), packages(ROOT / "app" / "requirements.txt")
-    assert set(online) == set(local) - {"pytest"}
+    assert "mcp" in local and not NOT_ONLINE & set(online)
+    assert set(online) == set(local) - NOT_ONLINE
     assert all(re.fullmatch(r"\d+(\.\d+)+", v) for v in online.values()), online
 
 

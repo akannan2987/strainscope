@@ -4,7 +4,7 @@
 
 **Prerequisites:** Phase 6 complete (the app runs, [`docs/07-app.md`](07-app.md)). Nothing new to install: the search uses scikit-learn, which has been in the toolbox since the setup. The search itself works offline, without an account or a key. Only the optional written answers (§8 and §9) need more: a free program on your computer, or a key from a provider.
 **Learning goal:** after this phase you will understand how a search engine ranks passages by the words they share with a question (and why rare words count more); why a documentation assistant should refuse a question rather than guess; how a fixed set of test questions keeps an assistant in check as the documents change; what a language model adds on top of a search, what it must never be trusted with, and what leaves your computer when you switch one on.
-**Why this phase exists in a real workflow:** by now StrainScope has eleven step-by-step guides, a Handbook, a glossary of nearly 300 terms, two roadmaps and a query cookbook. A newcomer needs all of it, and it's more than anyone can scan. Their most common question is "where is that explained?". Ask StrainScope answers it with the exact passage and its link, from the terminal or from a page in the app, and says so when the documents don't cover something. The same engine becomes the `ask_docs` tool of the MCP server in Phase 7b.
+**Why this phase exists in a real workflow:** by now StrainScope has eleven step-by-step guides, a Handbook, a glossary of nearly 300 terms, two roadmaps and a query cookbook. A newcomer needs all of it, and it's more than anyone can scan. Their most common question is "where is that explained?". Ask StrainScope answers it with the exact passage and its link, from the terminal or from a page in the app, and says so when the documents don't cover something. The same engine is also the `ask_docs` tool of the MCP server, built in Phase 7b ([`docs/08b-mcp-server.md`](08b-mcp-server.md)).
 
 **Session plan** (about 2 to 3 hours in total, in two sittings):
 - **Session A (~1.5 h):** the ideas (§1 to 3), get the files (§4), ask from the terminal (§5) and in the app (§6), the golden questions (§7).
@@ -33,7 +33,7 @@ Ask StrainScope is a librarian first. Every answer is a passage quoted **word fo
 
    ![A word found everywhere tells you little](../figures/word_weights.png)
 
-   In StrainScope's documents, "data" appears in 529 of the 1,386 passages and gets a weight of 2.0; "winsorise" appears in 3 and gets 6.8. Common little words ("the", "is", "how") are dropped altogether; they're called **stop words**. Words are also reduced to the form the documents use, so "strains" finds "strain", "scoring" finds "score" and "ranked" finds "rank". A section's heading counts three times, because a heading says what its section is about.
+   In StrainScope's documents, "data" appears in 546 of the 1,484 passages and gets a weight of 2.0; "winsorise" appears in 3 and gets 6.9. Common little words ("the", "is", "how") are dropped altogether; they're called **stop words**. Words are also reduced to the form the documents use, so "strains" finds "strain", "scoring" finds "score" and "ranked" finds "rank". A section's heading counts three times, because a heading says what its section is about.
 3. **Compare.** The question gets word weights the same way, and each passage gets a **match** score from 0 (no words in common) to 1 (the same words in the same proportions). The measure is **cosine similarity**. Two shopping lists match well when they're mostly about the same things, however long each list is. The best passage of each section stands for that section, and the three best sections are shown.
 4. **Decide**, before anything is shown (next part).
 
@@ -102,7 +102,7 @@ flowchart LR
     HITS["answered: the 3 best passages,<br/>word for word, with links<br/>+ you might also ask"]
     LLM["optional: a language model<br/>local (Ollama) or hosted"]
     WRITE["a short answer<br/>citing [1] [2] [3]"]
-    OUT["the terminal: src/strainscope/ask.py<br/>the app: Ask StrainScope page<br/>service.ask_docs (Phase 7b)"]
+    OUT["the terminal: src/strainscope/ask.py<br/>the app: Ask StrainScope page<br/>service.ask_docs: the MCP server (Phase 7b)"]
 
     DOCS --> SPLIT
     CODE --> SPLIT
@@ -146,7 +146,7 @@ What runs where: everything on your own computer, unless you switch on a hosted 
 6. **A gate before anything is shown.** Four checks, in order (§1). The numbers live at the top of `src/strainscope/ask.py` and were chosen from the golden questions (§10 draws their scores).
 7. **The golden questions run with the tests.** A change that loses an answer fails `pytest`. A question the search is known to get wrong is kept in the set and marked as a known limitation, so it's visible rather than quietly dropped.
 8. **Written answers are optional, off by default, and fenced in.** Only answered questions, only the question and three passages, citations required, passages kept on screen. A model on your own computer is always reached directly, never through a *proxy* (a go-between some company networks use for web traffic); a hosted provider's key stays in `.env`.
-9. **One engine, three doors.** The terminal (`python src/strainscope/ask.py`), the app's *Ask StrainScope* page, and the service layer (`ask_docs` in `src/strainscope/service.py`), which the MCP server of Phase 7b will call. (An *MCP server* lets AI assistants use a program's tools through a standard connection; [Handbook Stage 13](HANDBOOK.md#stage-13-phase-7b-the-mcp-server).)
+9. **One engine, three doors.** The terminal (`python src/strainscope/ask.py`), the app's *Ask StrainScope* page, and the service layer (`ask_docs` in `src/strainscope/service.py`), which the MCP server of Phase 7b calls. (An *MCP server* lets AI assistant apps use a program's tools through a standard connection; [`docs/08b-mcp-server.md`](08b-mcp-server.md).)
 10. **Always up to date.** The index is rebuilt automatically when any document changes (it takes a second or two), so a new guide is searchable the moment it's saved.
 
 ### What we leave out on purpose, and why
@@ -236,7 +236,7 @@ python src/strainscope/ask.py "What is a balanced error rate?"
       docs/GLOSSARY.md#phase-3-multi-omics-integration-doc-04
       - **Balanced error rate (BER)**: the average of the error on each outcome group. Unlike plain accuracy it can't be gamed by always guessing the common group: that lazy strategy scores 0.50, exactly like a coin.
 
-  [2] The scoreboard   (match 0.27)
+  [2] The scoreboard   (match 0.26)
       docs/05-machine-learning.md#the-scoreboard
       (picture: The model scoreboard)
 
@@ -285,8 +285,8 @@ python src/strainscope/ask.py --stats
 **You should see** the typo corrected on the first line (`✓ Reading "calibraton" as "calibration". Best match: "Calibration" in docs/GLOSSARY.md.`), and then:
 
 ```
-  1002 sections from 54 files: 432 document sections, 322 glossary entries, 248 code docstrings.
-  3,985 different words. Written answers: off (search only; nothing leaves this computer).
+  1068 sections from 56 files: 464 document sections, 338 glossary entries, 266 code docstrings.
+  4,057 different words. Written answers: off (search only; nothing leaves this computer).
 ```
 
 **If instead:**
@@ -592,4 +592,4 @@ git switch develop
 - Add a glossary entry of your own to `docs/GLOSSARY.md`, in the same shape as the others (`- **My term**: what it means.`), ask "what is my term?", and watch it come back at once: the index rebuilds when a document changes. Then remove it again (or keep it, if it helps).
 - Add three golden questions about this guide itself, run the golden set, and keep the ones a newcomer would really ask.
 
-**Next:** **Phase 7, deployment and the AI layer** ([`docs/08-deployment-ai.md`](08-deployment-ai.md), [Handbook Stage 12](HANDBOOK.md#stage-12-phase-7-deployment-and-the-ai-layer)): the app online for anyone with a link, in shared mode; written answers with the key stored on the host; plain-language explanations of results; Ask the data, which turns a question into SQL behind the console's four guards (and a fifth); and Ask the graph (GraphRAG), answers built by walking the knowledge graph. After that, Phase 7b gives AI assistants the same tools through an MCP server, starting with `ask_docs`.
+**Next:** **Phase 7, deployment and the AI layer** ([`docs/08-deployment-ai.md`](08-deployment-ai.md), [Handbook Stage 12](HANDBOOK.md#stage-12-phase-7-deployment-and-the-ai-layer)): the app online for anyone with a link, in shared mode; written answers with the key stored on the host; plain-language explanations of results; Ask the data, which turns a question into SQL behind the console's four guards (and a fifth); and Ask the graph (GraphRAG), answers built by walking the knowledge graph. After that, Phase 7b ([`docs/08b-mcp-server.md`](08b-mcp-server.md)) gives AI assistant apps the same tools through an MCP server, `ask_docs` among them.

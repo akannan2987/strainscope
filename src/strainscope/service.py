@@ -6,7 +6,8 @@ WHAT THIS MODULE IS
 -------------------
 One set of plain Python functions that every way into StrainScope uses: the
 Streamlit app (app/streamlit_app.py), the assistants (Phases 6b and 7), and
-the MCP server later (Phase 7b). In the restaurant picture of docs/00-architecture.md, the scripts of
+the MCP server (src/strainscope/mcp_server.py, Phase 7b). In the restaurant
+picture of docs/00-architecture.md, the scripts of
 Phases 1 to 5 are the kitchen and the app is the dining room. This module is
 the pass, the counter where finished plates are checked before a waiter takes
 them out. Nothing here draws anything on a screen, so every function can be
@@ -857,7 +858,7 @@ def ask_docs(question: str, write: bool | None = False) -> dict:
     data: the verdict, a one-line message, and the matching passages with
     their links. The engine is src/strainscope/ask.py (the app's Ask StrainScope
     page and the terminal use it directly); this is the door the MCP server
-    of Phase 7b will use. `write=None` adds a written answer when one is set
+    of Phase 7b uses (src/strainscope/mcp_server.py). `write=None` adds a written answer when one is set
     up (STRAINSCOPE_ASK_BACKEND); the default, False, never contacts a model."""
     from strainscope import ask as docs
     a = docs.ask(question, write=write)

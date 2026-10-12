@@ -272,7 +272,7 @@ Now we create the project's skeleton and link it to the empty GitHub repo.
 4. Add a few starter files. **The three files below (`.gitignore`, `requirements.txt` and the placeholder `README.md`) come with this project as ready-made files. Save each one into the project root (the folder with `docs/` in it) instead of typing them out.** Saving the files avoids copy-paste mistakes that can scramble a multi-line file in some terminals.
 
    - **`.gitignore`**: the list of files Git should never save. Save the provided `.gitignore` into the project root.
-   - **`requirements.txt`**: the project's Python "shopping list". Save the provided `requirements.txt` into the project root. (If you're curious, it currently lists: `pandas`, `numpy`, `scikit-learn`, `duckdb`, `networkx`, `streamlit`, `plotly`, `matplotlib`, `faker`, `pytest`. We grow it each phase.)
+   - **`requirements.txt`**: the project's Python "shopping list". Save the provided `requirements.txt` into the project root. (If you're curious, it currently lists: `pandas`, `numpy`, `scikit-learn`, `duckdb`, `networkx`, `streamlit`, `plotly`, `matplotlib`, `faker`, `pytest`, `requests` and, since Phase 7b, `mcp>=2,<3` for the MCP server, where `>=2,<3` means any version 2 release. We grow it each phase.)
    - **`README.md`**: the project's front page. Save the provided full `README.md` into the project root. (There's no need for a placeholder; use the real one.)
 
    Then create the two placeholder files that keep the empty data folders visible to Git:

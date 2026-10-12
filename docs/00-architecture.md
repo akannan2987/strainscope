@@ -78,7 +78,8 @@ flowchart TD
         I["9-10 · AI layer<br/>plain words (rules) · Ask the data ·<br/>Ask the graph (GraphRAG)"]
         Q["11 · Ask StrainScope<br/>answers from the project's own docs,<br/>with links · refuses off-topic questions"]
     end
-    M["12 · MCP server (Phase 7b)<br/>read-only tools an AI assistant can call"]
+    M["12 · MCP server (Phase 7b, on your computer)<br/>9 read-only tools an AI assistant app can call"]
+    APPAI["an AI assistant app<br/>(Claude Desktop, Claude Code, ...)"]
     DOCS[/"docs/: the guides,<br/>Handbook, glossary, cookbook"/]
 
     A -->|writes 3 raw tables| B
@@ -97,7 +98,9 @@ flowchart TD
     I -.->|"optional model: names and facts only,<br/>never rows; key in the host's Secrets box"| LLM["a language model<br/>(local or hosted)"]
     DOCS --> Q
     Q --> H
-    M -.->|read-only tools| C
+    M -.->|read-only| C
+    M -.->|reads| G
+    APPAI <-->|"MCP over stdio"| M
 
     classDef laptop fill:#E8F0FE,stroke:#5B8DEF,color:#0B2545;
     classDef store fill:#FFF3CD,stroke:#C9A227,color:#4A3B00;
@@ -109,9 +112,9 @@ flowchart TD
     class C store
     class G artifact
     class H cloud
-    class I,Q ai
+    class I,Q,M ai
     class DOCS artifact
-    class M,LLM roadmap
+    class LLM,APPAI roadmap
     style LAPTOP fill:#F5F9FF,stroke:#B9D2FF,color:#0B2545
     style CLOUD fill:#F2FBF5,stroke:#B7E4C7,color:#0B3D2E
 ```
@@ -122,8 +125,8 @@ cleaner, which fills the database; the database feeds integration, machine
 learning and the graph; those write small artifact files; the artifacts are
 deployed into the public app; and the AI layer switches on only when an API
 key is present. Ask StrainScope reads the project's own documentation and answers
-inside the app; the MCP server, last, offers the same functions to AI
-assistants. The box-by-box tour below says the same thing in words.)*
+inside the app; the MCP server, last, offers the same functions to an AI
+assistant app on your own computer. The box-by-box tour below says the same thing in words.)*
 
 ### Box 1: Data Generator (Python) · *backend*
 **What it does:** creates our dataset from scratch, in code. It invents a realistic library of microbial strains and, for each one, three tables of measurements plus a performance score.
@@ -187,15 +190,16 @@ If an ontology is a "family tree for concepts" (the rules of what connects to wh
 **Why it exists:** the documentation is large by design, and a newcomer's most frequent question is "where is that explained?". It behaves like a librarian who lends only from this one library and tells you so when you ask for a book it doesn't have. Full design: [`docs/ROADMAP.md`](ROADMAP.md#ask-strainscope-the-documentation-assistant-in-detail).
 **✅ Built in Phase 6b:** [`docs/07b-docs-assistant.md`](07b-docs-assistant.md). A word-based search over every guide, glossary entry and docstring (`src/strainscope/ask.py`, no download needed), a gate of four checks before anything is shown, golden questions run with the tests, and optional written answers from a local or hosted model. It's a page in the app and a command in the terminal.
 
-### Box 12: MCP Server · *a door for AI assistants (Phase 7b)*
-**What it does:** exposes a few of the project's functions (search the docs, ask the data, ask the graph, run a read-only query, fetch the signature, rank a strain, explain a strain's rank) through the **Model Context Protocol**, a standard "USB port" that lets AI assistants call tools directly. Every call is validated and logged.
-**Why it exists:** besides being code that people read, your repo becomes a tool an AI assistant can use. It's built last because it reuses functions the app and Ask StrainScope already provide; all it adds is a new door into machinery that's already there.
+### Box 12: MCP Server · *a door for AI assistant apps (Phase 7b)*
+**What it does:** offers nine of the project's functions (search the docs, ask the data, ask the graph, list the database's tables, run one read-only query, fetch the signature, rank a strain, explain a strain's rank, and say what testing the best N would bring) through the **Model Context Protocol**, the shared standard through which AI assistant apps such as Claude Desktop or Claude Code use other programs' tools. The app starts the server on your computer and talks to it through its input and output, so no network port is opened. Every input is checked and every call is logged, without its result.
+**Why it exists:** many people ask an AI assistant first, and with this door it can answer from StrainScope's own results instead of guessing. It's built last because it reuses functions the app and the assistants already provide; all it adds is a new door into machinery that's already there, its checks and a log.
+**✅ Built in Phase 7b:** [`docs/08b-mcp-server.md`](08b-mcp-server.md) (`src/strainscope/mcp_server.py`, with the commands `tools`, `call`, `check` and `config`).
 
 ---
 
 ## 5. How data flows, start to finish (the one-paragraph story)
 
-You run the **generator** (Box 1), which writes three raw tables. You run **harmonise + QC** (Box 2), which turns them into clean, aligned tables. Those load into **DuckDB** (Box 3). From the database, the **integration** step (Box 4) finds the cross-layer signature and saves it as an artifact; the **ML models** (Box 5) train and save predictions and a trained model as artifacts (Box 6); the **knowledge graph** (Box 7) is built from the same clean data. You commit everything to GitHub. Streamlit Community Cloud notices the new commit and (re)builds your **app** (Box 8), which reads the small artifacts and serves them quickly to anyone on the internet. Around it, **Ask StrainScope** (Box 11) answers questions about the project from its own docs, **plain words** (Box 9) explain each result, **Ask the data** and **Ask the graph** (Box 10) answer questions about the data and the graph, an optional language model rewrites what they found, and the **MCP server** (Box 12) offers the same functions to AI assistants.
+You run the **generator** (Box 1), which writes three raw tables. You run **harmonise + QC** (Box 2), which turns them into clean, aligned tables. Those load into **DuckDB** (Box 3). From the database, the **integration** step (Box 4) finds the cross-layer signature and saves it as an artifact; the **ML models** (Box 5) train and save predictions and a trained model as artifacts (Box 6); the **knowledge graph** (Box 7) is built from the same clean data. You commit everything to GitHub. Streamlit Community Cloud notices the new commit and (re)builds your **app** (Box 8), which reads the small artifacts and serves them quickly to anyone on the internet. Around it, **Ask StrainScope** (Box 11) answers questions about the project from its own docs, **plain words** (Box 9) explain each result, **Ask the data** and **Ask the graph** (Box 10) answer questions about the data and the graph, an optional language model rewrites what they found, and the **MCP server** (Box 12) offers the same functions to an AI assistant app on your computer.
 
 And that's the whole system: a dozen boxes in one straight line with a couple of branches, and nothing hidden anywhere.
 
@@ -262,8 +266,8 @@ Every box in the diagram is built and explained by one numbered document in `doc
 | 6 | [`docs/07-app.md`](07-app.md) | Box 8: the Streamlit app on your computer, on a service layer (`src/strainscope/service.py`) | ✅ |
 | 6b | [`docs/07b-docs-assistant.md`](07b-docs-assistant.md) | Box 11: Ask StrainScope, the documentation assistant (`src/strainscope/ask.py`) | ✅ |
 | 7 | [`docs/08-deployment-ai.md`](08-deployment-ai.md) | Box 8 online + Boxes 9-10: the online copy (shared mode, pinned versions, secrets on the host), plain words, Ask the data, Ask the graph | ✅ |
-| 7b | `docs/08b-mcp-server.md` | Box 12: the MCP server | ⏳ next |
-| 8 | `docs/09-packaging.md` | the whole picture: one-command pipeline, cross-platform CI, LICENSE, CHANGELOG, the 1.0 tag | ⏳ |
+| 7b | [`docs/08b-mcp-server.md`](08b-mcp-server.md) | Box 12: the MCP server, nine read-only tools for AI assistant apps (`src/strainscope/mcp_server.py`) | ✅ |
+| 8 | `docs/09-packaging.md` | the whole picture: one-command pipeline, cross-platform CI, LICENSE, CHANGELOG, the 1.0 tag | ⏳ next |
 
 Guides without links arrive with their phase. The order, the reasons for it and the deferred items (with the event that would schedule each) are in [`docs/ROADMAP.md`](ROADMAP.md); what an industrial version would add is in [`docs/PRODUCT_ROADMAP.md`](PRODUCT_ROADMAP.md).
 

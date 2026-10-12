@@ -30,7 +30,7 @@ That gives the app its first rule: **it reads, and it doesn't recompute the anal
 
 StrainScope's pass is `src/strainscope/service.py`, the **service layer**: a small set of plain Python functions that answer the questions every front door asks. Is the database there? Give me the ranking. Run this SQL safely. Check this uploaded file. Explain this strain. The app (`app/`) only calls the service layer, and the service layer uses the code of Phases 1 to 5. Two things follow from that:
 
-- the same answers can be reached from a terminal (`python src/strainscope/service.py ...`), from the app, and later from the MCP server (Phase 7b), without writing them twice (Ask StrainScope, Phase 6b, adds its own `ask_docs` to it);
+- the same answers can be reached from a terminal (`python src/strainscope/service.py ...`), from the app, and, since Phase 7b, from the MCP server ([`docs/08b-mcp-server.md`](08b-mcp-server.md)), without writing them twice (Ask StrainScope, Phase 6b, adds its own `ask_docs` to it);
 - the service layer has no buttons or charts in it, so it can be tested on its own (§13).
 
 ### How Streamlit runs a page
@@ -117,7 +117,7 @@ What runs where: everything on your own computer. The app is a small web server 
 ## 3. The decisions in English, before any code
 
 1. **The app reads; it doesn't recompute.** Pages read `artifacts/` and the database. The heavy steps stay on the command line, where their output is easy to follow.
-2. **One service layer for every front door.** Each question the app asks goes through `src/strainscope/service.py`, which the terminal shares and the MCP server will. The app files hold only layout and wording.
+2. **One service layer for every front door.** Each question the app asks goes through `src/strainscope/service.py`, which the terminal shares, and since Phase 7b the MCP server too. The app files hold only layout and wording.
 3. **Every click is cheap.** Files and the graph are cached, labelled with the file's last-changed time, so a rebuilt file is picked up by itself and nothing stale is shown.
 4. **SQL behind four guards.** The console opens the database read-only, with file access switched off and that setting locked, stops any query after 10 seconds and returns at most 10,000 rows. The terminal console (`src/strainscope/sql.py`) now opens the database the same way, so it gets the first two guards too; in a terminal you stop a long query yourself with Ctrl+C, and every row is printed.
 

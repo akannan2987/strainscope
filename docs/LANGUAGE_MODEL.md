@@ -249,8 +249,8 @@ So Ask StrainScope now gives the model the best passage and, of the next two, on
 
 | Question | Matches of the three passages shown | Given to the model |
 |---|---|---|
-| "What is a balanced error rate?" | 0.47, 0.27, 0.20 | [1] only |
-| "Why is the data simulated?" | 0.17, 0.16, 0.15 | all three |
+| "What is a balanced error rate?" | 0.47, 0.26, 0.20 | [1] only |
+| "Why is the data simulated?" | 0.17, 0.16, 0.16 | all three |
 
 Of the 43 starter and golden questions the search answers, 21 now send one passage and 22 send two or three. (Three quarters of the best *match* is a different rule from the gate's 75 % of the question's *words*, described in [Phase 6b §1](07b-docs-assistant.md#the-gate-answered-closest-or-refused); they just happen to use the same share.)
 
@@ -264,4 +264,4 @@ It asks the four questions of the test above through the real assistants, so the
 
 ## 10. What's planned
 
-A model already serves all three assistants; what's left is in the [roadmap](ROADMAP.md#deferred-items-and-their-triggers), each item with the event that would bring it forward: a model on the public online copy (setup C, whenever its owner chooses), follow-up questions in a conversation, model-written wording for the plain-language explanations (only with a model on the same computer), a model that summarises the rows a query returns (the same condition), and a button on *About this copy* that runs the model check of §9, for the owner of an online copy, who can't run a terminal command there. [Phase 7b](HANDBOOK.md#stage-13-phase-7b-the-mcp-server) turns things around: instead of StrainScope asking a model, an AI assistant you already use will be able to call StrainScope's tools through an MCP server.
+A model already serves all three assistants; what's left is in the [roadmap](ROADMAP.md#deferred-items-and-their-triggers), each item with the event that would bring it forward: a model on the public online copy (setup C, whenever its owner chooses), follow-up questions in a conversation, model-written wording for the plain-language explanations (only with a model on the same computer), a model that summarises the rows a query returns (the same condition), and a button on *About this copy* that runs the model check of §9, for the owner of an online copy, who can't run a terminal command there. [Phase 7b](08b-mcp-server.md) turned things around: instead of StrainScope asking a model, an AI assistant app you already use (Claude Desktop, Claude Code and others) calls StrainScope's tools through its MCP server. That needs none of the settings in this document, because the app brings its own model; what the app's model then sees is listed in [`docs/08b-mcp-server.md` §1](08b-mcp-server.md#what-the-assistant-sees).

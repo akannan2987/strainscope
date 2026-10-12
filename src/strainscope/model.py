@@ -274,7 +274,7 @@ def make_model(key: str, gene_cols, metab_cols, params: dict | None = None):
     # a script, Python calls it `__main__`; a model saved with that name could
     # only be loaded by this very script. Under its package name,
     # `strainscope.model`, the saved model loads anywhere the project's `src/`
-    # folder is importable (the app, the MCP server, the tests).
+    # folder is importable (the app, the tests).
     from strainscope.model import KingdomPrep as PackagedPrep
 
     params = params or {}
@@ -944,7 +944,7 @@ def final(db_path: Path = DB_PATH, artifacts_dir: Path = ARTIFACTS, verbose: boo
 
 
 def load_model(model_path: Path = MODEL_FILE, card_path: Path = CARD_FILE):
-    """Load the saved model and its card (used by the app and the MCP server).
+    """Load the saved model and its card (used by the app to score uploads).
 
     The model contains the project's own preparation step, so the folder `src/`
     must be importable (every StrainScope script arranges that at its top).

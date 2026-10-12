@@ -28,7 +28,7 @@ In kitchen terms, this repository is a well-equipped home kitchen that cooks one
 | **Data scientist** in a biologicals research team | genomic, chemical and trial data in separate spreadsheets and formats | one cleaned, queryable database; integration and models that are reproducible and graded |
 | **Research lead** | which strain families to invest in next year | an overview across kingdoms, with the evidence behind every recommendation as well as the score |
 | **Regulatory and documentation specialist** | dossiers need to say *why* a strain works (its mode of action) | the knowledge graph's sourced paths: strain → gene → compound → pathway → effect |
-| **An AI assistant** working for any of them | needs safe, structured access to the data | the MCP server: read-only tools with validation and a log |
+| **An AI assistant** working for any of them | needs safe, structured access to the data | the MCP server (Phase 7b): nine read-only tools, with every input checked and every call logged |
 
 ## The finished product in one picture
 
@@ -93,8 +93,8 @@ Everything inside the "StrainScope core" box is this repository (solid boxes are
 **What it is.** A question box over the project's own documentation that answers with passages and links, optionally writes a short grounded answer, and refuses questions that are not about StrainScope. Full design in [`docs/ROADMAP.md`](ROADMAP.md#ask-strainscope-the-documentation-assistant-in-detail).
 **Required?** Yes. The question a reader starting from zero asks most often is "where is X explained?", and the documentation grows with every phase.
 **Constraints.** Every answer cites its sources; out-of-scope questions are refused *before* any language model runs; a golden question set runs with the tests; the language-model backend (local Ollama or a hosted provider) is optional and switched on by environment variable; only documentation text is ever sent.
-**Verdict: Required now.** Level 1 (find and quote) and the optional level 2 (grounded answers) are built in Phase 6b ([`docs/07b-docs-assistant.md`](07b-docs-assistant.md)); level 3 is built in the online copy of Phase 7 ([`docs/08-deployment-ai.md`](08-deployment-ai.md)), and the `ask_docs` MCP tool comes in Phase 7b. Switching a model on or off, at home or online: [`docs/LANGUAGE_MODEL.md`](LANGUAGE_MODEL.md). **Trigger for embedding-based search:** questions phrased differently from the documents start being missed (the golden set already records one such question as a known limitation).
-*Prepared today by:* `ask_docs()` in the service layer, which returns an answer as plain data, ready to become the MCP tool and an API endpoint; the golden question set, which will measure any better search against the current one.
+**Verdict: Required now.** Level 1 (find and quote) and the optional level 2 (grounded answers) are built in Phase 6b ([`docs/07b-docs-assistant.md`](07b-docs-assistant.md)); level 3 is built in the online copy of Phase 7 ([`docs/08-deployment-ai.md`](08-deployment-ai.md)) and in the `ask_docs` tool of the MCP server, Phase 7b ([`docs/08b-mcp-server.md`](08b-mcp-server.md)). Switching a model on or off, at home or online: [`docs/LANGUAGE_MODEL.md`](LANGUAGE_MODEL.md). **Trigger for embedding-based search:** questions phrased differently from the documents start being missed (the golden set already records one such question as a known limitation).
+*Prepared today by:* `ask_docs()` in the service layer, which returns an answer as plain data, already the MCP tool's answer and ready to become an API endpoint; the golden question set, which will measure any better search against the current one.
 
 ### A5. Desktop or mobile apps, app-store distribution
 
@@ -167,8 +167,8 @@ Everything inside the "StrainScope core" box is this repository (solid boxes are
 
 ### C4. MCP server: StrainScope as a tool for AI assistants
 
-**What it is.** A Model Context Protocol server: a standard "USB port" through which an assistant can call `ask_docs`, `ask_data`, `ask_graph`, `query_database`, `get_signature`, `rank_strain` and `explain_strain`. Every tool is read-only, and every call is validated and logged.
-**Verdict: Required now (Phase 7b).**
+**What it is.** A Model Context Protocol server: a standard socket through which an assistant app can call `ask_docs`, `ask_data`, `ask_graph`, `describe_database`, `query_database`, `get_signature`, `rank_strain`, `explain_strain` and `shortlist`. Every tool is read-only, and every call is checked and logged.
+**Verdict: Required now; built in Phase 7b** as `src/strainscope/mcp_server.py` ([`docs/08b-mcp-server.md`](08b-mcp-server.md)). It runs on the user's own computer, started by their assistant app over stdio; each tool is a thin door onto the service layer, so the answers match the app's; SQL passes five guards and returns at most 200 rows; refusals come back as sentences; the call log keeps no results; 40 tests include a real MCP session over stdio. **Trigger for a server other people reach over the internet** (the protocol's "streamable HTTP" transport): people want the tools without installing anything; it needs sign-in, rate limits and a host that keeps connections open, so it comes with A1/A2.
 
 ### C5. Ontologies and a graph database
 
@@ -184,7 +184,7 @@ Everything inside the "StrainScope core" box is this repository (solid boxes are
 ### C7. Autonomous analysis agent
 
 **What it is.** A language model that plans multi-step analyses and calls StrainScope's tools in a loop.
-**Verdict: Recommended later.** **Trigger:** the MCP server (C4) is stable and its tools are well tested, because an agent is only as safe as the tools it may call.
+**Verdict: Recommended later.** **Trigger:** the MCP server (C4, built in Phase 7b) has been used for a while without changes to its tools, because an agent is only as safe as the tools it may call, and a question comes up that assistant apps can't plan by chaining the tools themselves.
 
 ---
 
@@ -252,8 +252,8 @@ For orientation only; there is no product to sell.
 | **Integrate** | genes and chemistry read together; graded signatures | DIABLO + Python twin; controls; stability; R↔Python contract | Phase 3 ✅ |
 | **Predict** | calibrated predictions with uncertainty | four models on the same folds; leak-proof pipeline; calibrated elastic net; model card; out-of-fold ranking | Phase 4 ✅ |
 | **Explain** | knowledge graph, explanations, GraphRAG | the knowledge graph (ontology, sourced edges, real KEGG/RefMet/BacDive context, Phase 3 and 4 evidence); hubs, communities, knowledge vs data; an explanation for every strain; `why` / `path` / `show` questions; plain-language explanations by rules; GraphRAG (Ask the graph) | Phases 5 and 7 ✅; C5 later |
-| **Serve** | app, docs assistant, data assistant, MCP server | the Streamlit app on a tested service layer: ranking with likely / borderline / unlikely bands, strain pages, the graph, integration, uploads, a guarded SQL console; Ask StrainScope, Ask the data and Ask the graph, each answering on its own and refusing what it can't answer, with an optional model; runs on Windows, macOS and RHEL 8, and online on Streamlit Community Cloud | Phases 6, 6b and 7 ✅; 7b; A1/A2 later |
-| **Operate** | one-command pipeline, CI, releases; later scheduling and monitoring | tests (369, the app's and three golden question sets included), a tested safety gate, a test that every link between the documents resolves, three-branch workflow, tagged releases (v0.1.0, v0.1.1, v0.2.0, v0.3.0); a health check (`service.py status`, the app's Home page, *About this copy*); the database rebuilt from one button, and by itself on a shared copy's first start; the online copy redeployed on every push, with pinned versions | Phase 8; B5, D4, D7 later |
+| **Serve** | app, docs assistant, data assistant, MCP server | the Streamlit app on a tested service layer: ranking with likely / borderline / unlikely bands, strain pages, the graph, integration, uploads, a guarded SQL console; Ask StrainScope, Ask the data and Ask the graph, each answering on its own and refusing what it can't answer, with an optional model; runs on Windows, macOS and RHEL 8, and online on Streamlit Community Cloud; the MCP server, nine read-only tools for AI assistant apps on the user's own computer | Phases 6, 6b, 7 and 7b ✅; A1/A2 later |
+| **Operate** | one-command pipeline, CI, releases; later scheduling and monitoring | tests (409, the app's, three golden question sets and a real MCP session included), a tested safety gate, a test that every link between the documents resolves, three-branch workflow, tagged releases (v0.1.0, v0.1.1, v0.2.0, v0.3.0); a health check (`service.py status`, the app's Home page, *About this copy*); the database rebuilt from one button, and by itself on a shared copy's first start; the online copy redeployed on every push, with pinned versions | Phase 8; B5, D4, D7 later |
 
 ## Sequencing summary
 

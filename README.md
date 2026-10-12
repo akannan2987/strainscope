@@ -2,7 +2,7 @@
 
 ![StrainScope: multi-omics · machine learning · beneficial microbes](docs/img/strainscope_logo.svg)
 
-**Live app:** [strainscope.streamlit.app](https://strainscope.streamlit.app), online with nothing to install, or on your own computer ([how](#the-app)) · **Interactive figures:** [akannan2987.github.io/strainscope](https://akannan2987.github.io/strainscope/) · **Version:** v0.3.0, usable by anyone, plus Phase 7: the online copy, plain-language explanations, Ask the data and Ask the graph (tagged with v1.0.0 after Phase 8)
+**Live app:** [strainscope.streamlit.app](https://strainscope.streamlit.app), online with nothing to install, or on your own computer ([how](#the-app)) · **Interactive figures:** [akannan2987.github.io/strainscope](https://akannan2987.github.io/strainscope/) · **Version:** v0.3.0, usable by anyone, plus Phases 7 and 7b: the online copy, plain-language explanations, Ask the data, Ask the graph and the MCP server (tagged with v1.0.0 after Phase 8)
 · ![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
 ![R](https://img.shields.io/badge/R-4.x-276DC3?logo=r)
 ![Streamlit](https://img.shields.io/badge/Streamlit-app-FF4B4B?logo=streamlit&logoColor=white)
@@ -38,6 +38,7 @@ public, with every step explained.
 - [The app](#the-app): rank strains, see why, score your own, ask the database (runs on your computer)
 - [Ask StrainScope](#ask-strainscope): questions about the project, answered from its own documents with links
 - [Ask the data, Ask the graph, and plain words](#ask-the-data-ask-the-graph-and-plain-words): questions about the data and how things connect, and every result in plain language
+- [The MCP server](#the-mcp-server): ask your own AI assistant app about StrainScope, through nine read-only tools
 - [The data at a glance](#the-data-at-a-glance)
 - [Results, phase by phase](#results-phase-by-phase) (fills in as each phase is finished)
 - [Build log](#build-log): every phase, linked to its guide, with its status
@@ -137,6 +138,7 @@ flowchart TD
         E["Machine learning (Python)<br/>predict performance · careful evaluation"]
         F["Knowledge graph (NetworkX)<br/>strain → gene → compound →<br/>mode of action → outcome"]
         G[/"artifacts/<br/>predictions · importances · signature ·<br/>trained model · knowledge graph"/]
+        M["MCP server (Python)<br/>9 read-only tools for<br/>AI assistant apps"]
     end
     subgraph CLOUD["The cloud: a free, public app (shared mode)"]
         H["Streamlit app<br/>explore · rank · SQL console · graph"]
@@ -144,7 +146,7 @@ flowchart TD
         Q["Ask StrainScope<br/>answers from the project's docs,<br/>with links · refuses off-topic"]
     end
     L["a language model (optional)<br/>sees names, facts and passages;<br/>never rows"]
-    M["MCP server<br/>read-only tools for AI assistants"]
+    N["an AI assistant app (optional)<br/>Claude Desktop, Claude Code, ...<br/>sees what the tools return"]
     A -->|"writes 3 raw tables (messy on purpose)"| B
     B -->|clean, aligned tables| C
     C -->|multi-omics integration| D
@@ -161,6 +163,8 @@ flowchart TD
     Q -.-> L
     Q --> H
     M -.->|read-only| C
+    M -.->|reads| G
+    N <-->|"MCP over stdio,<br/>on your computer"| M
 
     classDef laptop fill:#E8F0FE,stroke:#5B8DEF,color:#0B2545;
     classDef store fill:#FFF3CD,stroke:#C9A227,color:#4A3B00;
@@ -172,8 +176,8 @@ flowchart TD
     class C store
     class G artifact
     class H cloud
-    class I,Q ai
-    class M,L roadmap
+    class I,Q,M ai
+    class L,N roadmap
     style LAPTOP fill:#F5F9FF,stroke:#B9D2FF,color:#0B2545
     style CLOUD fill:#F2FBF5,stroke:#B7E4C7,color:#0B3D2E
 ```
@@ -183,7 +187,9 @@ queryable database. Then integrate the layers and train models on your laptop,
 saving small result files, and build a relationship graph from the same data.
 Finally, serve everything in a public app, with three assistants (about the
 project, the data and the graph) that answer on their own and can use an
-optional language model only to rewrite what they found. The heavy work happens once, offline.
+optional language model only to rewrite what they found. On your own computer,
+an MCP server offers the same results to an AI assistant app through nine
+read-only tools. The heavy work happens once, offline.
 The app only reads the small results, and that's what keeps the public
 deployment fast and free.
 
@@ -279,6 +285,35 @@ Both assistants are pages in the app with their own golden questions, run with
 the tests, and the optional model of Ask StrainScope (local or hosted) serves
 them too. The plain words appear on the Strain and Ranking pages.
 
+## The MCP server
+
+![One question in an assistant app, two StrainScope tools, and the reply](figures/mcp_conversation.png)
+
+Many people now ask an AI assistant first. The MCP server lets an assistant app
+on your computer (Claude Desktop, Claude Code, or any other app that speaks the
+[Model Context Protocol](https://modelcontextprotocol.io)) use StrainScope's
+results directly: ask it "why does STRAIN_0485 rank first?" and it calls
+`rank_strain` and `explain_strain` and writes its reply from what they return
+(Phase 7b, [`docs/08b-mcp-server.md`](docs/08b-mcp-server.md)).
+
+```bash
+python src/strainscope/mcp_server.py tools                                  # the nine tools and their inputs
+python src/strainscope/mcp_server.py call rank_strain strain_id=STRAIN_0485 # one tool, here, as JSON
+python src/strainscope/mcp_server.py check                                  # talk to it the way an app does
+python src/strainscope/mcp_server.py config                                 # the settings for your app
+```
+
+- **Nine tools, all read-only:** the three assistants (`ask_docs`, `ask_data`,
+  `ask_graph`), the database (`describe_database`, and `query_database` for one
+  `SELECT` behind five guards, at most 200 rows), the DIABLO signature, a
+  strain's rank and its explanation, and what testing the best N would bring.
+- **Checked and logged:** a bad strain id, an over-long question or anything but
+  one `SELECT` is refused with a sentence the assistant can act on, and every
+  call adds a line to `data/processed/mcp_calls.log` (never the result).
+- **Local:** the app starts the server and talks to it through its input and
+  output; no network port is opened. What a tool returns goes to the app and
+  its model, and the data is simulated.
+
 ## The data at a glance
 
 *StrainScope's dataset is **simulated**. It's created by the generator in
@@ -343,7 +378,7 @@ means, matching the build log below. Nothing is shown before it exists.*
   ![A strain's page: the reasons behind its rank, and its corner of the knowledge graph](docs/img/app_strain.png)
 
   An uploaded copy of a library strain gets exactly the explanation of the original (a test checks every strain of a hand-made project), and a slightly different score, because the ranking uses out-of-fold predictions while an upload is scored by the final model. Run it with `python -m streamlit run app/streamlit_app.py`; the guide is [`docs/07-app.md`](docs/07-app.md).
-- **Phase 6b (Ask StrainScope):** ✅ a documentation assistant that searches every guide, glossary entry and docstring (1002 sections) and answers with the matching passages, word for word, with links. Before anything is shown, a gate of four checks decides between *answered*, *closest* and *refused*, and 64 golden questions keep it in check: every in-scope one is answered from a right section, every off-topic question and instruction is refused, and one known limitation is reported rather than hidden. No single score threshold separates the two groups; the extra checks do:
+- **Phase 6b (Ask StrainScope):** ✅ a documentation assistant that searches every guide, glossary entry and docstring (1068 sections) and answers with the matching passages, word for word, with links. Before anything is shown, a gate of four checks decides between *answered*, *closest* and *refused*, and 64 golden questions keep it in check: every in-scope one is answered from a right section, every off-topic question and instruction is refused, and one known limitation is reported rather than hidden. No single score threshold separates the two groups; the extra checks do:
 
   ![The golden questions: how well each one matched](figures/golden_scores.png)
 
@@ -356,7 +391,11 @@ means, matching the build log below. Nothing is shown before it exists.*
 - **Fix after Phase 7 (Handbook Stage 12.1):** ✅ switching on a small language model (llama3.2:3b with Ollama, on an Intel Mac) showed that it wrote correct answers without citing anything, so the citation check hid every one. The request now shows the model what a citation looks like (a rule with an example sentence, one worked example, a reminder at the end): with the same four questions, 0 of 4 answers were shown before and 4 of 4 after. `python src/strainscope/service.py check-model` runs the same check on any model. Ask StrainScope also gives the model only the strong matches, after a weak third match steered one written answer off the question, and it no longer suggests a bare *Steps* heading. The test is described in [`docs/LANGUAGE_MODEL.md` §9](docs/LANGUAGE_MODEL.md#9-how-a-written-answer-is-asked-for-and-checked).
 
   ![What a model is sent, the checks, and the test that chose the request](figures/written_answer_check.png)
-- **Phase 7b (MCP server):** *(planned)* an AI assistant using StrainScope's tools.
+- **Phase 7b (the MCP server):** ✅ nine read-only tools through which AI assistant apps such as Claude Desktop or Claude Code answer from StrainScope's own results: the three assistants, the database (one `SELECT` behind five guards, at most 200 rows), the DIABLO signature, a strain's rank and explanation, and the shortlist. Each tool is a thin door onto the service layer the app uses, so an assistant gets the same numbers as the app (46.2 strains expected among the best 50, for one); bad input is refused with a sentence the assistant can act on, and every call is logged without its result. `python src/strainscope/mcp_server.py check` talks to the server over stdio the way an app does:
+
+  ![Nine read-only tools, what each reads, and what it checks](figures/mcp_tools.png)
+
+  Explore the tools, their input schemas and real calls in `docs/interactive/mcp_explorer.html`; the guide is [`docs/08b-mcp-server.md`](docs/08b-mcp-server.md).
 - **Phase 8 (release 1.0):** *(planned)* the one-command pipeline and tests passing
   on Windows, macOS and Linux at every push.
 
@@ -381,8 +420,8 @@ means, matching the build log below. Nothing is shown before it exists.*
 | 6b | [Ask StrainScope: answers from the project's own documents, a gate, golden questions](docs/07b-docs-assistant.md) | ✅ **v0.3.0** |
 | 7 | [Deployment and the AI layer: the online copy, plain words, Ask the data, Ask the graph](docs/08-deployment-ai.md) | ✅ |
 | 7.1 | [Fix: small language models cite their sources, the model check, clearer suggestions](docs/HANDBOOK.md#stage-121-fix-for-small-language-models-the-model-check-and-clearer-suggestions) | ✅ |
-| 7b | The MCP server (`docs/08b-mcp-server.md`) | ⏳ next |
-| 8 | Packaging & release 1.0 (`docs/09-packaging.md`) | ⬜ planned (**v1.0.0**) |
+| 7b | [The MCP server: nine read-only tools for AI assistant apps](docs/08b-mcp-server.md) | ✅ |
+| 8 | Packaging & release 1.0 (`docs/09-packaging.md`) | ⏳ next (**v1.0.0**) |
 
 *Legend: ✅ done · 🔨 living / in progress · ⏳ next · ⬜ planned. Guides appear as their phase is built.*
 
@@ -410,7 +449,7 @@ Read them in this order:
 | 07b | [Ask StrainScope](docs/07b-docs-assistant.md) | How a word search ranks passages (TF-IDF, cosine similarity); refusing instead of guessing; golden question sets as tests for answers; retrieval-augmented generation, hallucinations and prompt injection; an optional local (Ollama) or hosted language model, and what leaves your computer |
 | 08 | [Deployment and the AI layer](docs/08-deployment-ai.md) | Deploying on Streamlit Community Cloud: shared mode, pinned versions, secrets on a host, a first-start build; text-to-SQL with tested recipes first and five guards; GraphRAG as numbered, sourced facts; explanations written by rules; what a language model may and may not see |
 | n/a | [Switching on a language model](docs/LANGUAGE_MODEL.md) | Optional written answers for the three assistants: Ollama on your computer, a hosted provider at home or for the online copy, switching off, and what to do when something goes wrong |
-| 08b | `docs/08b-mcp-server.md` | The Model Context Protocol; exposing read-only tools to AI assistants safely |
+| 08b | [The MCP server](docs/08b-mcp-server.md) | The Model Context Protocol: servers, clients and tools; stdio and why standard output belongs to the protocol; input schemas and tool annotations; read-only tools with checked input, refusals as sentences and a call log; connecting Claude Desktop, Claude Code or another app on Windows, macOS and RHEL 8; what an assistant sees |
 | 09 | `docs/09-packaging.md` | The one-command pipeline, continuous integration on three operating systems, LICENSE, CHANGELOG, uninstall, the 1.0 tag |
 | n/a | [Roadmap](docs/ROADMAP.md) · [Product roadmap](docs/PRODUCT_ROADMAP.md) | What is built next and why; what an industrial version would add, with a verdict for every technology |
 | n/a | [Glossary](docs/GLOSSARY.md) | Every term, plain language, by phase |
@@ -424,11 +463,11 @@ integration came machine learning (Phase 4) and the knowledge graph (5), which
 complete the analysis (v0.2.0), then the app (6), which puts it all behind
 buttons, and Ask StrainScope (6b), which answers questions about the project
 from its own documents (v0.3.0). Then came the online copy and the AI layer
-(Phase 7): plain-language explanations, Ask the data and Ask the graph. Next:
+(Phase 7): plain-language explanations, Ask the data and Ask the graph, and the
+MCP server (Phase 7b), which offers StrainScope's tools to AI assistant apps
+through the [Model Context Protocol](https://modelcontextprotocol.io), read-only,
+checked and logged. Next:
 
-- **MCP server** (Phase 7b): StrainScope's tools, offered to AI assistants
-  through the [Model Context Protocol](https://modelcontextprotocol.io). They're
-  read-only, validated and logged.
 - **Packaging and release 1.0** (Phase 8): a one-command pipeline, tests on
   Windows, macOS and Linux at every push, the LICENSE and CHANGELOG, and the
   1.0 tag.
@@ -509,7 +548,8 @@ strainscope/
 │   ├── 07-app.md                  ← Phase 6: the app                               ✅
 │   ├── 07b-docs-assistant.md      ← Phase 6b: Ask StrainScope                      ✅
 │   ├── 08-deployment-ai.md        ← Phase 7: online, plain words, Ask the data/graph ✅
-│   ├── 08b, 09                    ← Phases 7b and 8                                 ⬜
+│   ├── 08b-mcp-server.md          ← Phase 7b: the MCP server                       ✅
+│   ├── 09                         ← Phase 8                                        ⬜
 │   ├── ROADMAP.md                 ← what is built next, and why                    ✅
 │   ├── PRODUCT_ROADMAP.md         ← beyond the repo: verdicts and triggers         ✅
 │   ├── QUERY_COOKBOOK.md          ← tested SQL recipes (grows every phase)         ✅
@@ -527,6 +567,7 @@ strainscope/
 │       ├── graph_explorer.html    ← Phase 5: the network, communities, explanations
 │       ├── ask_explorer.html      ← Phase 6b: how each question scored
 │       ├── assistants_explorer.html ← Phase 7: Ask the data and Ask the graph
+│       ├── mcp_explorer.html      ← Phase 7b: the nine tools, their inputs, real calls
 │       └── journey.html           ← the Handbook's journey, clickable
 │
 ├── figures/                       ← teaching figures, each regenerated by a script
@@ -540,6 +581,7 @@ strainscope/
 │   ├── make_phase6_figures.py     ← Phase 6: how the app works, uploads, guards    ✅
 │   ├── make_phase6b_figures.py    ← Phase 6b: the search, the gate, golden scores  ✅
 │   ├── make_phase7_figures.py     ← Phase 7: deployment, the assistants, the guards ✅
+│   ├── make_phase7b_figures.py    ← Phase 7b: the MCP pictures + tool explorer     ✅
 │   ├── take_app_screenshots.py    ← Phases 6 to 7: screenshots (optional, Playwright) ✅
 │   ├── make_illustrations.py      ← logo, icon, journey map + interactive journey  ✅
 │   └── *.png                      ← the figures themselves                         ✅
@@ -562,7 +604,7 @@ strainscope/
 │   ├── narrate.py                 ← Phase 7: results in plain words (rules)         ✅
 │   ├── ask_data.py                ← Phase 7: Ask the data (recipes, five guards)   ✅
 │   ├── ask_graph.py               ← Phase 7: Ask the graph (GraphRAG)              ✅
-│   ├── mcp_server.py              ← Phase 7b: the MCP server                       ⬜
+│   ├── mcp_server.py              ← Phase 7b: the MCP server (nine read-only tools) ✅
 │   └── pipeline.py                ← Phase 8: the one-command pipeline              ⬜
 │
 ├── R/
@@ -581,7 +623,7 @@ strainscope/
 │                                     ask_graph, ranking, strain, knowledge_graph,
 │                                     integration, data, sql_console                ✅
 │
-├── tests/                         ← automated checks (pytest): 369 today           ✅
+├── tests/                         ← automated checks (pytest): 409 today           ✅
 │   ├── test_sources.py            ← ingestion parsers, offline
 │   ├── test_harmonize.py          ← cleaning rules and the database loader
 │   ├── test_integrate.py          ← integration, grading, the R ↔ Python contract
@@ -593,6 +635,7 @@ strainscope/
 │   ├── test_ask_data.py, test_ask_graph.py ← the Phase 7 assistants and their guards
 │   ├── test_narrate.py, test_llm.py ← plain words; the model connection and daily cap
 │   ├── test_deploy.py             ← what the online copy relies on
+│   ├── test_mcp.py                ← the MCP server: tools, checks, the log, over stdio
 │   ├── conftest.py                ← the stand-in model server the tests share
 │   ├── golden_questions.csv       ← the golden questions and what must happen to each
 │   ├── golden_data_questions.csv, golden_graph_questions.csv ← the same, Phase 7
@@ -600,7 +643,8 @@ strainscope/
 │
 ├── data/                          ← NOT in Git; regenerated on demand
 │   ├── raw/                       ← raw synthetic tables + real-data evidence locker
-│   └── processed/                 ← clean tables, integration blocks, strainscope.duckdb
+│   └── processed/                 ← clean tables, integration blocks, strainscope.duckdb,
+│                                     the MCP server's call log (mcp_calls.log)
 │
 ├── .venv/                         ← Python's sealed toolbox (NOT in Git)
 └── renv/library/                  ← R's sealed library, NOT in Git (rebuilt from renv.lock)
@@ -610,7 +654,7 @@ strainscope/
 | --- | --- |
 | root files | Release surface: README, CHANGELOG, LICENSE (Phase 8), the pre-push safety gate, the two dependency receipts (`requirements.txt`, `renv.lock`) |
 | `docs/` | The Handbook, the phase-by-phase tutorial, glossary, cookbook and roadmaps (the repo's teaching layer) |
-| `src/strainscope/` | The reusable Python backend: generate, fetch, clean, query, integrate, then model, graph, serve, ask, explain in plain words |
+| `src/strainscope/` | The reusable Python backend: generate, fetch, clean, query, integrate, then model, graph, serve, ask, explain in plain words, and the MCP server for AI assistant apps |
 | `R/` | The single specialised R script (DIABLO integration), run on the laptop |
 | `artifacts/` | Small precomputed outputs the app serves; they're the bridge from laptop to cloud |
 | `app/` | The Streamlit app (the frontend): eleven pages over the service layer in `src/strainscope/service.py` and the assistants; `app/requirements.txt` is the online copy's packing list |
@@ -656,6 +700,8 @@ python src/strainscope/ask.py --golden    # the golden questions, scored
 python src/strainscope/ask_data.py "Which strains are borderline?"     # Ask the data (Phase 7)
 python src/strainscope/ask_graph.py "How does iturin suppress disease?"   # Ask the graph (Phase 7)
 python src/strainscope/narrate.py STRAIN_0485   # one strain in plain words (Phase 7)
+python src/strainscope/mcp_server.py tools      # the MCP server's tools (Phase 7b); also: call, check, config
+python src/strainscope/mcp_server.py check      # talk to the MCP server the way an assistant app does
 python src/strainscope/sql.py             # the read-only SQL console (see docs/QUERY_COOKBOOK.md)
 python figures/make_phase3_figures.py     # redraw the Phase 3 figures + interactive explorer
 python figures/make_phase4_figures.py     # redraw the Phase 4 figures + model explorer
@@ -663,14 +709,16 @@ python figures/make_phase5_figures.py     # redraw the Phase 5 figures + graph e
 python figures/make_phase6_figures.py     # redraw the Phase 6 figures
 python figures/make_phase6b_figures.py    # redraw the Phase 6b figures + Ask explorer
 python figures/make_phase7_figures.py     # redraw the Phase 7 figures + assistants explorer
+python figures/make_phase7b_figures.py    # redraw the Phase 7b figures + MCP tool explorer
 python src/strainscope/graph.py why STRAIN_0485   # why does this strain rank first?
 
 # Check everything
-pytest -q                                 # 368 passed, 1 skipped
+pytest -q                                 # 408 passed, 1 skipped
 ```
 
 To put your own copy online, follow [`docs/08-deployment-ai.md`](docs/08-deployment-ai.md) §9
-(Streamlit Community Cloud, free). Coming with Phase 8: the one-command
+(Streamlit Community Cloud, free); to connect an AI assistant app, §9 of
+[`docs/08b-mcp-server.md`](docs/08b-mcp-server.md). Coming with Phase 8: the one-command
 `python src/strainscope/pipeline.py`.
 
 > **Runs the same on Windows, macOS, and Linux (including RHEL 8 VMs).** The code
