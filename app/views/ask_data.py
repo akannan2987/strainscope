@@ -56,7 +56,7 @@ else:
         st.caption(f"No new query: {answer.note}")
     elif answer.verdict == qa.CLOSEST and not cfg.on:
         st.caption("With a language model switched on, this page writes a new query for a question like this "
-                   f"one ({ui.doc('08-deployment-ai.md', 'docs/08-deployment-ai.md')}, section 10). "
+                   f"one ({ui.doc('LANGUAGE_MODEL.md', 'how to switch one on')}). "
                    "**About this copy** shows whether one is.")
 
     if answer.sql:

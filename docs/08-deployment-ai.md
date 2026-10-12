@@ -542,7 +542,7 @@ Write down how long the first start took and your app's address; §19 part B put
 
 ## 10. Step 6 (optional): a language model for the three assistants
 
-Everything works without a model. With one, Ask StrainScope and Ask the graph write a short answer that cites what they found, and Ask the data writes a new query when no recipe fits. Try it at home first.
+Everything works without a model. With one, Ask StrainScope and Ask the graph write a short answer that cites what they found, and Ask the data writes a new query when no recipe fits. Try it at home first. This section is the short version; [`docs/LANGUAGE_MODEL.md`](LANGUAGE_MODEL.md) has every setup step by step, how to switch a model off again, and a table of what can go wrong.
 
 **At home, with Ollama.** If you set it up in [Phase 6b §8](07b-docs-assistant.md#8-step-4-optional-written-answers-from-a-model-on-your-own-computer), nothing more is needed: `STRAINSCOPE_ASK_BACKEND=local` in `.env` (or `export` it). Then:
 
@@ -628,7 +628,7 @@ Phase 7 figures:
   drew docs/interactive/assistants_explorer.html (interactive, 3 charts)
 ```
 
-The second redraws the Phase 6 figures, among them the app map with its eleven pages. The third redraws Phase 6b's, because their numbers come from the documentation, which this guide has made larger (979 sections now). The last one redraws the journey map with Stage 12 done. Afterwards `git status` may also list a picture or two that looks exactly the same as before (`figures/ask_gate.png`, say): the drawing library can write the same picture with slightly different bytes. Committing them is harmless. The first five pictures are the concept figures of §1, §6, §7 and below; `graphrag_walk.png` and `plain_words.png` are computed by the code itself, so they stay true when the results change.
+The second redraws the Phase 6 figures, among them the app map with its eleven pages. The third redraws Phase 6b's, because their numbers come from the documentation, which this guide has made larger (990 sections now). The last one redraws the journey map with Stage 12 done. Afterwards `git status` may also list a picture or two that looks exactly the same as before (`figures/ask_gate.png`, say): the drawing library can write the same picture with slightly different bytes. Committing them is harmless. The first five pictures are the concept figures of §1, §6, §7 and below; `graphrag_walk.png` and `plain_words.png` are computed by the code itself, so they stay true when the results change.
 
 ![In plain words: how a strain's rank becomes a paragraph](../figures/plain_words.png)
 

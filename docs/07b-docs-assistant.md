@@ -33,7 +33,7 @@ Ask StrainScope is a librarian first. Every answer is a passage quoted **word fo
 
    ![A word found everywhere tells you little](../figures/word_weights.png)
 
-   In StrainScope's documents, "data" appears in 522 of the 1,335 passages and gets a weight of 1.9; "winsorise" appears in 3 and gets 6.8. Common little words ("the", "is", "how") are dropped altogether; they're called **stop words**. Words are also reduced to the form the documents use, so "strains" finds "strain", "scoring" finds "score" and "ranked" finds "rank". A section's heading counts three times, because a heading says what its section is about.
+   In StrainScope's documents, "data" appears in 527 of the 1,357 passages and gets a weight of 1.9; "winsorise" appears in 3 and gets 6.8. Common little words ("the", "is", "how") are dropped altogether; they're called **stop words**. Words are also reduced to the form the documents use, so "strains" finds "strain", "scoring" finds "score" and "ranked" finds "rank". A section's heading counts three times, because a heading says what its section is about.
 3. **Compare.** The question gets word weights the same way, and each passage gets a **match** score from 0 (no words in common) to 1 (the same words in the same proportions). The measure is **cosine similarity**. Two shopping lists match well when they're mostly about the same things, however long each list is. The best passage of each section stands for that section, and the three best sections are shown.
 4. **Decide**, before anything is shown (next part).
 
@@ -285,8 +285,8 @@ python src/strainscope/ask.py --stats
 **You should see** the typo corrected on the first line (`✓ Reading "calibraton" as "calibration". Best match: "Calibration" in docs/GLOSSARY.md.`), and then:
 
 ```
-  979 sections from 53 files: 416 document sections, 319 glossary entries, 244 code docstrings.
-  3,958 different words. Written answers: off (search only; nothing leaves this computer).
+  990 sections from 54 files: 427 document sections, 319 glossary entries, 244 code docstrings.
+  3,964 different words. Written answers: off (search only; nothing leaves this computer).
 ```
 
 **If instead:**
@@ -352,7 +352,7 @@ Run `--golden` again: `42/42`. Now try a question the documents don't answer and
 
 ## 8. Step 4 (optional): written answers from a model on your own computer
 
-This step downloads about 2 GB and works best with 8 GB of memory or more. Everything stays on your computer. Skip it freely: nothing else depends on it.
+This step downloads about 2 GB and works best with 8 GB of memory or more. Everything stays on your computer. Skip it freely: nothing else depends on it. (Every way to switch a model on and off, including a hosted one and the online copy, with a table of what can go wrong, is collected in [`docs/LANGUAGE_MODEL.md`](LANGUAGE_MODEL.md).)
 
 1. **Install Ollama** (once per machine), from [ollama.com/download](https://ollama.com/download):
    - **Windows** (10 22H2 or newer): choose Windows on the download page and follow its instructions. The installer (`OllamaSetup.exe`) installs for your user, without administrator rights, and keeps Ollama running in the background.

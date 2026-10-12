@@ -335,9 +335,13 @@ def suggest_fix(page: str, question: str, verdict: str, shown: list[str]) -> Non
 
 
 def model_note(cfg) -> str:
-    """One line saying whether a language model is set up, for page footers."""
+    """One line saying whether a language model is set up, for page footers,
+    with a link to the how-to when none is."""
     from strainscope import llm
-    return f"Language model: {cfg.describe()}" + (f"; {llm.daily_cap().describe()}" if cfg.on and PUBLIC else "")
+    if not cfg.on:
+        who = "for the owner of this copy: " if PUBLIC else ""
+        return f"Language model: {cfg.describe()}; {who}{doc('LANGUAGE_MODEL.md', 'how to switch one on')}"
+    return f"Language model: {cfg.describe()}" + (f"; {llm.daily_cap().describe()}" if PUBLIC else "")
 
 
 def reason_line(row) -> str:

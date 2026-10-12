@@ -26,8 +26,9 @@ THE SETTINGS (from the shell, the git-ignored .env file, or a host's secrets)
                                 0 means none at all)
 
 "local" is Ollama on the same computer; "hosted" is any provider with an
-OpenAI-compatible interface. docs/07b-docs-assistant.md (sections 8 and 9)
-and docs/08-deployment-ai.md (section 10) show both.
+OpenAI-compatible interface. docs/LANGUAGE_MODEL.md shows every way to
+switch one on and off, at home and online; docs/07b-docs-assistant.md
+(sections 8 and 9) and docs/08-deployment-ai.md (section 10) explain them.
 
 WHAT A MODEL MAY SEE
 --------------------
@@ -175,7 +176,7 @@ def chat(messages: list[dict], cfg: Settings, timeout: float = TIMEOUT_S,
         r = session.post(f"{cfg.url}/chat/completions", headers=headers, data=json.dumps(body), timeout=timeout)
     except requests.Timeout:
         return None, (f"The model at {cfg.url} took longer than {timeout:.0f} seconds to answer. A smaller "
-                      "model is quicker (see docs/07b-docs-assistant.md section 8).")
+                      "model is quicker (see docs/LANGUAGE_MODEL.md, section 8).")
     except requests.RequestException:
         hint = " Is Ollama running? (ollama -v)" if cfg.backend == "local" else ""
         return None, f"Couldn't reach the model at {cfg.url}.{hint}"

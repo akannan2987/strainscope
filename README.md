@@ -246,7 +246,8 @@ scikit-learn), and a set of golden questions checks its answers with every test
 run. If you like, a language model can also write a short answer from the
 passages found, either on your own computer (Ollama) or through a hosted
 provider; it's off by default, and all it ever sees is its rules, the question and the
-passages. The guide is [`docs/07b-docs-assistant.md`](docs/07b-docs-assistant.md).
+passages. How to switch one on and off, at home or online:
+[`docs/LANGUAGE_MODEL.md`](docs/LANGUAGE_MODEL.md). The guide is [`docs/07b-docs-assistant.md`](docs/07b-docs-assistant.md).
 
 ## Ask the data, Ask the graph, and plain words
 
@@ -340,7 +341,7 @@ means, matching the build log below. Nothing is shown before it exists.*
   ![A strain's page: the reasons behind its rank, and its corner of the knowledge graph](docs/img/app_strain.png)
 
   An uploaded copy of a library strain gets exactly the explanation of the original (a test checks every strain of a hand-made project), and a slightly different score, because the ranking uses out-of-fold predictions while an upload is scored by the final model. Run it with `python -m streamlit run app/streamlit_app.py`; the guide is [`docs/07-app.md`](docs/07-app.md).
-- **Phase 6b (Ask StrainScope):** ✅ a documentation assistant that searches every guide, glossary entry and docstring (979 sections) and answers with the matching passages, word for word, with links. Before anything is shown, a gate of four checks decides between *answered*, *closest* and *refused*, and 62 golden questions keep it in check: every in-scope one is answered from a right section, every off-topic question and instruction is refused, and one known limitation is reported rather than hidden. No single score threshold separates the two groups; the extra checks do:
+- **Phase 6b (Ask StrainScope):** ✅ a documentation assistant that searches every guide, glossary entry and docstring (990 sections) and answers with the matching passages, word for word, with links. Before anything is shown, a gate of four checks decides between *answered*, *closest* and *refused*, and 62 golden questions keep it in check: every in-scope one is answered from a right section, every off-topic question and instruction is refused, and one known limitation is reported rather than hidden. No single score threshold separates the two groups; the extra checks do:
 
   ![The golden questions: how well each one matched](figures/golden_scores.png)
 
@@ -402,6 +403,7 @@ Read them in this order:
 | 07 | [The app](docs/07-app.md) | Streamlit and why every click reruns the page; caching and session state; a service layer shared by every front door; SQL behind four guards; accepting somebody else's file safely; out-of-fold vs final-model scores; running on Windows, macOS and a RHEL 8 VM |
 | 07b | [Ask StrainScope](docs/07b-docs-assistant.md) | How a word search ranks passages (TF-IDF, cosine similarity); refusing instead of guessing; golden question sets as tests for answers; retrieval-augmented generation, hallucinations and prompt injection; an optional local (Ollama) or hosted language model, and what leaves your computer |
 | 08 | [Deployment and the AI layer](docs/08-deployment-ai.md) | Deploying on Streamlit Community Cloud: shared mode, pinned versions, secrets on a host, a first-start build; text-to-SQL with tested recipes first and five guards; GraphRAG as numbered, sourced facts; explanations written by rules; what a language model may and may not see |
+| n/a | [Switching on a language model](docs/LANGUAGE_MODEL.md) | Optional written answers for the three assistants: Ollama on your computer, a hosted provider at home or for the online copy, switching off, and what to do when something goes wrong |
 | 08b | `docs/08b-mcp-server.md` | The Model Context Protocol; exposing read-only tools to AI assistants safely |
 | 09 | `docs/09-packaging.md` | The one-command pipeline, continuous integration on three operating systems, LICENSE, CHANGELOG, uninstall, the 1.0 tag |
 | n/a | [Roadmap](docs/ROADMAP.md) · [Product roadmap](docs/PRODUCT_ROADMAP.md) | What is built next and why; what an industrial version would add, with a verdict for every technology |
@@ -505,6 +507,7 @@ strainscope/
 │   ├── ROADMAP.md                 ← what is built next, and why                    ✅
 │   ├── PRODUCT_ROADMAP.md         ← beyond the repo: verdicts and triggers         ✅
 │   ├── QUERY_COOKBOOK.md          ← tested SQL recipes (grows every phase)         ✅
+│   ├── LANGUAGE_MODEL.md          ← switching a language model on and off          ✅
 │   ├── GLOSSARY.md                ← every term, plain language, by phase           ✅
 │   ├── img/                       ← logo, icon, wordmark, journey map, app screenshots ✅
 │   ├── index.html, .nojekyll      ← the optional GitHub Pages front page (Phase 7)  ✅
@@ -572,7 +575,7 @@ strainscope/
 │                                     ask_graph, ranking, strain, knowledge_graph,
 │                                     integration, data, sql_console                ✅
 │
-├── tests/                         ← automated checks (pytest): 354 today           ✅
+├── tests/                         ← automated checks (pytest): 355 today           ✅
 │   ├── test_sources.py            ← ingestion parsers, offline
 │   ├── test_harmonize.py          ← cleaning rules and the database loader
 │   ├── test_integrate.py          ← integration, grading, the R ↔ Python contract
@@ -656,7 +659,7 @@ python figures/make_phase7_figures.py     # redraw the Phase 7 figures + assista
 python src/strainscope/graph.py why STRAIN_0485   # why does this strain rank first?
 
 # Check everything
-pytest -q                                 # 353 passed, 1 skipped
+pytest -q                                 # 354 passed, 1 skipped
 ```
 
 To put your own copy online, follow [`docs/08-deployment-ai.md`](docs/08-deployment-ai.md) §9

@@ -57,6 +57,7 @@ Everything a person needs from StrainScope, as a list, with where each piece is 
 | ask questions about the project itself and get linked answers | Phase 6b | ✅ |
 | open the app from a link, with nothing installed | Phase 7 | ✅ online at [strainscope.streamlit.app](https://strainscope.streamlit.app) ([guide §9](08-deployment-ai.md#9-step-5-put-the-app-online-streamlit-community-cloud)) |
 | read results in plain language, ask the data in plain language, get answers that cite the graph | Phase 7 | ✅ |
+| switch on a language model for written answers, at home or online, and off again | Phases 6b and 7 | ✅ ([how](LANGUAGE_MODEL.md)) |
 | let an AI assistant use StrainScope's tools safely | Phase 7b | ⏳ |
 | rebuild everything with one command (or one button) | Phase 8 | ⏳ |
 | trust that every change was tested on three operating systems | Phase 8 | ⏳ |
@@ -103,6 +104,8 @@ Three assistants and one rule-based writer, all with the same shape: find first,
 | Ask the graph | numbered facts from walks through the graph, with sources | a short answer citing them, with no number of its own | anything about a strain |
 | In plain words | a paragraph written by rules from the results | nothing: no model is used | everything |
 
+No model is switched on by default, here or online. [`docs/LANGUAGE_MODEL.md`](LANGUAGE_MODEL.md) shows every way to switch one on and off (Ollama on your own computer, a hosted provider at home, a hosted provider for the online copy), what each one sends and costs, and what to do when something goes wrong.
+
 ## Deferred items and their triggers
 
 | Item | Status | Trigger / approach |
@@ -117,6 +120,7 @@ Three assistants and one rule-based writer, all with the same shape: find first,
 | Follow-up questions in the assistants (a conversation) | 🔒 | people ask follow-ups that only make sense with the previous question ("and on Windows?"); the previous question's words would then be carried into the next search |
 | Feedback on the assistants' answers | ✅ Phase 7 | the trigger (a public copy other people use) fired with Phase 7: a *Suggest a fix* link under every answer opens a GitHub issue with the question filled in, and missed answers become golden questions or documentation fixes |
 | Feedback stored in the app (ratings, a list of missed questions) | 🔒 | logins (the production web stack above), or more suggestions than GitHub issues can comfortably hold; the app keeps no record of visitors today |
+| A language model on the public online copy | 🔒 | the owner wants written answers for visitors and accepts that their questions go to a provider on the owner's key, within the daily cap; setup C of [`docs/LANGUAGE_MODEL.md`](LANGUAGE_MODEL.md) switches it on in a few minutes |
 | Model-written wording for the plain-language explanations | 🔒 | readers find the rule-written paragraphs hard to follow; it would send a strain's results to a model, so only with a model on the same computer, and never for uploads |
 | A model that summarises query results (Ask the data) | 🔒 | tables too large to read at a glance become common; it would send rows, so only with a model on the same computer |
 | A custom address for the online copy (its own domain) | 🔒 | the project gets a public name or site of its own; the `streamlit.app` address is enough until then |

@@ -51,6 +51,20 @@ st.markdown(f"**Language model:** {cfg.describe()}.")
 if cfg.on:
     st.caption(llm.daily_cap().describe() + ". The count starts again at midnight (UTC) and after a restart.")
 
+with st.expander("How to switch a language model on or off"):
+    st.markdown(
+        "Everything in StrainScope works without one. With one, Ask StrainScope and Ask the graph also write a "
+        "short answer that cites what they found, and Ask the data writes a new query when no recipe fits.\n\n"
+        "- **On your own computer, with Ollama (free, nothing leaves the computer):** install Ollama, run "
+        "`ollama pull llama3.2:3b`, add the line `STRAINSCOPE_ASK_BACKEND=local` to `.env`, and restart the app.\n"
+        "- **With a hosted provider (at home, or for an online copy):** set `STRAINSCOPE_ASK_BACKEND=hosted` "
+        "and the provider's address, model name and key (`STRAINSCOPE_ASK_URL`, `STRAINSCOPE_ASK_MODEL`, "
+        "`STRAINSCOPE_ASK_KEY`) in `.env`, or for an online copy in the host's Secrets box; then restart or "
+        "reboot the app.\n"
+        "- **To switch it off:** set `STRAINSCOPE_ASK_BACKEND=none` (or remove the lines) and restart.\n\n"
+        f"Every step, with what you should see and what to do when something goes wrong: "
+        f"{ui.doc('LANGUAGE_MODEL.md', 'docs/LANGUAGE_MODEL.md')}.")
+
 with st.expander("What may leave this copy, and what never does"):
     st.markdown(
         "Only when a language model is switched on, and only to that model:\n\n"

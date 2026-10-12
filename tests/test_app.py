@@ -141,6 +141,17 @@ def test_about_this_copy_shows_the_version_and_the_health_check():
     body = texts(at)
     assert f"v{sv.release_info()['version']}" in body and "local copy" in body
     assert "AI features (optional)" in body and "Never a row of data" in body
+    assert "How to switch a language model on or off" in [e.label for e in at.expander]
+    assert "docs/LANGUAGE_MODEL.md" in body                                          # the how-to, linked
+
+
+def test_the_footers_link_the_how_to_only_while_no_model_is_on(monkeypatch):
+    from strainscope import llm
+    assert "LANGUAGE_MODEL.md" in ui.model_note(llm.Settings())
+    on = llm.Settings("local", "http://localhost:11434/v1", "llama3.2:3b", "")
+    assert "LANGUAGE_MODEL.md" not in ui.model_note(on)
+    monkeypatch.setattr(ui, "PUBLIC", True)                                      # a visitor can't act on it
+    assert "for the owner of this copy" in ui.model_note(llm.Settings())
 
 
 def test_a_shared_copy_builds_its_database_on_the_first_start(monkeypatch, tmp_path):

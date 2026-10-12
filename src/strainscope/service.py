@@ -205,7 +205,7 @@ def status(db_path: Path = DB_PATH, artifacts_dir: Path = ARTIFACTS) -> list[Che
     else:
         checks.append(Check("AI features (optional)", None, "off: the assistants answer by search and rules "
                                                             "alone, and nothing is sent anywhere",
-                            "STRAINSCOPE_ASK_BACKEND in .env (docs/08-deployment-ai.md section 10)"))
+                            "STRAINSCOPE_ASK_BACKEND in .env (docs/LANGUAGE_MODEL.md)"))
     return checks
 
 

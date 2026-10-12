@@ -205,7 +205,7 @@ python src/strainscope/service.py status
   · Real tables (optional)   none fetched (the app works without them)
       to add: Data page, Real data tab, or python src/strainscope/fetch_real.py
   · AI features (optional)   off: the assistants answer by search and rules alone, and nothing is sent anywhere
-      to add: STRAINSCOPE_ASK_BACKEND in .env (docs/08-deployment-ai.md section 10)
+      to add: STRAINSCOPE_ASK_BACKEND in .env (docs/LANGUAGE_MODEL.md)
 ```
 
 **What it means.** A ✓ is fine, a ✗ is needed and missing (with the fix underneath), and a · is optional. Every phase's results are both in `artifacts/` and in the database, and the saved model was built with the scikit-learn you have. The last line arrived with Phase 7: it says whether the assistants use a language model (with `STRAINSCOPE_ASK_BACKEND=local` from Phase 6b, it's a ✓ that names the model).

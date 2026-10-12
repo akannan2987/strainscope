@@ -38,7 +38,7 @@ What is an MCP server?,answer,docs/HANDBOOK.md::Stage 13 | docs/00-architecture.
 Which function scores uploaded strains?,answer,src/strainscope/service.py::score_upload | src/strainscope/service.py::score_and_explain
 How does Ask StrainScope decide to refuse a question?,answer,docs/07b-docs-assistant.md::gate | docs/GLOSSARY.md::gate | docs/GLOSSARY.md::Out-of-scope refusal
 What is TF-IDF?,answer,docs/GLOSSARY.md::TF-IDF | docs/07b-docs-assistant.md::How a word search ranks
-How do I use a local model with Ollama?,answer,docs/07b-docs-assistant.md::Step 4 | docs/GLOSSARY.md::Ollama
+How do I use a local model with Ollama?,answer,docs/07b-docs-assistant.md::Step 4 | docs/GLOSSARY.md::Ollama | docs/LANGUAGE_MODEL.md::Setup A | docs/HANDBOOK.md::Switching on a language model
 What is a hallucination?,answer,docs/GLOSSARY.md::Hallucination | docs/07b-docs-assistant.md::Written answers
 What is the capital of France?,refuse,
 Who won the football World Cup in 2022?,refuse,
