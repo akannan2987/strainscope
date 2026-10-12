@@ -314,13 +314,18 @@ def network_figure(layout: pd.DataFrame, edges: pd.DataFrame, types: list[str] |
 
 
 def path_figure(hops: list[dict]) -> go.Figure:
-    """A path as a chain of boxes, left to right, one arrow per step. A
-    statistics-only step is red and dotted, as everywhere else."""
-    labels = [hops[0]["from"]] + [h["to"] for h in hops] if hops else []
+    """A path as a chain of boxes, left to right in the order the walk visits
+    them, one arrow per step. Each arrow points the way its edge points, so
+    a step the walk takes backwards (fenA works by the same mode of action
+    as ituA) has an arrow pointing left. A statistics-only step is red and
+    dotted, as everywhere else."""
+    labels = [hops[0].get("step_from", hops[0]["from"])] + [h.get("step_to", h["to"]) for h in hops] if hops else []
     fig = go.Figure()
     for i, h in enumerate(hops):
         stats = h["relation"] == "associated_with"
-        fig.add_annotation(x=i + 1, y=0, ax=i, ay=0, xref="x", yref="y", axref="x", ayref="y",
+        back = h.get("step_from", h["from"]) != h["from"]       # the edge points against the walk
+        head, tail = (i, i + 1) if back else (i + 1, i)
+        fig.add_annotation(x=head, y=0, ax=tail, ay=0, xref="x", yref="y", axref="x", ayref="y",
                            showarrow=True, arrowhead=3, arrowsize=1.2, arrowwidth=2,
                            arrowcolor=RED if stats else DARK_GREEN, standoff=34, startstandoff=34, text="")
         fig.add_annotation(x=i + 0.5, y=0.32, text=f"<i>{h['relation']}</i>", showarrow=False,

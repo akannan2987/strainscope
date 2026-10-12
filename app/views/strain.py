@@ -1,11 +1,13 @@
-"""app/views/strain.py: one strain's page. Its score and rank, the reasons
-behind them (walks through the knowledge graph, each with its sources), its
-corner of the graph drawn as five columns, and where it sits among the rest."""
+"""app/views/strain.py: one strain's page. Its score and rank, the same in
+plain words (Phase 7), the reasons behind them (walks through the knowledge
+graph, each with its sources), its corner of the graph drawn as five
+columns, and where it sits among the rest."""
 import pandas as pd
 import streamlit as st
 
 import charts
 import ui
+from strainscope import narrate
 from strainscope import service as sv
 
 pred = ui.ranking()
@@ -55,7 +57,7 @@ threshold = (ui.card() or {}).get("decision_threshold", 0.5)
 m = st.columns(4)
 m[0].metric("Rank", f"{int(row['rank'])} of {len(pred)}")
 band = sv.confidence_band(row["probability"])
-m[1].metric("Chance of being effective", f"{row['probability']:.0%}",
+m[1].metric("Chance of being effective", narrate.percent(row["probability"]),
             f"{band} · {'flagged' if row['probability'] >= threshold else 'not flagged'}",
             delta_color="off", delta_arrow="off",
             help=f"Likely above 70 %, borderline from 30 % to 70 %, unlikely below 30 %. 'Effective' means "
@@ -70,6 +72,16 @@ if "is_effective" in row.index and pd.notna(row.get("is_effective")):
 elif "library_rank" in row.index:
     lr = int(row["library_rank"])
     m[3].metric("Would rank in the library", f"{lr} of 600" if lr <= 600 else "below all 600")
+
+# -- in plain words (Phase 7) ---------------------------------------------------------
+story = narrate.strain(row.to_dict(), expl, len(pred), ui.card(), uploaded=ui.showing_upload())
+with st.container(border=True):
+    st.markdown("**In plain words**")
+    for para in story.paragraphs:
+        st.markdown(para)
+    st.caption("Written by rules from this strain's results, so every number above can be found in them "
+               f"({ui.doc('08-deployment-ai.md', 'docs/08-deployment-ai.md')}, section 5). No language model "
+               "is used.")
 
 # -- why it ranks here -----------------------------------------------------------
 st.subheader("Why it ranks here")

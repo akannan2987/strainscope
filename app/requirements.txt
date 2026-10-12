@@ -1,0 +1,23 @@
+# app/requirements.txt: the packing list of the ONLINE copy, with exact versions.
+#
+# Streamlit Community Cloud looks for a dependency file next to the app's entry
+# point (app/streamlit_app.py) before it looks in the project folder, so the
+# online copy installs THIS list, and your own computer keeps using the
+# project's requirements.txt. Exact versions mean the online copy only changes
+# when you change this file and push. (docs/08-deployment-ai.md, section 9.)
+#
+# Rules this file follows (tests/test_deploy.py checks them):
+#   * the same packages as requirements.txt, except pytest (tests don't run online);
+#   * scikit-learn at the version the saved model was built with
+#     (artifacts/model/model_card.json), so the model loads without a warning;
+#   * versions that pass every test.
+duckdb==1.5.6
+faker==40.43.0
+matplotlib==3.11.2
+networkx==3.7
+numpy==2.5.4
+pandas==3.0.6
+plotly==7.1.0
+requests==2.34.2
+scikit-learn==1.9.0
+streamlit==1.65.0

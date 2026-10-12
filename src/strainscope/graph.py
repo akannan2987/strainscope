@@ -918,8 +918,13 @@ def path(G, a: str, b: str) -> list[dict]:
     may be an end point, never a stepping stone). Mechanism and fact edges
     cost 1 step; a statistics-only edge (associated_with) costs STATS_COST
     steps, so the search prefers a route that says HOW over a shortcut that
-    only says "the data links them". Each hop says which way the edge points,
-    what it means and where it came from."""
+    only says "the data links them". Each hop says which way the edge points
+    ("from", "relation", "to", read aloud the way the edge points), what it
+    means and where it came from. "step_from" and "step_to" give the same
+    two names in the order the walk visits them: a walk can cross an edge
+    against its direction (ituA works by lipopeptide membrane attack, and so
+    does fenA, so the walk from ituA to fenA crosses the second edge
+    backwards), and a picture of the route needs the walking order."""
     import networkx as nx
     na, nb = find_node(G, a), find_node(G, b)
     view = knowledge_view(G, keep=(na, nb))
@@ -937,6 +942,7 @@ def path(G, a: str, b: str) -> list[dict]:
         frm, to = (x, y) if forward else (y, x)
         hops.append({"from": G.nodes[frm]["label"], "relation": data[0]["relation"],
                      "to": G.nodes[to]["label"],
+                     "step_from": G.nodes[x]["label"], "step_to": G.nodes[y]["label"],
                      "provenance": "; ".join(dict.fromkeys(e["provenance"] for e in data)),
                      "evidence": "; ".join(e["evidence"] for e in data if isinstance(e.get("evidence"), str))})
     return hops

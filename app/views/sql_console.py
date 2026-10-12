@@ -1,7 +1,8 @@
 """app/views/sql_console.py: ask the database anything in SQL, safely.
 The recipes of docs/QUERY_COOKBOOK.md are one click away; every query runs
 through the service layer's four guards (read-only, no file access, a time
-limit, a row limit)."""
+limit, a row limit). A query from Ask the data (Phase 7) opens here too, so
+you can change it."""
 import streamlit as st
 
 import ui
@@ -30,6 +31,8 @@ def _use_recipe():
         st.session_state["sql_text"] = recipes[pick].sql
 
 
+if "sql_handoff" in st.session_state:               # a query sent here from Ask the data (Phase 7)
+    st.session_state["sql_text"] = st.session_state.pop("sql_handoff")
 if "sql_text" not in st.session_state:
     st.session_state["sql_text"] = recipes[0].sql if recipes else "SELECT * FROM phenotype LIMIT 5;"
 

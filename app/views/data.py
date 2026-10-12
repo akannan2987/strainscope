@@ -63,8 +63,8 @@ with uploaded:
                                 "The column copied_from says which strain each one is.")
     else:
         c2.caption("The example is copied from the library, so it needs the database (first tab).")
-    st.markdown("**2. Upload it.** Your file stays in this browser tab's memory. It is never written to disk "
-                "and disappears when you close the tab.")
+    st.markdown("**2. Upload it.** The app keeps your file in memory for this browser tab only. It is never "
+                "written to disk, and it's gone when you close the tab.")
     file = st.file_uploader("A CSV file (comma-separated, UTF-8, up to 5 MB)", type=["csv"], key="upload_file")
     if file is not None:
         # Score a file once, not on every click: remember the result with a

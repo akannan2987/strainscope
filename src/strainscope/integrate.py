@@ -46,7 +46,6 @@ THE DECISIONS, WRITTEN DOWN (each is explained in docs/04-integration.md)
 from __future__ import annotations
 
 import argparse
-import json
 import shutil
 import subprocess
 import sys

@@ -230,6 +230,15 @@ def test_path_prefers_how_over_statistics(small):
     assert [h["relation"] for h in stats] == ["associated_with"]
 
 
+def test_a_path_also_gives_its_walking_order(small):
+    _, G = small
+    hops = kg.path(G, "disease suppression", "ituA")          # walked against every edge's direction
+    walk = [hops[0]["step_from"]] + [h["step_to"] for h in hops]
+    assert walk[0] == "disease suppression" and walk[-1] == "ituA"
+    assert all(a["step_to"] == b["step_from"] for a, b in zip(hops, hops[1:]))
+    assert hops[-1]["from"] == "ituA"                          # the edge itself still reads ituA -acts_by-> ...
+
+
 def test_find_node_is_forgiving_and_helpful(small):
     _, G = small
     assert kg.find_node(G, "ITURIN") == "compound:iturin"

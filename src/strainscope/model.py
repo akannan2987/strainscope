@@ -480,7 +480,7 @@ def compare(db_path: Path = DB_PATH, artifacts_dir: Path = ARTIFACTS,
                  f"within one SD of the best, {best_name}, and simpler)")
               + f": {SIMPLICITY[winner]}")
         top_c = max(c_counts, key=c_counts.get)
-        print(f"  elastic net's C chosen inside the folds: "
+        print("  elastic net's C chosen inside the folds: "
               + ", ".join(f"{c} ×{c_counts.get(c, 0)}" for c in ELASTIC_NET_C)
               + f"  → final C = {top_c}")
         print("  ── The leak check ───────────────────────────────────────────────")

@@ -1,12 +1,12 @@
 """
-src/strainscope/service.py (StrainScope Phase 6): the service layer behind the app.
-===================================================================================
+src/strainscope/service.py (StrainScope Phases 6 and 7): the service layer behind the app.
+=========================================================================================
 
 WHAT THIS MODULE IS
 -------------------
 One set of plain Python functions that every way into StrainScope uses: the
-Streamlit app (app/streamlit_app.py), Ask StrainScope (Phase 6b), and the MCP
-server later (Phase 7b). In the restaurant picture of docs/00-architecture.md, the scripts of
+Streamlit app (app/streamlit_app.py), the assistants (Phases 6b and 7), and
+the MCP server later (Phase 7b). In the restaurant picture of docs/00-architecture.md, the scripts of
 Phases 1 to 5 are the kitchen and the app is the dining room. This module is
 the pass, the counter where finished plates are checked before a waiter takes
 them out. Nothing here draws anything on a screen, so every function can be
@@ -25,6 +25,11 @@ WHAT IT OFFERS
   neighbourhood()          one strain's corner of the graph, laid out for drawing
   ask_docs()               Ask StrainScope: a question about the project, answered from
                            its own documents (src/strainscope/ask.py), as plain data
+  ask_data(), ask_graph(), explain_in_words()
+                           Phase 7: a question about the data (src/strainscope/ask_data.py),
+                           a question about how things connect (src/strainscope/ask_graph.py)
+                           and a strain's rank in plain words (src/strainscope/narrate.py)
+  release_info()           which version this copy is (from CHANGELOG.md)
   PIPELINES, run_pipeline()
                            the scripts of Phases 1 to 5, run in order, with live output
 
@@ -192,7 +197,32 @@ def status(db_path: Path = DB_PATH, artifacts_dir: Path = ARTIFACTS) -> list[Che
     else:
         checks.append(Check("Real tables (optional)", None, "none fetched (the app works without them)",
                             "Data page, Real data tab, or python src/strainscope/fetch_real.py"))
+
+    from strainscope import llm
+    cfg = llm.settings()
+    if cfg.on:
+        checks.append(Check("AI features (optional)", True, f"on, {cfg.describe()}; {llm.daily_cap().describe()}"))
+    else:
+        checks.append(Check("AI features (optional)", None, "off: the assistants answer by search and rules "
+                                                            "alone, and nothing is sent anywhere",
+                            "STRAINSCOPE_ASK_BACKEND in .env (docs/08-deployment-ai.md section 10)"))
     return checks
+
+
+def release_info(changelog: Path = ROOT / "CHANGELOG.md") -> dict:
+    """The newest released version and its date, read from CHANGELOG.md,
+    and whether changes have been added since ([Unreleased] has entries).
+    Reading it from the changelog means there's no second place to update."""
+    out = {"version": "unknown", "date": "", "title": "", "unreleased": False}
+    if not Path(changelog).exists():
+        return out
+    text = Path(changelog).read_text(encoding="utf-8")
+    m = re.search(r"^## \[(\d+\.\d+\.\d+)\] - (\d{4}-\d{2}-\d{2}):?\s*(.*)$", text, flags=re.M)
+    if m:
+        out.update(version=m.group(1), date=m.group(2), title=m.group(3).strip())
+    pending = re.search(r"^## \[Unreleased\]\s*(.*?)^## \[", text, flags=re.M | re.S)
+    out["unreleased"] = bool(pending and re.search(r"^### ", pending.group(1), flags=re.M))
+    return out
 
 
 # =============================================================================
@@ -815,9 +845,8 @@ def neighbourhood(G, strain: str, explanation: pd.DataFrame | None = None) -> tu
 
 
 # =============================================================================
-# 6. THE PIPELINE: the scripts of Phases 1 to 5, run in order
-# =============================================================================
-# Ask StrainScope (Phase 6b): questions about the project itself
+# 6. THE ASSISTANTS: questions about the project (Phase 6b), the data and
+#    the graph (Phase 7), and a strain's rank in plain words (Phase 7)
 # =============================================================================
 
 def ask_docs(question: str, write: bool | None = False) -> dict:
@@ -838,6 +867,64 @@ def ask_docs(question: str, write: bool | None = False) -> dict:
     }
 
 
+def ask_data(question: str, write: bool | None = False, db_path: Path = DB_PATH, max_rows: int = 200) -> dict:
+    """A question about the data, answered with a query (a tested recipe, or
+    one a model wrote when that's switched on) run through the four guards,
+    as plain data: the verdict, the message, the SQL, where it came from and
+    up to `max_rows` rows. `write=None` lets a model write a query when no
+    recipe fits and one is set up; the default, False, never contacts a model."""
+    from strainscope import ask_data as data
+    a = data.ask(question, db_path, write=write)
+    table = a.table
+    return {
+        "question": a.question, "verdict": a.verdict, "message": a.message, "sql": a.sql,
+        "source": ("recipe" if a.recipe else a.written_by),
+        "recipe": a.recipe.recipe.question if a.recipe else None,
+        "error": a.result.error if a.result is not None else None,
+        "columns": list(table.columns) if table is not None else [],
+        "rows": table.head(max_rows).to_dict("records") if table is not None else [],
+        "row_count": int(len(table)) if table is not None else 0,
+        "options": [h.recipe.question for h in a.options], "note": a.note,
+    }
+
+
+def ask_graph(question: str, write: bool | None = False, G=None) -> dict:
+    """A question about how things connect, answered by walking the knowledge
+    graph (GraphRAG), as plain data: the verdict, the message, the numbered
+    facts with their sources and the route. `write=None` adds a written
+    answer when a model is set up; the default, False, never contacts one."""
+    from strainscope import ask_graph as graph_qa
+    a = graph_qa.ask(question, G, write=write)
+    return {
+        "question": a.question, "verdict": a.verdict, "message": a.message,
+        "facts": [{"number": n, "text": f.text, "source": f.source} for n, f in enumerate(a.facts, start=1)],
+        "route": [{k: h.get(k) for k in ("from", "relation", "to", "provenance")} for h in a.hops],
+        "strain": a.strain, "story": a.story, "written": a.written, "written_by": a.written_by, "note": a.note,
+    }
+
+
+def explain_in_words(strain_id: str, artifacts_dir: Path = ARTIFACTS) -> dict:
+    """One library strain's rank and reasons in plain words
+    (src/strainscope/narrate.py), from the committed results only."""
+    from strainscope import narrate
+    pred = read_artifact("model/predictions.csv", artifacts_dir)
+    reasons = read_artifact("graph/explanations.csv", artifacts_dir)
+    if pred is None or reasons is None:
+        raise FileNotFoundError("The ranking or the explanations are missing (Phases 4 and 5).")
+    match = pred[pred["strain_id"] == strain_id]
+    if match.empty:
+        raise KeyError(f"no strain called {strain_id!r}")
+    nodes = read_artifact("graph/nodes.csv", artifacts_dir)
+    row = match.iloc[0].to_dict()
+    if nodes is not None:
+        genus = nodes.loc[nodes["label"] == strain_id, "genus"]
+        row["genus"] = genus.iloc[0] if len(genus) else None
+    story = narrate.strain(row, reasons[reasons["strain_id"] == strain_id], len(pred), model_card(artifacts_dir))
+    return {"strain_id": strain_id, "text": story.text, "paragraphs": story.paragraphs}
+
+
+# =============================================================================
+# 7. THE PIPELINE: the scripts of Phases 1 to 5, run in order
 # =============================================================================
 
 # Each pipeline is a list of (script, arguments). They run with the same
@@ -903,7 +990,7 @@ def run_pipeline(name: str, root: Path = ROOT):
 
 
 # =============================================================================
-# 7. THE COMMAND LINE
+# 8. THE COMMAND LINE
 # =============================================================================
 
 def _print_status() -> None:

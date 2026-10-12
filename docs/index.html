@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>StrainScope: interactive figures</title>
+<meta name="description" content="The interactive figures of StrainScope, a multi-omics, machine-learning and knowledge-graph project on beneficial microbes (simulated data). Each one opens in the browser.">
+<link rel="icon" href="img/strainscope_icon.svg" type="image/svg+xml">
+<!--
+  docs/index.html: the front page of the project's GitHub Pages site.
+  GitHub Pages publishes the docs/ folder as it is (docs/.nojekyll switches
+  off its page builder), so every interactive figure in docs/interactive/
+  opens with one click. docs/08-deployment-ai.md, section 11, sets it up.
+-->
+<style>
+  :root { --ink: #1F2933; --soft: #5f6b7a; --bg: #FFFFFF; --panel: #F5F9FF; --line: #DCE6F5;
+          --green: #2E7D5B; --blue: #5B8DEF; }
+  @media (prefers-color-scheme: dark) {
+    :root { --ink: #E6EAF0; --soft: #A7B0BC; --bg: #11161C; --panel: #18202A; --line: #2A3542;
+            --green: #6CC79A; --blue: #8DB0F5; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 960px; margin: 0 auto; padding: 32px 16px 48px; }
+  header { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+  header img { width: 64px; height: 64px; }
+  h1 { font-size: 1.9rem; margin: 0; }
+  .lead { color: var(--soft); margin: 4px 0 0; }
+  .note { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 16px;
+          margin: 24px 0; }
+  h2 { font-size: 1.2rem; margin: 32px 0 12px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+  a.card { display: block; text-decoration: none; color: inherit; background: var(--panel);
+           border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+  a.card:hover, a.card:focus { border-color: var(--blue); outline: none; }
+  .card b { display: block; color: var(--green); margin-bottom: 4px; }
+  .card span { color: var(--soft); font-size: 0.93rem; }
+  .card small { display: block; margin-top: 8px; color: var(--soft); font-size: 0.8rem; }
+  footer { margin-top: 40px; color: var(--soft); font-size: 0.9rem; }
+  footer a, .note a { color: var(--blue); }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <img src="img/strainscope_icon.svg" alt="">
+    <div>
+      <h1>StrainScope: interactive figures</h1>
+      <p class="lead">Multi-omics, machine learning and a knowledge graph for beneficial microbes.</p>
+    </div>
+  </header>
+
+  <p class="note">Every figure here opens in your browser and works offline once loaded. Hover for details,
+  click the legends to hide a group, drag to zoom. <b>The strains are simulated</b>: the figures show the
+  workflow working, not facts about real microbes. The guides that explain each one, and every step from a
+  blank laptop to the finished app, are in the
+  <a href="https://github.com/akannan2987/strainscope/blob/master/docs/HANDBOOK.md">Handbook</a>.</p>
+
+  <h2>Start here</h2>
+  <div class="grid">
+    <a class="card" href="interactive/journey.html"><b>The journey</b>
+      <span>Every stage of the project, from a blank laptop to the finished product, with what you do,
+      why, and how you know you're done.</span><small>The Handbook as a clickable page</small></a>
+  </div>
+
+  <h2>The data</h2>
+  <div class="grid">
+    <a class="card" href="interactive/signal_scatter.html"><b>Signal in the synthetic data</b>
+      <span>How the planted weapons separate effective strains from the rest.</span>
+      <small>Phase 1: docs/02-data-generation.md</small></a>
+    <a class="card" href="interactive/real_compounds.html"><b>Real compounds</b>
+      <span>The library's metabolites as PubChem records them.</span>
+      <small>Phase 1b: docs/02b-real-data-ingestion.md</small></a>
+    <a class="card" href="interactive/real_genomes.html"><b>Real genomes</b>
+      <span>Genome sizes across the four kingdoms, from NCBI Datasets.</span>
+      <small>Phase 1c: docs/02c-more-real-sources.md</small></a>
+    <a class="card" href="interactive/batch_before_after.html"><b>Batch drift, before and after</b>
+      <span>What cleaning removed: the lab-batch drift in the compound levels.</span>
+      <small>Phase 2: docs/03-harmonization-qc.md</small></a>
+  </div>
+
+  <h2>The analysis</h2>
+  <div class="grid">
+    <a class="card" href="interactive/integration_explorer.html"><b>Integration explorer</b>
+      <span>Genes and chemistry read together: every method scored the same way.</span>
+      <small>Phase 3: docs/04-integration.md</small></a>
+    <a class="card" href="interactive/model_explorer.html"><b>Model explorer</b>
+      <span>Four models on the same folds, calibration, and what the winner relies on.</span>
+      <small>Phase 4: docs/05-machine-learning.md</small></a>
+    <a class="card" href="interactive/graph_explorer.html"><b>Graph explorer</b>
+      <span>The knowledge graph: genes, compounds, modes of action, and where each edge came from.</span>
+      <small>Phase 5: docs/06-knowledge-graph.md</small></a>
+  </div>
+
+  <h2>The assistants</h2>
+  <div class="grid">
+    <a class="card" href="interactive/ask_explorer.html"><b>Ask StrainScope explorer</b>
+      <span>How each golden question about the project scored, and why some are refused.</span>
+      <small>Phase 6b: docs/07b-docs-assistant.md</small></a>
+    <a class="card" href="interactive/assistants_explorer.html"><b>Ask the data and Ask the graph</b>
+      <span>Every golden question of the two Phase 7 assistants, and what each one sends to a model.</span>
+      <small>Phase 7: docs/08-deployment-ai.md</small></a>
+  </div>
+
+  <footer>
+    Source code, guides and tests:
+    <a href="https://github.com/akannan2987/strainscope">github.com/akannan2987/strainscope</a>.
+    The charts use Plotly (<code>interactive/plotly.min.js</code>, MIT licence).
+  </footer>
+</main>
+</body>
+</html>

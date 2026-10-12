@@ -77,7 +77,7 @@ first appears. If a term is missing, that's a documentation bug worth fixing.
 - **Feature**: one measured column (one gene, one metabolite), which gives you one clue about a sample.
 - **Signal vs noise (features)**: *signal* features actually drive the outcome; *noise* features vary but don't. Real data mixes both, and finding the signal is the hard part.
 - **Target / outcome / label**: the thing we want to predict. Here: `suppression_score` (a number) and `is_effective` (yes/no).
-- **Synthetic (simulated) data**: data created by a program rather than measured in a lab. It's an honest and useful option when real data is private, rare, or unavailable; you could call it a flight simulator for the workflow.
+- **Synthetic (simulated) data**: data created by a program rather than measured in a lab. It's a useful option when real data is private, rare, or unavailable; you could call it a flight simulator for the workflow.
 - **Random seed**: the starting number that makes a computer's "random" choices repeatable. Same seed → same data, everywhere, much like shuffling a deck of cards the same way every time.
 - **Reproducibility**: the property that anyone can rerun your work and get the same result.
 - **Class imbalance**: when one outcome is much rarer than the other (here ~24% "effective"). Naive models can cheat by always guessing the majority.
@@ -287,8 +287,8 @@ first appears. If a term is missing, that's a documentation bug worth fixing.
 - **Template**: an empty file with the right column names, to fill in (`python src/strainscope/service.py template FILE.csv`).
 - **Out-of-fold vs final model**: the library's ranking comes from models that never saw each strain (out-of-fold, a fair test). A new strain is scored by the final model, which learned from all 600. A copy of a library strain therefore gets a slightly different number as an upload.
 - **Borderline (likely / borderline / unlikely)**: the bands next to every predicted chance: above 70 % likely, 30 % to 70 % borderline, below 30 % unlikely. "Effective" means suppressing disease by at least 65 % in the trial, and strains just either side of that line are much alike, so for a middling chance the app says *borderline* instead of a confident yes or no.
-- **Health check**: a list of what the app needs and whether it's there, with the fix for anything missing (`python src/strainscope/service.py status`, and the app's Home page).
-- **Shared mode** (`STRAINSCOPE_MODE=public`): an environment variable for an app other people can reach. It hides the real-data buttons and allows the database build only while there's no database yet (a first start).
+- **Health check**: a list of what the app needs and whether it's there, with the fix for anything missing (`python src/strainscope/service.py status`, the app's Home page, and since Phase 7 its *About this copy* page).
+- **Shared mode** (`STRAINSCOPE_MODE=public`): an environment variable for an app other people can reach. It hides the real-data buttons and allows the database build only while there's no database yet (a first start). Since Phase 7 it also builds the database by itself on that first start, gives visitors messages they can act on, and caps the AI features' requests to a language model per day.
 - **AppTest**: Streamlit's test runner; it plays the app the way a browser would, in memory, so the tests can open pages, press buttons and read what was drawn (`tests/test_app.py`).
 - **Playwright**: a library that drives a real browser from Python; only the optional screenshot script uses it (`figures/take_app_screenshots.py`).
 - **`tmux`**: a terminal program that keeps a command running after you log out of a remote machine.
@@ -302,7 +302,7 @@ first appears. If a term is missing, that's a documentation bug worth fixing.
 - **Stop words**: little words that appear everywhere ("the", "is", "how") and are dropped before searching. Ask StrainScope also drops *filler* words that say what kind of question it is rather than what it's about ("explain", "does", "StrainScope").
 - **Word forms**: "strains", "scoring" and "ranked" are matched as "strain", "score" and "rank", but only when the shorter form really appears in the documents.
 - **Cosine similarity (match)**: a score from 0 (no words in common) to 1 (the same words in the same proportions) between a question and a passage. It compares what two texts are mostly about, whatever their length, the way two shopping lists can match well even if one is much longer.
-- **The gate**: the four checks every question passes before anything is shown (an instruction? words no document uses? a weak match? a good match with most of the words found?). They decide between *answered*, *closest* and *refused*.
+- **The gate**: the four checks every question to Ask StrainScope passes before anything is shown (an instruction? words no document uses? a weak match? a good match with most of the words found?). They decide whether a question is answered, shown as *closest* or refused. Ask the data and Ask the graph (Phase 7) have gates of the same kind.
 - **Out-of-scope refusal**: Ask StrainScope's polite "the documents don't cover this", given instead of a guess. It happens before any language model could be involved, so nothing can be invented.
 - **Closest**: the verdict for a question the documents touch on but don't answer directly: the nearest sections are shown, marked as such, with the question's words that none of them use.
 - **Golden question set**: a fixed list of questions with known right answers, off-topic questions that must be refused and undocumented ones that must not get a confident answer (`tests/golden_questions.csv`), run with the tests on every change. A driving test route for the assistant.
@@ -315,10 +315,52 @@ first appears. If a term is missing, that's a documentation bug worth fixing.
 - **Prompt injection**: text that tries to give a language model new orders ("ignore your instructions and..."), like a note slipped into a pile of forms telling the clerk to skip the checks. Ask StrainScope refuses questions that look like one.
 - **Ollama**: free software that runs open language models on your own computer (Windows, macOS, Linux), so nothing leaves it. `ollama pull llama3.2:3b` downloads a small model.
 - **OpenAI-compatible interface**: a common way of asking a language model for an answer over the web (send the messages to an address ending in `/chat/completions`, get the answer back). Ollama and many hosted providers offer it, so one piece of code reaches all of them.
-- **Backend (for written answers)**: where a written answer comes from, set with `STRAINSCOPE_ASK_BACKEND`: `none` (the default: search only), `local` (Ollama on this computer) or `hosted` (a provider, with the key in `.env`).
+- **Backend (for written answers)**: where a written answer comes from, set with `STRAINSCOPE_ASK_BACKEND`: `none` (the default: search only), `local` (Ollama on this computer) or `hosted` (a provider, with the key in `.env`). Since Phase 7 the same setting serves all three assistants.
 - **Temperature**: a language model setting for how adventurous its wording is; 0 asks for its most likely wording every time. Ask StrainScope uses 0.
 - **Stand-in server**: a tiny web server that a test starts on your own computer to play the part of the real service (an understudy), so the written answers can be tested without a model, a key or the internet.
 - **grep**: the classic command that prints every line containing some text (`git grep -n "text"` is Git's version, the same on every system). Exact and complete, but not ranked.
+
+## Phase 7: deployment and the AI layer (doc 08)
+
+### Putting the app online
+
+- **Deploying (deployment)**: running the app on a computer that is on all day and reachable from the internet, so anyone with the link can use it.
+- **Hosting / host**: the service that provides that computer and runs your app on it, rather like a landlord who provides the shop, the power and the opening hours while you run the business.
+- **Streamlit Community Cloud**: a free host for Streamlit apps. It builds the app from a GitHub repository, gives it an address on `streamlit.app` and updates it on every push.
+- **App address (subdomain)**: the first part of the online copy's address (`<a-name>.streamlit.app`), chosen when the app is created.
+- **Entry point (main file path)**: the file a host runs to start the app: `app/streamlit_app.py`.
+- **Redeploy**: the host installing and starting the app again, which Community Cloud does by itself after every push to the branch it watches.
+- **Sleeping app**: an online app with no visitors for 12 hours is paused; the next visitor wakes it with a button, and it may start again from a fresh copy of the repository.
+- **First start**: the first time a shared copy runs without a database. It builds one from the committed results (about 15 seconds), once per running copy.
+- **Shared copy / local copy**: a copy of the app other people use (shared mode on, as online) or one on your own computer (every button available). *About this copy* says which one you're looking at.
+- **About this copy**: the app's health page: the version, the mode, what each page can read, whether the AI features use a model, what may leave the copy, and the package versions.
+- **Pinning (an exact version)**: writing `scikit-learn==1.9.0` instead of `scikit-learn`, so an install gives the same version every time (ordering a part by its catalogue number instead of asking for "a bolt that fits").
+- **Dependency file (packing list)**: the file a host installs packages from. StrainScope has two: `requirements.txt` (your computer, current versions) and `app/requirements.txt` (the online copy, exact versions; Community Cloud reads the one next to the entry point first).
+- **Secrets box (a host's secret store)**: where a host keeps settings and keys that must not be in Git. Community Cloud's is in the app's *Settings*; Streamlit puts its top-level lines into the app's environment.
+- **TOML**: a plain settings format, one `NAME = "value"` per line (and `[section]` headings, which StrainScope doesn't use). The Secrets box is written in it; the template is `.streamlit/secrets.toml.example`.
+- **Reboot (an app)**: stopping and starting the online copy from its *Manage app* menu, for example after changing its secrets.
+- **Daily cap**: the most requests a running copy may send to a language model in one day (200 in shared mode unless `STRAINSCOPE_AI_DAILY_LIMIT` says otherwise). Once it's used up, the assistants still answer with what they found, without a written version, until the count starts again the next day (UTC).
+- **Free tier**: a provider's free allowance, with its own limits. A free tier may use what you send to improve the provider's products, which is one reason StrainScope never sends a row of data or anything about a strain.
+- **GitHub Pages**: GitHub's free hosting for a folder of plain web pages; StrainScope can publish `docs/` with it, so the interactive figures open with one click.
+- **Static site** and **`.nojekyll`**: a static site is a set of files served as they are, with no program running behind them. GitHub Pages normally passes them through a page builder called Jekyll; an empty `docs/.nojekyll` file switches it off.
+
+### The AI layer
+
+- **Ask the data (data assistant)**: the app page and command (`python src/strainscope/ask_data.py "..."`) that answer a question about the data with a SQL query you can see and the table it returns.
+- **Text-to-SQL**: turning a question in words into a SQL query. In StrainScope a tested recipe comes first, and a language model writes a new query only when no recipe fits.
+- **Recipe (Query Cookbook)**: a tested SQL query in [`docs/QUERY_COOKBOOK.md`](QUERY_COOKBOOK.md), under the plain-English question it answers. Ask the data finds the recipe whose question matches yours.
+- **Schema**: the names of a database's tables and columns (not what's in them). It's all a model is shown of the database.
+- **The fifth guard**: the check a model's query passes before the SQL console's four guards: one statement, starting with `SELECT` or `WITH`, with no command that changes anything and no function that reads files.
+- **Ask the graph**: the app page and command (`python src/strainscope/ask_graph.py "..."`) that answer how things connect by walking the knowledge graph.
+- **GraphRAG**: retrieval-augmented generation where the retrieved material is facts read off a graph (each one an edge, with its source) rather than passages of text. The answer carries its own route.
+- **Entity linking (finding names)**: spotting which things in the graph a question mentions ("iturin", "iron competition", "STRAIN_0485"), so the right walks can be taken.
+- **Alias**: an everyday name the graph doesn't use itself ("hydrogen cyanide" for HCN); Ask the graph knows a few.
+- **Fact (numbered)**: one step of a walk read aloud ("iturin works by lipopeptide membrane attack") with the source the edge records. A written answer must cite the facts by number.
+- **Walking order**: the order a route visits its steps. A walk can cross an edge against its direction (ituA and fenA both work by the same mode of action), and a drawing of the route shows that step with an arrow pointing back.
+- **Coverage**: the share of a question's words that the material found also uses; too little, and the answer is shown as *closest* instead.
+- **Number check**: Ask the graph drops a written answer that contains a number none of its facts holds; a model rephrasing facts has no reason to add one.
+- **Plain words (template text)**: a short paragraph written by rules from computed results, with no language model, so every number in it can be traced to a file (`src/strainscope/narrate.py`).
+- **Suggest a fix**: the link under every answer in the app that opens a new GitHub issue with the question filled in. Nothing is sent unless you press Submit on GitHub, and issues there are public.
 
 ## The Handbook, releases and the planned phases (docs HANDBOOK, ROADMAP, PRODUCT_ROADMAP)
 
@@ -328,8 +370,6 @@ first appears. If a term is missing, that's a documentation bug worth fixing.
 - **Tag (Git)**: a bookmark on one exact commit, named with a version number (`v0.1.0`), so anyone can return to that state. *Annotated* tags (`git tag -a`) also record who, when and why.
 - **Semantic versioning**: version numbers as `MAJOR.MINOR.PATCH`: MINOR for a new usable level, PATCH for fixes, MAJOR 1 for the first complete release.
 - **Changelog**: [`CHANGELOG.md`](../CHANGELOG.md), the human-readable list of what changed in each version.
-- **Text-to-SQL / data assistant** *(Phase 7)*: turning a question in plain words into a SQL query, run read-only, with the query shown so it can be checked.
-- **GraphRAG** *(Phase 7)*: RAG where the "passages" are paths walked through the knowledge graph, cited as the route taken.
 - **MCP (Model Context Protocol)** *(Phase 7b)*: an open standard that lets AI assistants call a program's tools in a uniform way (a USB port for AI assistants, more or less).
 - **Continuous integration (CI)** *(Phase 8)*: a service (here GitHub Actions) that runs the tests automatically on fresh Windows, macOS and Linux machines at every push.
 - **Container** *(Phase 8, optional)*: a sealed, portable box holding a program plus everything it needs to run (Python, R, packages), so it runs the same anywhere.

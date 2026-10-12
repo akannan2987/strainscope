@@ -83,7 +83,7 @@ flowchart TB
     DB2[("the same database,<br/>now with 11 kg_* tables")]
     Q["ask the graph:<br/>graph.py why · path · show"]
     FIG["figures/make_phase5_figures.py<br/>9 figures + the graph explorer"]
-    APP["the app's graph view (Phase 6) · GraphRAG (Phase 7)<br/>MCP server (Phase 7b)"]
+    APP["the app's graph view (Phase 6) · Ask the graph (Phase 7)<br/>MCP server (Phase 7b)"]
 
     DB --> G
     ONT --> G
@@ -125,7 +125,7 @@ What runs where: everything on your laptop, in well under a minute. The graph it
 - **No graph database (Neo4j) yet.** About 700 nodes and 8,000 edges fit comfortably in memory with NetworkX. A database earns its place when the graph outgrows memory or many people query it at once; [`docs/ROADMAP.md`](ROADMAP.md#deferred-items-and-their-triggers) and the product roadmap record that trigger.
 - **No external ontologies yet.** Mapping our names to NCBI Taxonomy, ChEBI or the Gene Ontology matters once real data brings real names that need reconciling. With a simulated library it would add machinery without adding meaning.
 - **No graph machine learning** (node embeddings, graph neural networks). They need far larger graphs, and Phase 4's model already does the predicting. This phase is about explaining.
-- **No language model.** GraphRAG, where a language model answers questions by walking this graph and citing the route, arrives in Phase 7. The walks it will use are built and tested here first.
+- **No language model.** GraphRAG, answers built by walking this graph and citing the route, came in Phase 7 as *Ask the graph* ([`docs/08-deployment-ai.md` §7](08-deployment-ai.md#7-step-3-ask-the-graph)). It reuses the walks built and tested here; a language model there is optional and only phrases the facts.
 - **No claim about real biology.** The modes of action come from the descriptions that define the simulated library. They match textbook biocontrol biology, but on real strains the evidence would come from the literature and the lab.
 
 ---
@@ -317,7 +317,7 @@ python src/strainscope/graph.py path accE "disease suppression"
        source: Phase 4 (permutation importance of the winning model) · Elastic net logistic regression: AUC drops 0.006 when shuffled
 ```
 
-The same question, two very different answers: one says *how*, the other only says *the data links them*. That difference is what GraphRAG will cite in Phase 7. (Names with spaces need quotes. Upper and lower case don't matter, and a strain can be an end point: try `path STRAIN_0485 "iron competition"`.)
+The same question, two very different answers: one says *how*, the other only says *the data links them*. That difference is what Ask the graph (GraphRAG, Phase 7) cites, step by step ([`docs/08-deployment-ai.md` §7](08-deployment-ai.md#7-step-3-ask-the-graph)). (Names with spaces need quotes. Upper and lower case don't matter, and a strain can be an end point: try `path STRAIN_0485 "iron competition"`.)
 
 **What is this, and what is it connected to?**
 
@@ -474,7 +474,7 @@ None needs the network or the real database.
 | Integrate (Phase 3) | `integrate.py prepare` → `Rscript R/diablo_integration.R` → `integrate.py twin` → `integrate.py publish` | `python src/strainscope/integrate.py all` |
 | Machine learning (Phase 4) | `model.py compare` → `calibrate` → `explain` → `final` → `publish` | `python src/strainscope/model.py all` |
 | **Knowledge graph (this phase)** | `graph.py build` → `analyse` → `explain` → `publish` | **`python src/strainscope/graph.py all`** |
-| Ask why / how / what | `graph.py why ...`, `graph.py path ... ...`, `graph.py show ...` | the app's Strain page and Knowledge graph page ([`docs/07-app.md`](07-app.md)), GraphRAG (Phase 7) |
+| Ask why / how / what | `graph.py why ...`, `graph.py path ... ...`, `graph.py show ...` | the app's Strain page and Knowledge graph page ([`docs/07-app.md`](07-app.md)), Ask the graph ([`docs/08-deployment-ai.md`](08-deployment-ai.md)) |
 | Question the data | `python src/strainscope/sql.py` + the [Cookbook](QUERY_COOKBOOK.md) | the app's SQL console, cookbook built in ([`docs/07-app.md` §9](07-app.md#9-step-5-the-sql-console)) |
 
 ---

@@ -7,6 +7,7 @@ import streamlit as st
 
 import charts
 import ui
+from strainscope import narrate
 
 uploaded = ui.showing_upload()
 st.title("Ranking: your strains" if uploaded else "Ranking")
@@ -19,6 +20,9 @@ if pred is None:
 if uploaded:
     st.markdown(f"The {len(pred)} strains from **{ui.upload()['name']}**, scored by the saved model. "
                 "Switch back to the library in the sidebar.")
+    with st.container(border=True):
+        st.markdown("**In plain words**")
+        st.markdown(narrate.shortlist(pred, len(pred), uploaded=True).text)
 else:
     st.markdown("All 600 library strains, ranked by their predicted chance of being effective. Each chance "
                 "comes from a model that **never saw that strain** while learning (out-of-fold), so the "
@@ -35,6 +39,11 @@ else:
     c2.metric("Picking at random would find", f"about {chance:.0f}", delta_color="off", delta_arrow="off")
     c3.metric("Effective strains you'd miss", f"{int(pred['is_effective'].sum()) - found}",
               f"of {int(pred['is_effective'].sum())} in the library", delta_color="off", delta_arrow="off")
+    with st.container(border=True):
+        st.markdown("**In plain words**")
+        st.markdown(narrate.shortlist(pred, n).text)
+        st.caption("Written by rules from the ranking. The model's chances are calibrated (Phase 4), so adding "
+                   "them up gives the number it expects to work.")
     st.plotly_chart(charts.top_n_figure(pred, n), width="stretch")
 
 # -- the table ----------------------------------------------------------------

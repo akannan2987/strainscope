@@ -1,12 +1,18 @@
 """
-app/streamlit_app.py: the StrainScope app (Phases 6 and 6b).
-=============================================================
+app/streamlit_app.py: the StrainScope app (Phases 6, 6b and 7).
+================================================================
 Start it from the project folder, with the virtual environment active:
 
     python -m streamlit run app/streamlit_app.py
 
 A browser tab opens at http://localhost:8501. Stop the app with Ctrl+C in the
-terminal. The guides are docs/07-app.md and docs/07b-docs-assistant.md (Ask StrainScope).
+terminal. The guides are docs/07-app.md, docs/07b-docs-assistant.md (Ask
+StrainScope) and docs/08-deployment-ai.md (the online copy, Ask the data,
+Ask the graph and the plain-language explanations).
+
+The same file is the entry point of the online copy on Streamlit Community
+Cloud, which installs app/requirements.txt (exact versions) and runs it in
+shared mode (STRAINSCOPE_MODE=public, from the app's secrets).
 
 THIS FILE
 ---------
@@ -21,8 +27,9 @@ WHAT THE APP READS (and never changes)
   docs/QUERY_COOKBOOK.md                                         the recipes in the SQL console
   README.md, docs/*.md, the docstrings in src/ and app/          what Ask StrainScope answers from
 The only things that write files are the database build (on the Home and Data
-pages) and the real-data fetch (on the Data page). They run the same scripts
-you'd run by hand (src/strainscope/service.py, PIPELINES).
+pages, and by itself on the first start of a shared copy) and the real-data
+fetch (on the Data page). They run the same scripts you'd run by hand
+(src/strainscope/service.py, PIPELINES).
 """
 import streamlit as st
 
@@ -41,7 +48,12 @@ st.logo(str(ui.ROOT / "docs" / "img" / "strainscope_wordmark.svg"), size="large"
 pages = {
     "StrainScope": [
         st.Page(ui.PAGES["home"], title="Home", icon=":material/home:", default=True),
+        st.Page(ui.PAGES["about"], title="About this copy", icon=":material/monitor_heart:"),
+    ],
+    "Ask": [
         st.Page(ui.PAGES["ask"], title="Ask StrainScope", icon=":material/question_answer:"),
+        st.Page(ui.PAGES["ask_data"], title="Ask the data", icon=":material/table_chart:"),
+        st.Page(ui.PAGES["ask_graph"], title="Ask the graph", icon=":material/account_tree:"),
     ],
     "Explore": [
         st.Page(ui.PAGES["ranking"], title="Ranking", icon=":material/format_list_numbered:"),
@@ -55,6 +67,7 @@ pages = {
     ],
 }
 page = st.navigation(pages)
+ui.first_start()                 # shared mode: build the database on the first visit (Phase 7)
 
 with st.sidebar:
     if ui.upload() is not None:
@@ -62,8 +75,8 @@ with st.sidebar:
         st.radio("Strains shown", ["library", "upload"], key="source", horizontal=True,
                  format_func=lambda s: "Library (600)" if s == "library" else f"My upload ({n})",
                  help="Ranking and Strain page show either the simulated library or the strains you uploaded "
-                      "on the Data page. Your upload stays in this browser tab and is never saved.")
-    st.caption("Simulated data · read-only database · "
+                      "on the Data page. Your upload is kept for this browser tab only and never saved.")
+    st.caption(("Shared copy · " if ui.PUBLIC else "") + "Simulated data · read-only database · "
                f"[guide]({ui.DOCS}/07-app.md) · [Handbook]({ui.DOCS}/HANDBOOK.md)")
 
 page.run()

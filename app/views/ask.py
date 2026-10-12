@@ -80,8 +80,11 @@ else:
         for col, s in zip(cols, answer.related):
             col.button(s.heading, key=f"related_{s.link}_{s.heading}", on_click=_set_question, args=(s.heading,),
                        help=f"from {s.file}", width="stretch")
+    ui.suggest_fix("Ask StrainScope", question, answer.verdict, [f"{h.section.heading} ({h.section.link})"
+                                                                for h in answer.hits])
 
 st.divider()
 st.caption(f"{len(index.sections):,} sections from {len({s.file for s in index.sections})} files. Written answers: "
-           f"{settings.describe()}. How it works: {ui.doc('07b-docs-assistant.md', 'docs/07b-docs-assistant.md')}. "
+           f"{ui.model_note(settings).removeprefix('Language model: ')}. "
+           f"How it works: {ui.doc('07b-docs-assistant.md', 'docs/07b-docs-assistant.md')}. "
            "The same from a terminal: `python src/strainscope/ask.py \"your question\"`.")

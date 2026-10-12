@@ -73,9 +73,9 @@ flowchart TD
         F["7 · Knowledge graph (NetworkX)<br/>strain → gene → compound →<br/>mode of action → outcome"]
         G[/"6 · Artifacts<br/>predictions · importances · signature ·<br/>trained model · knowledge graph"/]
     end
-    subgraph CLOUD["THE CLOUD: free, always on, anyone can use it"]
+    subgraph CLOUD["THE CLOUD: free; anyone with the link can use it"]
         H["8 · Streamlit app<br/>explore · rank · SQL console · graph view"]
-        I["9-10 · AI layer  (optional)<br/>plain-language explanations ·<br/>data assistant · GraphRAG"]
+        I["9-10 · AI layer<br/>plain words (rules) · Ask the data ·<br/>Ask the graph (GraphRAG)"]
         Q["11 · Ask StrainScope<br/>answers from the project's own docs,<br/>with links · refuses off-topic questions"]
     end
     M["12 · MCP server (Phase 7b)<br/>read-only tools an AI assistant can call"]
@@ -93,7 +93,8 @@ flowchart TD
     E -.->|importance, ranking| F
     F --> G
     G -->|committed to Git, then deployed| H
-    H -.->|AI wording only when a model<br/>is configured; key kept as a secret| I
+    H --> I
+    I -.->|"optional model: names and facts only,<br/>never rows; key in the host's Secrets box"| LLM["a language model<br/>(local or hosted)"]
     DOCS --> Q
     Q --> H
     M -.->|read-only tools| C
@@ -110,7 +111,7 @@ flowchart TD
     class H cloud
     class I,Q ai
     class DOCS artifact
-    class M roadmap
+    class M,LLM roadmap
     style LAPTOP fill:#F5F9FF,stroke:#B9D2FF,color:#0B2545
     style CLOUD fill:#F2FBF5,stroke:#B7E4C7,color:#0B3D2E
 ```
@@ -169,15 +170,17 @@ If an ontology is a "family tree for concepts" (the rules of what connects to wh
 **What it does:** the website. A person opens a URL and can browse strains, see predictions and the reasons behind them, run their own SQL queries in a safe read-only console, view the knowledge graph, and rank new candidate strains.
 **Why it exists:** results that nobody can open and try aren't much use to anyone. The app turns the analysis into something a non-specialist can *use*. Streamlit lets us build this entire web page in plain Python, with no web-development knowledge needed. We deploy it free on Streamlit Community Cloud, which connects to your GitHub repo and gives it a public URL; every time you push new code, the site updates itself.
 **How it talks to the rest:** through a thin **service layer**, `src/strainscope/service.py`, the counter between the kitchen and the dining room (a restaurant calls it the *pass*). It reads the artifacts and the database, runs SQL behind four guards, and checks, scores and explains uploaded strains. The terminal (`python src/strainscope/service.py ...`), the app, and later Boxes 9, 10 and 12 all go through it, so every way in gives the same answers. (Box 11 has an engine of its own, `src/strainscope/ask.py`, which the service layer passes on as `ask_docs`.)
-**✅ Built in Phase 6 (on your computer; online in Phase 7):** [`docs/07-app.md`](07-app.md). Seven pages: Home, Ranking, Strain page, Knowledge graph, Integration, Data (including uploads of your own strains) and a SQL console with the cookbook built in. Phase 6b added an eighth, Ask StrainScope (Box 11).
+**✅ Built in Phase 6, online since Phase 7:** [`docs/07-app.md`](07-app.md) and [`docs/08-deployment-ai.md`](08-deployment-ai.md). Seven pages at first: Home, Ranking, Strain page, Knowledge graph, Integration, Data (including uploads of your own strains) and a SQL console with the cookbook built in. Phase 6b added Ask StrainScope (Box 11), and Phase 7 three more: Ask the data, Ask the graph (Box 10) and *About this copy*, a health page. The online copy runs on Streamlit Community Cloud in shared mode, installs exact package versions from `app/requirements.txt`, keeps its settings in the host's Secrets box and builds its database on the first start.
 
-### Box 9: AI Explanation Layer · *frontend feature (staged)*
-**What it does:** turns a model's terse output ("top features: phlD gene, surfactin, siderophore") into a plain sentence a non-specialist can read.
-**Why it exists:** findings are only useful if people without a technical background can follow them, and this is the cheapest way to get there. It works without any language model at all, writing template sentences filled with the computed facts. When a model is configured (a hosted one, with its API key stored safely as a secret, or a local one on your own computer), the model only rephrases those facts. If nothing is configured, nothing breaks.
+### Box 9: Plain-language explanations · *frontend feature (Phase 7)*
+**What it does:** turns a strain's results (rank 1 of 600, a chance of 0.9998, ten mechanism paths, a statistics-only flag) into a short paragraph a non-specialist can read, and says what testing the best N strains would bring.
+**Why it exists:** findings are only useful if people without a technical background can follow them. It's written by rules from the computed facts, with no language model, so every number in it can be traced to a file, and nothing about a strain is ever sent anywhere.
+**✅ Built in Phase 7:** `src/strainscope/narrate.py`, the *In plain words* boxes on the Strain and Ranking pages ([`docs/08-deployment-ai.md`](08-deployment-ai.md) §5).
 
-### Box 10: Data assistant and GraphRAG · *frontend feature (Phase 7)*
-**What it does:** someone asks a question about the *data* in ordinary language ("which chemicals are most linked to high performance?"). The **data assistant** turns it into a SQL query on the read-only database and shows the query beside the answer; the **GraphRAG** version answers by tracing the knowledge graph and citing the path it walked.
-**Why it exists:** it's the most natural way for a non-expert to question the project's results. It comes later because it builds on Boxes 3, 7 and 9.
+### Box 10: Ask the data and Ask the graph · *frontend features (Phase 7)*
+**What it does:** someone asks a question about the *data* in ordinary language ("which strains are borderline?"). **Ask the data** finds the tested Query Cookbook recipe that answers it, or, with a language model switched on and no recipe that fits, has the model write a query from the table and column names; either way the query runs read-only behind the SQL console's guards and is shown beside the answer. **Ask the graph** (GraphRAG) answers how things connect ("how does iturin suppress disease?") by walking the knowledge graph and listing each step as a numbered fact with its source.
+**Why it exists:** it's the most natural way for a non-expert to question the project's results. It comes after Boxes 3, 7 and 11 because it builds on all three (the database, the graph and the word search).
+**✅ Built in Phase 7:** `src/strainscope/ask_data.py` and `src/strainscope/ask_graph.py`, with one shared connection to a model in `src/strainscope/llm.py` ([`docs/08-deployment-ai.md`](08-deployment-ai.md) §6, §7).
 
 ### Box 11: Ask StrainScope · *documentation assistant (Phase 6b)*
 **What it does:** answers questions about the *project itself* (say, "how do I install mixOmics on Windows?" or "what is a balanced error rate?") from the project's own documents, quoting the matching passages with links to the exact sections. Questions that aren't about StrainScope get a polite refusal instead of a guess. Optionally, a language model writes a short answer from those passages only.
@@ -185,14 +188,14 @@ If an ontology is a "family tree for concepts" (the rules of what connects to wh
 **✅ Built in Phase 6b:** [`docs/07b-docs-assistant.md`](07b-docs-assistant.md). A word-based search over every guide, glossary entry and docstring (`src/strainscope/ask.py`, no download needed), a gate of four checks before anything is shown, golden questions run with the tests, and optional written answers from a local or hosted model. It's a page in the app and a command in the terminal.
 
 ### Box 12: MCP Server · *a door for AI assistants (Phase 7b)*
-**What it does:** exposes a few of the project's functions (search the docs, run a read-only query, fetch the signature, rank a strain, explain a strain's rank) through the **Model Context Protocol**, a standard "USB port" that lets AI assistants call tools directly. Every call is validated and logged.
+**What it does:** exposes a few of the project's functions (search the docs, ask the data, ask the graph, run a read-only query, fetch the signature, rank a strain, explain a strain's rank) through the **Model Context Protocol**, a standard "USB port" that lets AI assistants call tools directly. Every call is validated and logged.
 **Why it exists:** besides being code that people read, your repo becomes a tool an AI assistant can use. It's built last because it reuses functions the app and Ask StrainScope already provide; all it adds is a new door into machinery that's already there.
 
 ---
 
 ## 5. How data flows, start to finish (the one-paragraph story)
 
-You run the **generator** (Box 1), which writes three raw tables. You run **harmonise + QC** (Box 2), which turns them into clean, aligned tables. Those load into **DuckDB** (Box 3). From the database, the **integration** step (Box 4) finds the cross-layer signature and saves it as an artifact; the **ML models** (Box 5) train and save predictions and a trained model as artifacts (Box 6); the **knowledge graph** (Box 7) is built from the same clean data. You commit everything to GitHub. Streamlit Community Cloud notices the new commit and (re)builds your **app** (Box 8), which reads the small artifacts and serves them quickly to anyone on the internet. Around it, **Ask StrainScope** (Box 11) answers questions about the project from its own docs, the optional **AI features** (Boxes 9 and 10) switch on when a language model is configured, and the **MCP server** (Box 12) offers the same functions to AI assistants.
+You run the **generator** (Box 1), which writes three raw tables. You run **harmonise + QC** (Box 2), which turns them into clean, aligned tables. Those load into **DuckDB** (Box 3). From the database, the **integration** step (Box 4) finds the cross-layer signature and saves it as an artifact; the **ML models** (Box 5) train and save predictions and a trained model as artifacts (Box 6); the **knowledge graph** (Box 7) is built from the same clean data. You commit everything to GitHub. Streamlit Community Cloud notices the new commit and (re)builds your **app** (Box 8), which reads the small artifacts and serves them quickly to anyone on the internet. Around it, **Ask StrainScope** (Box 11) answers questions about the project from its own docs, **plain words** (Box 9) explain each result, **Ask the data** and **Ask the graph** (Box 10) answer questions about the data and the graph, an optional language model rewrites what they found, and the **MCP server** (Box 12) offers the same functions to AI assistants.
 
 And that's the whole system: a dozen boxes in one straight line with a couple of branches, and nothing hidden anywhere.
 
@@ -258,8 +261,8 @@ Every box in the diagram is built and explained by one numbered document in `doc
 | 5 | [`docs/06-knowledge-graph.md`](06-knowledge-graph.md) | Box 7: the knowledge graph → `artifacts/graph/` (graph, communities, explanations) | ✅ |
 | 6 | [`docs/07-app.md`](07-app.md) | Box 8: the Streamlit app on your computer, on a service layer (`src/strainscope/service.py`) | ✅ |
 | 6b | [`docs/07b-docs-assistant.md`](07b-docs-assistant.md) | Box 11: Ask StrainScope, the documentation assistant (`src/strainscope/ask.py`) | ✅ |
-| 7 | `docs/08-deployment-ai.md` | Box 8 online + Boxes 9-10: free public deployment, explanations, data assistant, GraphRAG | ⏳ next |
-| 7b | `docs/08b-mcp-server.md` | Box 12: the MCP server | ⏳ |
+| 7 | [`docs/08-deployment-ai.md`](08-deployment-ai.md) | Box 8 online + Boxes 9-10: the online copy (shared mode, pinned versions, secrets on the host), plain words, Ask the data, Ask the graph | ✅ |
+| 7b | `docs/08b-mcp-server.md` | Box 12: the MCP server | ⏳ next |
 | 8 | `docs/09-packaging.md` | the whole picture: one-command pipeline, cross-platform CI, LICENSE, CHANGELOG, the 1.0 tag | ⏳ |
 
 Guides without links arrive with their phase. The order, the reasons for it and the deferred items (with the event that would schedule each) are in [`docs/ROADMAP.md`](ROADMAP.md); what an industrial version would add is in [`docs/PRODUCT_ROADMAP.md`](PRODUCT_ROADMAP.md).

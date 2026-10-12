@@ -60,7 +60,7 @@ A **widget** is anything you can click or type into: a slider, a dropdown (Strea
 | **Data** | the simulated library; **upload your own strains**; real data from public databases | the database, the saved model, the graph |
 | **SQL console** | ask the database anything, with the [Query Cookbook](QUERY_COOKBOOK.md)'s recipes one click away | the database, `docs/QUERY_COOKBOOK.md` |
 
-Phase 6b added an eighth page, **Ask StrainScope**, under Home: questions about the project, answered from its own documents with links ([`docs/07b-docs-assistant.md`](07b-docs-assistant.md)). The picture above already shows it.
+Phase 6b added an eighth page, **Ask StrainScope**: questions about the project, answered from its own documents with links ([`docs/07b-docs-assistant.md`](07b-docs-assistant.md)). Phase 7 added three more: **Ask the data** and **Ask the graph**, which sit with Ask StrainScope in the sidebar's *Ask* group, and **About this copy**, a health page under Home ([`docs/08-deployment-ai.md`](08-deployment-ai.md)). The picture above shows all eleven.
 
 ---
 
@@ -82,7 +82,7 @@ flowchart LR
         P3["Data · SQL console"]
     end
     YOU(["you, in a browser<br/>http://localhost:8501"])
-    UP[/"your CSV file<br/>(kept in the tab's memory only)"/]
+    UP[/"your CSV file<br/>(kept in memory,<br/>for this tab only)"/]
     CLI["the same service from a terminal:<br/>service.py status · template · score"]
     SCRIPTS["the scripts of Phases 1 to 5<br/>(only through the build and fetch buttons)"]
 
@@ -123,13 +123,13 @@ What runs where: everything on your own computer. The app is a small web server 
 
    ![The four guards around the SQL console](../figures/sql_guards.png)
 
-5. **Uploads are checked, scored and explained by the same rules as the library, and never stored.** Your file is read into the browser tab's memory, checked line by line, scored by the saved model of Phase 4 and explained by the knowledge graph of Phase 5 with exactly Phase 5's rules (a test proves it, §13). It is never written to disk.
+5. **Uploads are checked, scored and explained by the same rules as the library, and never stored.** Your file is read into the app's memory for your browser tab only, checked line by line, scored by the saved model of Phase 4 and explained by the knowledge graph of Phase 5 with exactly Phase 5's rules (a test proves it, §13). It is never written to disk.
 
    ![Your strains, from a CSV file to an explained ranking](../figures/upload_journey.png)
 
 6. **An upload is scored by the final model.** The library's ranking comes from *out-of-fold* predictions: each strain was scored by a model that never saw it while learning (Phase 4). A new strain can only be scored by the final model, which learned from all 600. So a copy of a library strain gets a slightly different number from its library entry, and the app says so (§8).
 7. **The same command on every computer.** `python -m streamlit run app/streamlit_app.py` works the same on Windows, macOS and RHEL 8. I chose `python -m streamlit` over the shorter `streamlit` because it always uses the Python of the active virtual environment, even when the `streamlit` command isn't on the system's search path (a common surprise on Windows). The app's settings live in one small, committed file, `.streamlit/config.toml` (§4).
-8. **A switch for shared use.** Setting the environment variable `STRAINSCOPE_MODE=public` hides the real-data buttons and allows the database build only while there's no database yet (the first start of a shared copy). Your laptop doesn't need it; the online version in Phase 7 will.
+8. **A switch for shared use.** Setting the environment variable `STRAINSCOPE_MODE=public` hides the real-data buttons and allows the database build only while there's no database yet (the first start of a shared copy). Your laptop doesn't need it; the online copy of Phase 7 runs with it, and there it also builds the database by itself on the first start and caps model requests per day ([`docs/08-deployment-ai.md` §1](08-deployment-ai.md#what-changes-when-other-people-use-it-shared-mode)).
 9. **Near the line, say so.** Next to the chance, every strain gets a band: *likely* (above 70 %), *borderline* (30 % to 70 %) or *unlikely* (below 30 %). It's the definition the Query Cookbook already uses, and it keeps the promise of Phase 4's §11 that strains near the line are shown as borderline instead of a confident yes or no. The band lives in the service layer (`confidence_band`), so the terminal and the app agree.
 
 ### What we leave out on purpose, and why
@@ -137,7 +137,7 @@ What runs where: everything on your own computer. The app is a small web server 
 - **No logins or user accounts.** One person on a laptop doesn't need them. A multi-user web front end is item A1 of the [product roadmap](PRODUCT_ROADMAP.md#a1-web-front-end-react-with-typescript), with the event that would schedule it.
 - **No React or FastAPI.** Streamlit is enough for one person exploring. The split into a back-end API and a separate front end is recorded in the [roadmap](ROADMAP.md#deferred-items-and-their-triggers) as a deferred item with its trigger.
 - **No re-training from the app.** The analysis steps take minutes and print a lot that's worth reading; they stay on the command line until Phase 8's one-command pipeline.
-- **No language model in this phase.** The plain-language explanations, the data assistant and GraphRAG arrive in Phase 7; the documentation assistant of Phase 6b has its own page ([`docs/07b-docs-assistant.md`](07b-docs-assistant.md)), with optional written answers.
+- **No language model in this phase.** The plain-language explanations, Ask the data and Ask the graph (GraphRAG) came in Phase 7 ([`docs/08-deployment-ai.md`](08-deployment-ai.md)); the documentation assistant of Phase 6b has its own page ([`docs/07b-docs-assistant.md`](07b-docs-assistant.md)), with optional written answers.
 - **No editing of data in the app.** The data flows one way ([architecture §5b](00-architecture.md#5b-the-one-design-rule-that-makes-it-reproducible)); an app that edited results would break that rule.
 
 ---
@@ -204,9 +204,11 @@ python src/strainscope/service.py status
   ✓ Saved model              Elastic net logistic regression, built with scikit-learn 1.9.0
   · Real tables (optional)   none fetched (the app works without them)
       to add: Data page, Real data tab, or python src/strainscope/fetch_real.py
+  · AI features (optional)   off: the assistants answer by search and rules alone, and nothing is sent anywhere
+      to add: STRAINSCOPE_ASK_BACKEND in .env (docs/08-deployment-ai.md section 10)
 ```
 
-**What it means.** A ✓ is fine, a ✗ is needed and missing (with the fix underneath), and a · is optional. Every phase's results are both in `artifacts/` and in the database, and the saved model was built with the scikit-learn you have.
+**What it means.** A ✓ is fine, a ✗ is needed and missing (with the fix underneath), and a · is optional. Every phase's results are both in `artifacts/` and in the database, and the saved model was built with the scikit-learn you have. The last line arrived with Phase 7: it says whether the assistants use a language model (with `STRAINSCOPE_ASK_BACKEND=local` from Phase 6b, it's a ✓ that names the model).
 
 **With the real tables from Phases 1b and 1c** (if you fetched them), the database line says 47 tables instead of 40 (the seven extra are the real ones), and the last line becomes:
 
@@ -510,7 +512,7 @@ flowchart LR
     style VM fill:#F2FBF5,stroke:#B7E4C7,color:#0B3D2E
 ```
 
-To keep the app running after you log out of the VM, start it inside `tmux`, a terminal that keeps going in the background: install it once with `sudo dnf install tmux`, type `tmux`, start the app, then press Ctrl+B followed by D to leave it running. Later, `tmux attach` brings you back to it, and Ctrl+C there stops the app. Running it as a proper service that starts with the machine belongs to deployment (Phase 7).
+To keep the app running after you log out of the VM, start it inside `tmux`, a terminal that keeps going in the background: install it once with `sudo dnf install tmux`, type `tmux`, start the app, then press Ctrl+B followed by D to leave it running. Later, `tmux attach` brings you back to it, and Ctrl+C there stops the app. Running it as a service that starts with the machine isn't covered in these guides: Phase 7 puts the app online on a free host instead ([`docs/08-deployment-ai.md`](08-deployment-ai.md#9-step-5-put-the-app-online-streamlit-community-cloud)), so there's no machine to look after.
 
 ---
 
@@ -599,7 +601,7 @@ None of them needs the network. The few that need the database say so and are sk
 | Machine learning (Phase 4) | `model.py compare` → `calibrate` → `explain` → `final` → `publish` | `python src/strainscope/model.py all`; the pipeline (Phase 8) |
 | Knowledge graph (Phase 5) | `graph.py build` → `analyse` → `explain` → `publish` | `python src/strainscope/graph.py all`; the pipeline (Phase 8) |
 | See the ranking | `python src/strainscope/sql.py` + [Cookbook §9](QUERY_COOKBOOK.md#9-machine-learning-results-phase-4) | the app: **Ranking** |
-| Ask why / how / what | `graph.py why ...`, `graph.py path ... ...`, `graph.py show ...` | the app: **Strain page** and **Knowledge graph**; GraphRAG (Phase 7) |
+| Ask why / how / what | `graph.py why ...`, `graph.py path ... ...`, `graph.py show ...` | the app: **Strain page** and **Knowledge graph**; **Ask the graph** (Phase 7) |
 | **Score your own strains (this phase)** | `python src/strainscope/service.py template ...` then `score ...` | **the app: Data page, Upload your strains** |
 | **Check what's there (this phase)** | `python src/strainscope/service.py status` | **the app: Home, health check** |
 | Question the data | `python src/strainscope/sql.py` + the [Cookbook](QUERY_COOKBOOK.md) | **the app: SQL console, cookbook built in** |

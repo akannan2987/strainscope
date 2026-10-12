@@ -1,17 +1,23 @@
 """
-tests/test_app.py: the app itself, clicked through without a browser (Phases 6 and 6b).
-==========================================================================================
+tests/test_app.py: the app itself, clicked through without a browser (Phases 6, 6b and 7).
+=============================================================================================
 Streamlit ships a test runner (AppTest) that runs the app's scripts the way a
 browser session would, but in memory: it can open a page, set a widget, press
 a button and read what was drawn. These tests check that:
   * every page opens without an error, with or without the database, and
     the test really lands on it (it checks the page's title);
-  * the strain page explains the top strain with the graph's own words;
+  * the strain page explains the top strain with the graph's own words, and
+    in plain words;
   * the SQL console answers a question and refuses to change anything;
   * Ask StrainScope answers from the documents, refuses an off-topic
     question, and a starter button puts its question in the box;
+  * Ask the data runs a recipe, shows its query and hands it to the SQL
+    console; Ask the graph answers with facts and a route;
+  * About this copy shows the version and the health check;
   * an upload shows up on the Ranking and Strain pages when chosen;
-  * the shared ("public") mode hides the buttons that download or rewrite;
+  * the shared ("public") mode hides the buttons that download or rewrite,
+    builds the database on its first start, and gives a visitor messages
+    they can act on;
   * every chart can be drawn from the committed results.
 
 Run:  pytest -q tests/test_app.py
@@ -35,7 +41,8 @@ from strainscope import service as sv  # noqa: E402
 
 # Each page and the title it shows. A test that asks for a page and quietly
 # gets the Home page instead would prove nothing, so open_app() checks the title.
-TITLES = {"views/home.py": "StrainScope", "views/ask.py": "Ask StrainScope", "views/ranking.py": "Ranking",
+TITLES = {"views/home.py": "StrainScope", "views/about.py": "About this copy", "views/ask.py": "Ask StrainScope",
+          "views/ask_data.py": "Ask the data", "views/ask_graph.py": "Ask the graph", "views/ranking.py": "Ranking",
           "views/strain.py": "STRAIN_",
           "views/knowledge_graph.py": "Knowledge graph", "views/integration.py": "Integration",
           "views/data.py": "Data", "views/sql_console.py": "SQL console"}
@@ -84,7 +91,71 @@ def test_the_strain_page_explains_the_top_strain():
     body = texts(at)
     assert "carries fenA and produces fengycin" in body
     assert "no known mechanism links it to disease suppression" in body          # the accE flag
-    assert [m.value for m in at.metric][:1] == ["1 of 600"]
+    assert [m.value for m in at.metric][:2] == ["1 of 600", "over 99 %"]
+    assert "It's in the top 50, and 47 of those 50 strains were effective" in body   # in plain words (Phase 7)
+
+
+def test_the_ranking_page_says_the_shortlist_in_plain_words():
+    at = open_app("views/ranking.py")
+    assert "the model's chances for them add up to 46.2" in texts(at)
+
+
+@needs_db
+def test_ask_the_data_runs_a_recipe_and_hands_it_to_the_console(monkeypatch):
+    monkeypatch.setenv("STRAINSCOPE_ASK_BACKEND", "none")
+    at = open_app("views/ask_data.py")
+    at.text_input(key="data_question").set_value("Which strains are borderline?")
+    at.run()
+    assert not at.exception, at.exception[0].value
+    assert "From the Query Cookbook" in at.success[0].value
+    sql = at.code[0].value
+    assert "BETWEEN 0.3 AND 0.7" in sql and at.dataframe[0].value.shape == (4, 2)
+    next(b for b in at.button if b.label == "Open this query in the SQL console").click()
+    at.run()
+    assert at.title[0].value == "SQL console" and at.text_area(key="sql_text").value == sql
+
+
+def test_ask_the_data_refuses_a_change(monkeypatch):
+    monkeypatch.setenv("STRAINSCOPE_ASK_BACKEND", "none")
+    at = open_app("views/ask_data.py")
+    if not HAS_DB:
+        pytest.skip("needs the database")
+    at.text_input(key="data_question").set_value("DROP TABLE phenotype")
+    at.run()
+    assert "only reads" in at.info[0].value and not at.code
+
+
+def test_ask_the_graph_answers_with_facts_and_a_route(monkeypatch):
+    monkeypatch.setenv("STRAINSCOPE_ASK_BACKEND", "none")
+    at = open_app("views/ask_graph.py")
+    at.text_input(key="graph_question").set_value("How does iturin suppress disease?")
+    at.run()
+    assert not at.exception, at.exception[0].value
+    assert "From the knowledge graph" in at.success[0].value
+    assert "[3] iturin works by lipopeptide membrane attack" in texts(at)
+    assert len(at.get("plotly_chart")) == 1                                         # the route
+
+
+def test_about_this_copy_shows_the_version_and_the_health_check():
+    at = open_app("views/about.py")
+    body = texts(at)
+    assert f"v{sv.release_info()['version']}" in body and "local copy" in body
+    assert "AI features (optional)" in body and "Never a row of data" in body
+
+
+def test_a_shared_copy_builds_its_database_on_the_first_start(monkeypatch, tmp_path):
+    calls = []
+    monkeypatch.setattr(ui, "PUBLIC", True)
+    monkeypatch.setattr(ui, "DB_PATH", tmp_path / "missing.duckdb")
+    monkeypatch.setattr(ui, "_first_start_tried", False)
+    monkeypatch.setattr(ui, "build_database_quietly", lambda: (calls.append(1), (True, ["done"]))[1])
+    at = open_app()
+    assert not at.exception, at.exception[0].value
+    at.switch_page("views/sql_console.py")
+    at.run()
+    assert calls == [1]                                                           # once per running copy
+    assert "reload the page in a minute" in at.info[0].value                     # a message a visitor can act on
+    assert not at.code                                                            # no command to run
 
 
 @needs_db

@@ -43,9 +43,18 @@ if summary is not None:
 
 # -- where to go ---------------------------------------------------------------
 st.subheader("Where to start")
-st.page_link(ui.PAGES["ask"], label="Ask StrainScope", icon=":material/question_answer:")
-st.caption("A question about the project, answered from its own guides with links to the exact section. "
-           "Try \"How do I score my own strains?\"")
+a1, a2, a3 = st.columns(3)
+with a1:
+    st.page_link(ui.PAGES["ask"], label="Ask StrainScope", icon=":material/question_answer:")
+    st.caption("A question about the project, answered from its own guides with links to the exact section. "
+               "Try \"How do I score my own strains?\"")
+with a2:
+    st.page_link(ui.PAGES["ask_data"], label="Ask the data", icon=":material/table_chart:")
+    st.caption("A question about the data in plain words, answered with a query you can see and the table it "
+               "returns.")
+with a3:
+    st.page_link(ui.PAGES["ask_graph"], label="Ask the graph", icon=":material/account_tree:")
+    st.caption("How things connect: answers built by walking the knowledge graph, every step with its source.")
 left, right = st.columns(2)
 with left:
     st.page_link(ui.PAGES["ranking"], label="Ranking", icon=":material/format_list_numbered:")
@@ -68,8 +77,9 @@ with st.expander("What the app is reading (health check)", expanded=not all(c.ok
     for c in checks:
         st.markdown(f"{mark[c.ok]} **{c.name}**: {c.detail}")
         if c.fix and c.ok is not True:
-            st.caption(f"To fix: `{c.fix}`")
-    st.caption("The same check from a terminal: `python src/strainscope/service.py status`")
+            st.caption(("For the owner: " if ui.PUBLIC else "To add: " if c.ok is None else "To fix: ") + f"`{c.fix}`")
+    st.caption("The same check from a terminal: `python src/strainscope/service.py status`. More on the "
+               "**About this copy** page.")
 
 with st.expander("How this app works"):
     st.markdown(

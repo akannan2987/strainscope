@@ -26,7 +26,11 @@ then run `duckdb -readonly data/processed/strainscope.duckdb`. The console
 above needs no installation and behaves identically.)*
 
 This file grows every phase. SQL reads almost like English, so each recipe
-below is headed by the plain-English question it answers.
+below is headed by the plain-English question it answers. Those questions
+matter twice since Phase 7: the app's **Ask the data** page (and
+`python src/strainscope/ask_data.py "..."`) answers a question in words by
+finding the recipe whose question matches it, and runs that recipe
+([`docs/08-deployment-ai.md` §6](08-deployment-ai.md#6-step-2-ask-the-data)).
 
 ---
 
@@ -539,6 +543,7 @@ isn't effective.
 ---
 
 *Recipes are added as the project grows. The app's SQL console reads its menu
-from this file, so a new recipe here (a bold, quoted question followed by a
-fenced `sql` code block) shows up in the app without changing any code; a test
-checks that every recipe is found and runs.*
+from this file, and Ask the data searches it, so a new recipe here (a bold,
+quoted question followed by a fenced `sql` code block) shows up in both without
+changing any code; a test checks that every recipe is found and runs. Write the
+question the way someone would ask it: that's what Ask the data matches.*

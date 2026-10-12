@@ -33,7 +33,7 @@ Ask StrainScope is a librarian first. Every answer is a passage quoted **word fo
 
    ![A word found everywhere tells you little](../figures/word_weights.png)
 
-   In StrainScope's documents, "data" appears in 428 of the 1,160 passages and gets a weight of 2.0; "winsorise" appears in 3 and gets 6.7. Common little words ("the", "is", "how") are dropped altogether; they're called **stop words**. Words are also reduced to the form the documents use, so "strains" finds "strain", "scoring" finds "score" and "ranked" finds "rank". A section's heading counts three times, because a heading says what its section is about.
+   In StrainScope's documents, "data" appears in 523 of the 1,335 passages and gets a weight of 1.9; "winsorise" appears in 3 and gets 6.8 Common little words ("the", "is", "how") are dropped altogether; they're called **stop words**. Words are also reduced to the form the documents use, so "strains" finds "strain", "scoring" finds "score" and "ranked" finds "rank". A section's heading counts three times, because a heading says what its section is about.
 3. **Compare.** The question gets word weights the same way, and each passage gets a **match** score from 0 (no words in common) to 1 (the same words in the same proportions). The measure is **cosine similarity**. Two shopping lists match well when they're mostly about the same things, however long each list is. The best passage of each section stands for that section, and the three best sections are shown.
 4. **Decide**, before anything is shown (next part).
 
@@ -151,9 +151,9 @@ What runs where: everything on your own computer, unless you switch on a hosted 
 
 ### What we leave out on purpose, and why
 
-- **Answers about the data** ("which strains make iturin?"). Phase 7's data assistant will handle those: which turns a question into SQL and runs it through the SQL console's four guards. Ask StrainScope answers questions about the *project*: how to do things, what words mean, why things are built the way they are.
+- **Answers about the data** ("which strains make iturin?"). Phase 7's data assistant handles those ([Ask the data](08-deployment-ai.md#6-step-2-ask-the-data)): it turns a question into SQL and runs it through the SQL console's four guards. Ask StrainScope answers questions about the *project*: how to do things, what words mean, why things are built the way they are.
 - **A conversation.** Each question stands alone; there's no memory of the previous one. Follow-up questions are a deferred item with a trigger.
-- **Feedback buttons** ("was this helpful?"). They're useful once other people use a public copy; then their answers can grow the golden set. Deferred until the deployment of Phase 7.
+- **Feedback buttons** ("was this helpful?"). They're useful once other people use a public copy; then their answers can grow the golden set. Since Phase 7, a *Suggest a fix* link under every answer opens a GitHub issue with the question filled in ([why that way](08-deployment-ai.md#3-the-decisions-in-english-before-any-code)).
 - **A bundled language model.** A good small model is a 2 GB download; the search works without one, so it stays optional.
 
 ---
@@ -232,7 +232,7 @@ python src/strainscope/ask.py "What is a balanced error rate?"
 ```
   ✓ Best match: "Balanced error rate (BER)" in docs/GLOSSARY.md.
 
-  [1] Balanced error rate (BER)   (match 0.46)
+  [1] Balanced error rate (BER)   (match 0.47)
       docs/GLOSSARY.md#phase-3-multi-omics-integration-doc-04
       - **Balanced error rate (BER)**: the average of the error on each outcome group. Unlike plain accuracy it can't be gamed by always guessing the common group: that lazy strategy scores 0.50, exactly like a coin.
 
@@ -264,7 +264,7 @@ python src/strainscope/ask.py "How do I run StrainScope in a Jupyter notebook?"
 **You should see**, for the first:
 
 ```
-  ✗ No StrainScope document uses the word "capital" or "france", so Ask StrainScope won't guess an answer. It can help with setting up a computer, the synthetic and real data, cleaning and the database, SQL, multi-omics integration, the model, the knowledge graph, the app, and the plans ahead.
+  ✗ No StrainScope document uses the word "capital" or "france", so Ask StrainScope won't guess an answer. It can help with setting up a computer, the synthetic and real data, cleaning and the database, SQL, multi-omics integration, the model, the knowledge graph, the app and its online copy, the assistants, and the plans ahead.
 ```
 
 and for the second, a · line followed by three sections:
@@ -285,8 +285,8 @@ python src/strainscope/ask.py --stats
 **You should see** the typo corrected on the first line (`✓ Reading "calibraton" as "calibration". Best match: "Calibration" in docs/GLOSSARY.md.`), and then:
 
 ```
-  859 sections from 45 files: 384 document sections, 287 glossary entries, 188 code docstrings.
-  3,835 different words. Written answers: off (search only; nothing leaves this computer).
+  979 sections from 53 files: 416 document sections, 319 glossary entries, 244 code docstrings.
+  3,958 different words. Written answers: off (search only; nothing leaves this computer).
 ```
 
 **If instead:**
@@ -326,15 +326,15 @@ python src/strainscope/ask.py --golden
 ```
   ── Ask StrainScope: the golden questions ──────────────────────
   ✓ 41/41 answered from the right section
-           (35 of them with an expected section first)
+           (34 of them with an expected section first)
   ✓  4/4  not documented: no confident answer
   ✓ 16/16 off-topic or instructions: refused
-  · known limitation: "Does the app have a dark mode?" (still answered)
+  · known limitation: "Does the app have a dark mode?" (now passes: it can become a 'closest' question)
 
   61 of 61 passed.
 ```
 
-**What it means.** Every in-scope question was answered with a right section among the three shown (35 of the 41 with a right one first); every question about something undocumented was refused or marked *closest*; every off-topic question and instruction was refused. The known limitation is reported but doesn't count (§12 explains it).
+**What it means.** Every in-scope question was answered with a right section among the three shown (34 of the 41 with a right one first); every question about something undocumented was refused or marked *closest*; every off-topic question and instruction was refused. The known limitation is reported but doesn't count; §12 explains it, and why it passes for now.
 
 **Add a question of your own.** Open `tests/golden_questions.csv` and add a line at the end, for example:
 
@@ -465,10 +465,10 @@ The screenshot of the page (`docs/img/app_ask.png`) and the updated tour come fr
 - **A fix that blanked the questions too.** The first version of that fix blanked the example questions everywhere, including in the question being asked, so every starter question came back as "nothing specific to search for". Only documents are blanked now, and a test asks every starter question.
 - **A heading that ended in "does".** "What does DIABLO do?" first matched an empty-looking section of the knowledge-graph guide: "does" wasn't on the stop-word list, the heading "Step 3: why each strain ranks where it does" ends with it, and the section's passage was a lone horizontal rule. Filler words ("does", "explain", "StrainScope") are now dropped everywhere, and a `---` line never forms a passage of its own.
 - **Long sections lost to short ones.** "How do I score my own strains?" first matched the glossary's *Brier score*: the right section (Step 4 of the app guide) is long, and its words were diluted by everything else in it. Searching in passages of about 120 words fixed it.
-- **Spelling suggestions that were too keen.** The first suggestions turned "brakes" into "bakes", "bread" into "read" and "tall" into "tally" (from the guides' *running tally* headings), which let off-topic questions through. A suggestion now needs a word of at least five letters, 85 % similarity and the same first two letters.
+- **Spelling suggestions that were too keen.** The first suggestions turned "brakes" into "bakes", "bread" into "read" and "tall" into "tally" (from the guides' *running tally* headings), which let off-topic questions through. A suggestion now needs a word of at least five letters, 85 % similarity and the same first two letters (and, since Phase 7, a length within one letter of the original: [why](08-deployment-ai.md#14-notes-from-the-build-kept-on-purpose)).
 - **Writing this guide broke three golden questions.** The golden set passed before this guide existed; once it did, three golden questions failed. "How do I set up my laptop?" lost to an example in this guide's FAQ that used the same words; the Jupyter question was "answered" by a Handbook sentence that named the program; and the guide's own off-topic examples made their words count as documented. The example phrases were rewritten, every golden question quoted anywhere is blanked, and words found only in this guide (`SELF_GUIDE` in `src/strainscope/ask.py`) don't count as documented. A little later the misspelt "calibraton" was answered by this guide's own Step 1, which shows that very example, and its grep exercise (§15) had crept into the top three for "What is a balanced error rate?"; this guide's passages now count 0.8 (`SELF_WEIGHT`), and a misspelt word is replaced by the word the documents use before searching. Since then the golden questions run after every change to the documents too, not only after changes to the code.
 - **Two thresholds became one.** The first gate refused below 0.08, answered from 0.12, and in between refused or showed *closest* depending on how many of the question's words were found. "How do I lose weight quickly?" landed in that middle zone with its common words all found somewhere (weights, quickly) and came back as *closest*. The lowest in-scope question in the golden scores was at 0.127, so the middle zone bought nothing: one threshold (0.12) plus the word check does the job, and it's simpler to explain.
-- **The known limitation: "Does the app have a dark mode?"** It's answered, because each of its two main words appears in the documents on its own: the second in the glossary's *Shared mode*, the first in a caption that describes a chart's colours. A word search can't tell that the two words together mean a colour scheme for the screen. The question is kept in the golden set as `limit`, reported on every run, and it's the kind of question the deferred meaning-based search would fix.
+- **The known limitation: "Does the app have a dark mode?"** When this phase was built, it was answered, because each of its two main words appears in the documents on its own: the second in the glossary's *Shared mode*, the first in a caption that describes a chart's colours. A word search can't tell that the two words together mean a colour scheme for the screen. As the documents grew in Phase 7, its best match slipped just under the 0.12 line (0.11), so today it's refused and `--golden` reports that it *now passes*. The search itself didn't change, though, and a few more pages could lift it over the line again. So the question stays in the golden set as `limit`, reported on every run, and it's the kind of question the deferred meaning-based search would fix.
 
 ---
 
@@ -505,7 +505,7 @@ None of them needs the network, a model or a key.
 | Integrate, predict, build the graph (Phases 3 to 5) | each script's verbs, step by step | each script's `all`; the one-command pipeline (Phase 8) |
 | See the ranking, ask why | `src/strainscope/sql.py`, `graph.py why ...` | the app: **Ranking**, **Strain page**, **Knowledge graph** |
 | Score your own strains | `python src/strainscope/service.py template ...` then `score ...` | the app: **Data** page, *Upload your strains* |
-| Question the data | `python src/strainscope/sql.py` + the [Cookbook](QUERY_COOKBOOK.md) | the app: **SQL console**; the data assistant (Phase 7) |
+| Question the data | `python src/strainscope/sql.py` + the [Cookbook](QUERY_COOKBOOK.md) | the app: **SQL console**; **Ask the data** (Phase 7) |
 | **Ask about the project (this phase)** | `python src/strainscope/ask.py "..."` | **the app: Ask StrainScope**; the MCP server's `ask_docs` (Phase 7b) |
 | **Check the answers (this phase)** | `python src/strainscope/ask.py --golden` | **`pytest -q`, in every commit ritual**; on every push from Phase 8 |
 
@@ -592,4 +592,4 @@ git switch develop
 - Add a glossary entry of your own to `docs/GLOSSARY.md`, in the same shape as the others (`- **My term**: what it means.`), ask "what is my term?", and watch it come back at once: the index rebuilds when a document changes. Then remove it again (or keep it, if it helps).
 - Add three golden questions about this guide itself, run the golden set, and keep the ones a newcomer would really ask.
 
-**Next:** **Phase 7, deployment and the AI layer** ([Handbook Stage 12](HANDBOOK.md#stage-12-phase-7-deployment-and-the-ai-layer)): the app online for anyone with a link, in shared mode; Ask StrainScope's written answers switched on with the key stored on the host; plain-language explanations of results; a read-only data assistant that turns a question into SQL behind the console's four guards; and GraphRAG, answers built by walking the knowledge graph. After that, Phase 7b gives AI assistants the same tools through an MCP server, starting with `ask_docs`.
+**Next:** **Phase 7, deployment and the AI layer** ([`docs/08-deployment-ai.md`](08-deployment-ai.md), [Handbook Stage 12](HANDBOOK.md#stage-12-phase-7-deployment-and-the-ai-layer)): the app online for anyone with a link, in shared mode; written answers with the key stored on the host; plain-language explanations of results; Ask the data, which turns a question into SQL behind the console's four guards (and a fifth); and Ask the graph (GraphRAG), answers built by walking the knowledge graph. After that, Phase 7b gives AI assistants the same tools through an MCP server, starting with `ask_docs`.

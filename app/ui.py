@@ -2,10 +2,13 @@
 app/ui.py: what every page of the app shares.
 =============================================
   * where the data lives (and how tests point the app somewhere else),
+  * the shared mode for a copy other people use (Phase 7): the first start
+    that builds the database, and messages a visitor can act on,
   * reading the committed results once and keeping them in memory (caching),
   * which strains are being shown (the library, or your upload),
   * small building blocks: the simulated-data note, help boxes, links to
-    the guides, the explanation lines, and the live log of a pipeline run.
+    the guides, the explanation lines, the "suggest a fix" link under an
+    answer, and the live log of a pipeline run.
 
 How Streamlit runs a page, in one paragraph: every click, every slider move
 and every new selection runs the page's script again from the top. That
@@ -20,6 +23,8 @@ from __future__ import annotations
 import os
 import re
 import sys
+import threading
+import urllib.parse
 from pathlib import Path
 
 import pandas as pd
@@ -29,14 +34,20 @@ APP = Path(__file__).resolve().parent
 ROOT = APP.parent
 sys.path.insert(0, str(ROOT / "src"))
 from strainscope import service as sv  # noqa: E402
+from strainscope.sources.base import load_env  # noqa: E402
+
+load_env()          # settings in the git-ignored .env count too (the shell, or a host's secrets, win)
 
 # Where to read from. Tests (and anyone curious) can point the app at another
 # database or results folder with these two environment variables.
 DB_PATH = Path(os.environ.get("STRAINSCOPE_DB", sv.DB_PATH))
 ARTIFACTS = Path(os.environ.get("STRAINSCOPE_ARTIFACTS", sv.ARTIFACTS))
 # "public" is for a copy other people can reach (Phase 7): it hides the
-# real-data buttons and allows the database build only while there is no
-# database yet (a first start). The default, "local", is for your own computer.
+# real-data buttons, builds the database by itself on the first start and
+# allows no rebuild after that, and caps the AI features' requests per day.
+# The default, "local", is for your own computer. On Streamlit Community
+# Cloud the setting comes from the app's secrets: Streamlit puts every
+# top-level secret into the environment when the app starts.
 PUBLIC = os.environ.get("STRAINSCOPE_MODE", "local").strip().lower() == "public"
 
 REPO = "https://github.com/akannan2987/strainscope"
@@ -86,16 +97,68 @@ def tables() -> pd.DataFrame:
 
 
 @st.cache_data(show_spinner=False, max_entries=4)
-def _status(db_changed: float, art_changed: float, db: str, folder: str):
+def _status(db_changed: float, art_changed: float, db: str, folder: str, requests_today: str):
     return sv.status(Path(db), Path(folder))
 
 
 def status():
-    return _status(stamp(DB_PATH), stamp(ARTIFACTS / "graph" / "edges.csv"), str(DB_PATH), str(ARTIFACTS))
+    """The health check, read again when the database, the results or the
+    number of model requests made today changes (so its AI line is current)."""
+    from strainscope import llm
+    return _status(stamp(DB_PATH), stamp(ARTIFACTS / "graph" / "edges.csv"), str(DB_PATH), str(ARTIFACTS),
+                   llm.daily_cap().describe())
 
 
 def has_database() -> bool:
     return {"genomics", "metabolomics", "phenotype"} <= set(tables()["table"])
+
+
+# =============================================================================
+# The first start of a shared copy (Phase 7)
+# =============================================================================
+# A hosted copy starts from the repository, which holds the results
+# (artifacts/) but no database (data/ is never committed). Hosts also wipe
+# their disk when an app restarts or wakes from sleep. So in shared mode the
+# app builds the database itself, once, before the first page is drawn. The
+# lock makes a second visitor who arrives during the build wait for it
+# instead of starting another.
+
+_FIRST_START = threading.Lock()
+_first_start_tried = False       # one attempt per running copy: a failed build isn't retried on every click
+
+
+def build_database_quietly() -> tuple[bool, list[str]]:
+    """Run the 'database' pipeline (about 15 seconds) and return (finished, log)."""
+    lines, ok = [], False
+    for step, label, line in sv.run_pipeline("database"):
+        lines.append(line)
+        if step is None:
+            ok = label == "done"
+    return ok, lines
+
+
+def first_start() -> None:
+    """Shared mode only: build the database if there isn't one yet. If the
+    build fails, it isn't tried again until the copy restarts (the owner
+    reboots it); the pages that read the committed results still work."""
+    global _first_start_tried
+    if not PUBLIC or _first_start_tried or has_database():
+        return
+    with st.status("Preparing this copy: building the database from the committed results "
+                   "(about 15 seconds, once)...", expanded=False) as box:
+        with _FIRST_START:
+            core = {"genomics", "metabolomics", "phenotype"}
+            if not _first_start_tried and not core <= set(sv.database_tables(DB_PATH)["table"]):
+                _first_start_tried = True               # checked again inside the lock: someone may have built it
+                ok, log = build_database_quietly()
+                if not ok:
+                    box.update(label="The database couldn't be built. The pages that read the committed "
+                                     "results still work.", state="error", expanded=True)
+                    st.code("\n".join(log[-30:]), language=None)
+                    return
+        st.cache_data.clear()
+        st.cache_resource.clear()
+        box.update(label="This copy is ready.", state="complete")
 
 
 @st.cache_resource(show_spinner="Loading the knowledge graph (a second or two, once)...", max_entries=2)
@@ -208,7 +271,9 @@ def pick_strain(strain_id: str) -> None:
 
 
 # Page files, so pages can link to each other by name.
-PAGES = {"home": "views/home.py", "ask": "views/ask.py", "ranking": "views/ranking.py", "strain": "views/strain.py",
+PAGES = {"home": "views/home.py", "about": "views/about.py", "ask": "views/ask.py",
+         "ask_data": "views/ask_data.py", "ask_graph": "views/ask_graph.py",
+         "ranking": "views/ranking.py", "strain": "views/strain.py",
          "graph": "views/knowledge_graph.py", "integration": "views/integration.py",
          "data": "views/data.py", "sql": "views/sql_console.py"}
 
@@ -234,9 +299,45 @@ def plain(markdown: str) -> str:
 
 
 def needs(what: str, fix: str) -> None:
-    """A friendly stop sign: what's missing and the one thing that fixes it."""
+    """A friendly stop sign: what's missing and the one thing that fixes it.
+    On a shared copy a visitor can't run commands, so the message says what
+    they can do instead (and the command is kept for the owner)."""
+    if PUBLIC:
+        st.info(f"{what}\n\nThis shared copy builds what it needs when it starts, so reload the page in a "
+                "minute. If the message stays, **About this copy** (in the sidebar) shows what's missing.")
+        st.caption(f"For the owner of this copy: `{fix.splitlines()[0]}`")
+        return
     st.info(f"{what}\n\nFix: open the **Data** page and build the database, or run:")
     st.code(fix, language="bash")
+
+
+ISSUES = f"{REPO}/issues/new"
+
+
+def feedback_link(page: str, question: str, verdict: str, shown: list[str]) -> str:
+    """A link that opens a new GitHub issue with the question already filled
+    in, so an answer that missed can become a golden question or a fix to the
+    documents. Nothing is sent until the person reads it and presses Submit
+    on GitHub (an issue there is public)."""
+    body = (f"**Page:** {page}\n**Question:** {question}\n**What it said:** {verdict}\n"
+            + ("**What it showed:**\n" + "\n".join(f"- {x}" for x in shown[:5]) + "\n" if shown else "")
+            + "\n**What I expected instead:**\n\n")
+    query = urllib.parse.urlencode({"title": f"{page}: {question[:80]}", "body": body})
+    return f"{ISSUES}?{query}"
+
+
+def suggest_fix(page: str, question: str, verdict: str, shown: list[str]) -> None:
+    """The small "Not what you needed?" line under an answer."""
+    st.link_button("Not what you needed? Suggest a fix", feedback_link(page, question, verdict, shown),
+                   icon=":material/flag:", type="tertiary",
+                   help="Opens a GitHub issue with your question filled in. You can edit it before sending, and "
+                        "nothing is sent unless you press Submit there. Issues on GitHub are public.")
+
+
+def model_note(cfg) -> str:
+    """One line saying whether a language model is set up, for page footers."""
+    from strainscope import llm
+    return f"Language model: {cfg.describe()}" + (f"; {llm.daily_cap().describe()}" if cfg.on and PUBLIC else "")
 
 
 def reason_line(row) -> str:

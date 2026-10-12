@@ -260,6 +260,7 @@ def test_status_without_a_database(tmp_path):
     assert checks["Database"].ok is False and "Data page" in checks["Database"].fix
     assert checks["Real tables (optional)"].ok is None
     assert checks["Phase 5 results"].ok is True                     # the committed results are still there
+    assert checks["AI features (optional)"].ok in (None, True)     # optional: never a failure
 
 
 def test_a_failing_step_stops_the_pipeline(monkeypatch):

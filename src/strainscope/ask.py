@@ -67,6 +67,9 @@ anywhere. Settings (from the shell, or the git-ignored .env file; see
     STRAINSCOPE_ASK_MODEL     local default llama3.2:3b; hosted: required
     STRAINSCOPE_ASK_URL       local default http://localhost:11434/v1; hosted: required
     STRAINSCOPE_ASK_KEY       hosted only; keep it in .env, never in Git
+
+Since Phase 7 the connection itself lives in src/strainscope/llm.py, shared
+with Ask the data and Ask the graph (docs/08-deployment-ai.md).
 """
 from __future__ import annotations
 
@@ -74,8 +77,6 @@ import argparse
 import ast
 import csv
 import difflib
-import json
-import os
 import re
 import sys
 from dataclasses import dataclass, field
@@ -86,6 +87,8 @@ import numpy as np
 
 # Make `strainscope` importable no matter where the script is run from.
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from strainscope import llm  # noqa: E402  (after the path fix)
 
 ROOT = Path(__file__).resolve().parents[2]
 REPO_URL = "https://github.com/akannan2987/strainscope"
@@ -146,10 +149,11 @@ EXAMPLE_QUESTIONS = tuple(STARTERS) + ("What is the capital of France?", "Who wo
 SELF_GUIDE = "docs/07b-docs-assistant.md"
 
 TOPICS = ("setting up a computer, the synthetic and real data, cleaning and the database, SQL, "
-          "multi-omics integration, the model, the knowledge graph, the app, and the plans ahead")
+          "multi-omics integration, the model, the knowledge graph, the app and its online copy, the "
+          "assistants, and the plans ahead")
 
-LOCAL_URL = "http://localhost:11434/v1"
-LOCAL_MODEL = "llama3.2:3b"
+LOCAL_URL = llm.LOCAL_URL
+LOCAL_MODEL = llm.LOCAL_MODEL
 SECTION_CHARS = 1500    # characters of each section sent to a language model
 MODEL_SECTIONS = 3      # sections sent to a language model
 
@@ -326,12 +330,16 @@ def readable(text: str, document: bool = True) -> str:
 @lru_cache(maxsize=1)
 def quoted_examples() -> tuple:
     """The example questions to blank: the starters, three more examples
-    the guides quote, and every golden question (when tests/golden_questions.csv
-    is there and readable; a damaged file never stops the search)."""
-    try:
-        golden = tuple(row["question"] for row in read_golden()) if GOLDEN.exists() else ()
-    except (OSError, KeyError, csv.Error, UnicodeDecodeError):
-        golden = ()
+    the guides quote, and every golden question of the three assistants
+    (tests/golden_questions.csv, and since Phase 7 golden_data_questions.csv
+    and golden_graph_questions.csv, whose starters are golden questions too).
+    A missing or damaged file never stops the search."""
+    golden: tuple = ()
+    for path in sorted(GOLDEN.parent.glob("golden_*questions.csv")):
+        try:
+            golden += tuple(row["question"] for row in read_golden(path))
+        except (OSError, KeyError, csv.Error, UnicodeDecodeError):
+            continue
     return tuple(dict.fromkeys(EXAMPLE_QUESTIONS + golden))
 
 
@@ -571,7 +579,8 @@ def ask(question: str, index: Index | None = None, top_k: int = TOP_K, write: bo
     did_you_mean = {}
     for w in unknown:
         close = difflib.get_close_matches(w, index.known, n=1, cutoff=0.85) if len(w) >= 5 else []
-        if close and close[0][:2] == w[:2]:        # a typo rarely changes the first two letters
+        # a typo rarely changes the first two letters, or the length by more than one letter
+        if close and close[0][:2] == w[:2] and abs(len(close[0]) - len(w)) <= 1:
             did_you_mean[w] = close[0]
     off_topic = (f"This doesn't look like a question the StrainScope documents answer, so Ask StrainScope "
                  f"won't guess. It can help with {TOPICS}.")
@@ -639,33 +648,11 @@ def related(hits: list[Hit], index: Index, where: np.ndarray, n: int = 3) -> lis
 # Level 2 (optional): a short written answer from the sections found
 # =============================================================================
 
-@dataclass
-class WriterSettings:
-    backend: str = "none"               # none | local | hosted
-    url: str = ""
-    model: str = ""
-    key: str = ""                       # hosted only; never printed, never sent in the body
-
-    def describe(self) -> str:
-        if self.backend == "none":
-            return "off (search only; nothing leaves this computer)"
-        where = "on this computer" if self.backend == "local" else "hosted"
-        return f"{self.backend}: {self.model} at {self.url} ({where})"
-
-
-def writer_settings(env: dict | None = None) -> WriterSettings:
-    """Level 2 settings from the shell, or from the git-ignored .env file
-    (the shell wins, as everywhere in StrainScope)."""
-    if env is None:
-        from strainscope.sources.base import load_env
-        load_env()
-        env = os.environ
-    backend = env.get("STRAINSCOPE_ASK_BACKEND", "none").strip().lower() or "none"
-    if backend not in ("none", "local", "hosted"):
-        backend = "none"
-    url = env.get("STRAINSCOPE_ASK_URL", "").strip() or (LOCAL_URL if backend == "local" else "")
-    model = env.get("STRAINSCOPE_ASK_MODEL", "").strip() or (LOCAL_MODEL if backend == "local" else "")
-    return WriterSettings(backend, url.rstrip("/"), model, env.get("STRAINSCOPE_ASK_KEY", "").strip())
+# The settings and the request itself are shared with Ask the data and Ask
+# the graph, in src/strainscope/llm.py. These two names stay for the code
+# and tests written in Phase 6b.
+WriterSettings = llm.Settings
+writer_settings = llm.settings
 
 
 SYSTEM_PROMPT = (
@@ -687,43 +674,20 @@ def build_messages(question: str, hits: list[Hit]) -> list[dict]:
 
 
 def write_answer(question: str, hits: list[Hit], settings: WriterSettings,
-                 timeout: float = 120) -> tuple[str | None, str | None, str | None]:
+                 timeout: float = llm.TIMEOUT_S) -> tuple[str | None, str | None, str | None]:
     """Ask the configured model for a short answer that cites the sections.
     Returns (answer, model, note). Any problem gives (None, None, a note
     saying what to do), and the search results still stand."""
     if settings.backend == "none" or not hits:
         return None, None, None
-    if not settings.url or not settings.model:
-        return None, None, "Written answers need STRAINSCOPE_ASK_URL and STRAINSCOPE_ASK_MODEL (see .env.example)."
-    if settings.backend == "hosted" and not settings.key:
-        return None, None, "The hosted backend needs STRAINSCOPE_ASK_KEY in your .env file (see .env.example)."
-    import requests
-    headers = {"Content-Type": "application/json"}
-    if settings.key:
-        headers["Authorization"] = f"Bearer {settings.key}"
-    body = {"model": settings.model, "messages": build_messages(question, hits), "temperature": 0}
-    session = requests.Session()
-    session.trust_env = settings.backend != "local"     # a model on this computer is never reached through a proxy
-    try:
-        r = session.post(f"{settings.url}/chat/completions", headers=headers, data=json.dumps(body),
-                         timeout=timeout)
-    except requests.Timeout:
-        return None, None, (f"The model at {settings.url} took longer than {timeout:.0f} seconds to answer. A smaller "
-                            "model is quicker (see docs/07b-docs-assistant.md section 8). The sections below still answer.")
-    except requests.RequestException:
-        hint = " Is Ollama running? (ollama -v)" if settings.backend == "local" else ""
-        return None, None, f"Couldn't reach the model at {settings.url}.{hint} The sections below still answer."
-    if r.status_code != 200:
-        return None, None, (f"The model service answered with HTTP {r.status_code}. Check the model name "
-                            f"({settings.model}) and, for a hosted service, the key. The sections below still answer.")
-    try:
-        text = r.json()["choices"][0]["message"]["content"].strip()
-    except (ValueError, KeyError, IndexError, TypeError):
-        return None, None, "The model service sent something that isn't a chat answer. The sections below still answer."
-    cited = {int(n) for n in re.findall(r"\[(\d+)\]", text)}
-    if "doesn't cover this" in text.lower():
+    text, problem = llm.chat(build_messages(question, hits), settings, timeout)
+    if text is None:
+        if problem and problem.startswith(("Written answers need", "The hosted backend needs", "This copy has")):
+            return None, None, problem
+        return None, None, f"{problem} The sections below still answer."
+    if llm.NO_ANSWER in text.lower():
         return None, settings.model, "The model found no answer in these sections."
-    if not cited or not cited <= set(range(1, min(len(hits), MODEL_SECTIONS) + 1)):
+    if llm.citation_problem(text, min(len(hits), MODEL_SECTIONS)):
         return None, settings.model, ("The model's answer didn't cite the sections correctly, so it isn't shown. "
                                       "The sections below are what the documentation says.")
     return text, settings.model, None

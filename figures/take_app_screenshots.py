@@ -1,17 +1,21 @@
 """
 figures/take_app_screenshots.py: pictures of the running app (optional).
 ========================================================================
-Takes the screenshots used in README.md, docs/07-app.md, docs/07b-docs-assistant.md
-and docs/HANDBOOK.md, plus a short animated tour:
+Takes the screenshots used in README.md, docs/07-app.md, docs/07b-docs-assistant.md,
+docs/08-deployment-ai.md and docs/HANDBOOK.md, plus a short animated tour:
 
-    docs/img/app_home.png      the front page
-    docs/img/app_ask.png       Ask StrainScope answering a question from the documents
-    docs/img/app_ranking.png   the ranking and the "test N strains" question
-    docs/img/app_strain.png    one strain: its reasons and its corner of the graph
-    docs/img/app_graph.png     the path finder (the decoy accE has only a statistic)
-    docs/img/app_sql.png       a cookbook recipe run in the SQL console
-    docs/img/app_upload.png    twelve uploaded strains, checked and scored
-    docs/img/app_tour.gif      the same pages as a slideshow
+    docs/img/app_home.png         the front page
+    docs/img/app_ask.png          Ask StrainScope answering a question from the documents
+    docs/img/app_ask_data.png     Ask the data: a recipe found, its query and its table (Phase 7)
+    docs/img/app_ask_graph.png    Ask the graph: the route and the numbered facts (Phase 7)
+    docs/img/app_about.png        About this copy: version, health, AI features (Phase 7)
+    docs/img/app_ranking.png      the ranking and the "test N strains" question
+    docs/img/app_plain_words.png  one strain in plain words (Phase 7)
+    docs/img/app_strain.png       one strain: its reasons and its corner of the graph
+    docs/img/app_graph.png        the path finder (the decoy accE has only a statistic)
+    docs/img/app_sql.png          a cookbook recipe run in the SQL console
+    docs/img/app_upload.png       twelve uploaded strains, checked and scored
+    docs/img/app_tour.gif         the same pages as a slideshow
 
 You only need this when the app's look changes; the pictures are committed.
 It drives a real browser, so it needs Playwright, which isn't in
@@ -105,6 +109,26 @@ def main() -> None:
             settle(page, 4)
             shot("app_ask.png")
 
+            page.goto(f"{BASE}/ask_data")
+            settle(page)
+            box = page.get_by_role("textbox", name="Your question")
+            box.fill("Which strains are borderline?")
+            box.press("Enter")
+            settle(page, 4)
+            shot("app_ask_data.png")
+
+            page.goto(f"{BASE}/ask_graph")
+            settle(page)
+            box = page.get_by_role("textbox", name="Your question")
+            box.fill("How does iturin suppress disease?")
+            box.press("Enter")
+            settle(page, 4)
+            shot("app_ask_graph.png")
+
+            page.goto(f"{BASE}/about")
+            settle(page)
+            shot("app_about.png", frame=False)
+
             page.goto(f"{BASE}/ranking")
             settle(page)
             page.get_by_role("heading", name="If you can test N strains, how many would work?").scroll_into_view_if_needed()
@@ -113,6 +137,9 @@ def main() -> None:
 
             page.goto(f"{BASE}/strain?strain=STRAIN_0485")
             settle(page, 5)
+            page.get_by_text("In plain words", exact=True).scroll_into_view_if_needed()
+            settle(page, 1.5)
+            shot("app_plain_words.png")
             page.get_by_role("heading", name="Why it ranks here").scroll_into_view_if_needed()
             settle(page, 1.5)
             shot("app_strain.png")

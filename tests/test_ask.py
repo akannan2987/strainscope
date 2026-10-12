@@ -17,7 +17,8 @@ What they protect, in plain words:
     model can't be reached.
 
 None of them needs the network: the language model is a small stand-in
-server on this computer that answers like an OpenAI-compatible one.
+server on this computer that answers like an OpenAI-compatible one
+(tests/conftest.py).
 
 Run:  pytest -q tests/test_ask.py
 """
@@ -25,8 +26,6 @@ import json
 import re
 import subprocess
 import sys
-import threading
-from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 
 import pytest
@@ -223,33 +222,8 @@ def _env():
 # Level 2: written answers, against a stand-in model server on this computer
 # =============================================================================
 
-class StandIn(BaseHTTPRequestHandler):
-    """Answers POST /v1/chat/completions like an OpenAI-compatible service,
-    with whatever reply the test set, and remembers every request."""
-
-    def do_POST(self):
-        body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
-        self.server.calls.append({"path": self.path, "body": body, "headers": dict(self.headers)})
-        data = json.dumps({"choices": [{"message": {"role": "assistant", "content": self.server.reply}}]}).encode()
-        self.send_response(200)
-        self.send_header("Content-Type", "application/json")
-        self.send_header("Content-Length", str(len(data)))
-        self.end_headers()
-        self.wfile.write(data)
-
-    def log_message(self, *args):
-        pass
-
-
-@pytest.fixture()
-def model():
-    server = HTTPServer(("127.0.0.1", 0), StandIn)
-    server.calls, server.reply = [], "A balanced error rate averages the error on each group [1]."
-    thread = threading.Thread(target=server.serve_forever, daemon=True)
-    thread.start()
-    yield server
-    server.shutdown()
-
+# The stand-in server (the `model` fixture) lives in tests/conftest.py, shared
+# with the Phase 7 assistants' tests.
 
 def local(server) -> A.WriterSettings:
     return A.WriterSettings("local", f"http://127.0.0.1:{server.server_port}/v1", "stand-in")

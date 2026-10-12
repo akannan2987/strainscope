@@ -2,7 +2,7 @@
 
 # The StrainScope Handbook: from day 0 to the finished product
 
-**Handbook version:** 1.6 · **Last updated:** 2026-10-12 · **Repository state it describes:** version **v0.3.0**. Phases 0 → 6b are built and tested (data, real sources, cleaning, database, multi-omics integration, machine learning, the knowledge graph, the app, and Ask StrainScope), along with the v0.1.1 fix release. Phase 7 (deployment and the AI layer) is next. 208 automated tests.
+**Handbook version:** 1.7 · **Last updated:** 2026-10-12 · **Repository state it describes:** version **v0.3.0** and Phase 7 (not yet tagged: v1.0.0 comes with Phase 8). Phases 0 → 7 are built and tested (data, real sources, cleaning, database, multi-omics integration, machine learning, the knowledge graph, the app, Ask StrainScope, and the online copy with the AI layer: plain-language explanations, Ask the data and Ask the graph), along with the v0.1.1 fix release. Phase 7b (the MCP server) is next. 354 automated tests.
 
 **This is the one document to read first, and the one to come back to.** It walks the whole journey in order (understanding the project, preparing a blank computer, building every phase, releasing, and what lies beyond), explaining *why* at every step and linking to the specialised guide that holds the detail. You should never have to hunt through the repository to find out what to do next; if you ever do, that's a defect in this Handbook.
 
@@ -16,7 +16,9 @@
 
 ### Only want to use the app?
 
-To explore StrainScope before building it, you need Python and Git (and nothing else: no R, no GitHub account). Install them with [`docs/01-setup.md`](01-setup.md) Parts B and D, then, in a terminal, from the folder where you keep projects:
+The quickest way needs nothing installed: open the online copy, whose address is at the top of the [README](../README.md) (Stage 12 puts it online). It's the same app, in shared mode.
+
+To run it on your own computer instead, you need Python and Git (and nothing else: no R, no GitHub account). Install them with [`docs/01-setup.md`](01-setup.md) Parts B and D, then, in a terminal, from the folder where you keep projects:
 
 ```bash
 git clone https://github.com/akannan2987/strainscope.git
@@ -27,7 +29,7 @@ python -m pip install -r requirements.txt
 python -m streamlit run app/streamlit_app.py
 ```
 
-The app opens in your browser. If it says there's no database yet, press *Build the database now* on its Home page (about 15 seconds). Stage 10 explains every page, and Stage 11 the *Ask StrainScope* page, where you can ask any question about the project and get the passage that answers it. Next time, only the last command is needed (after `cd strainscope` and the `activate` line).
+The app opens in your browser. If it says there's no database yet, press *Build the database now* on its Home page (about 15 seconds). Stage 10 explains every page, Stage 11 the *Ask StrainScope* page, where you can ask any question about the project and get the passage that answers it, and Stage 12 *Ask the data*, *Ask the graph* and the plain-language explanations. Next time, only the last command is needed (after `cd strainscope` and the `activate` line).
 
 ![The StrainScope app: rank strains, see why, ask the data](img/app_tour.gif)
 
@@ -62,9 +64,9 @@ flowchart TB
     classDef done fill:#E6F4EA,stroke:#4CAF7D,color:#0B3D2E;
     classDef next fill:#FFF3CD,stroke:#C9A227,color:#4A3B00;
     classDef later fill:#F5F5F5,stroke:#B0B0B0,color:#555555,stroke-dasharray:4 3;
-    class S0,S1,S2,S3,S4,S5,S6,S7,S8,S9,S10,S11 done
-    class S12 next
-    class S13,S14,S15 later
+    class S0,S1,S2,S3,S4,S5,S6,S7,S8,S9,S10,S11,S12 done
+    class S13 next
+    class S14,S15 later
     style FOUND fill:#F5F9FF,stroke:#B9D2FF,color:#0B2545
     style DATA fill:#F5F9FF,stroke:#B9D2FF,color:#0B2545
     style ANALYSIS fill:#F5F9FF,stroke:#B9D2FF,color:#0B2545
@@ -88,8 +90,8 @@ flowchart TB
 | 9 | Graph | Phase 5: the knowledge graph | [`docs/06-knowledge-graph.md`](06-knowledge-graph.md) | ~3 h (2 sittings) | ✅ |
 | 10 | App | Phase 6: the app | [`docs/07-app.md`](07-app.md) | 3-4 h (2 sittings) | ✅ |
 | 11 | Assistant | Phase 6b: Ask StrainScope, the documentation assistant | [`docs/07b-docs-assistant.md`](07b-docs-assistant.md) | 2-3 h (2 sittings) | ✅ |
-| 12 | Cloud | Phase 7: deployment and the AI layer | `docs/08-deployment-ai.md` | 3-4 h | ⏳ next |
-| 13 | MCP | Phase 7b: the MCP server | `docs/08b-mcp-server.md` | 2 h | ⏳ |
+| 12 | Cloud + AI | Phase 7: deployment and the AI layer | [`docs/08-deployment-ai.md`](08-deployment-ai.md) | 3-4 h (2 sittings) | ✅ |
+| 13 | MCP | Phase 7b: the MCP server | `docs/08b-mcp-server.md` | 2 h | ⏳ next |
 | 14 | Release | Phase 8: packaging and release 1.0 | `docs/09-packaging.md` | 2-3 h | ⏳ |
 | 15 | Product | Beyond the repository: the product | [`docs/PRODUCT_ROADMAP.md`](PRODUCT_ROADMAP.md) | reading | ✅ plan exists |
 
@@ -342,7 +344,7 @@ Check the result with `git tag -n1`: both `v0.1.0` and `v0.1.1` are listed, each
 **What.** Follow [`docs/07b-docs-assistant.md`](07b-docs-assistant.md). In two sittings:
 
 1. **Ask from the terminal:** `python src/strainscope/ask.py` lists starter questions; `python src/strainscope/ask.py "What is a balanced error rate?"` answers with the glossary entry, word for word, its link, two more sections and "you might also ask" suggestions. Then ask something off-topic and something the documents don't cover, and read the two other verdicts (*refused*, *closest*).
-2. **Ask in the app:** the *Ask StrainScope* page, under Home. Same answers, with working links, the pictures a passage refers to, and buttons for the starter and follow-up questions.
+2. **Ask in the app:** the *Ask StrainScope* page, in the sidebar's *Ask* group. Same answers, with working links, the pictures a passage refers to, and buttons for the starter and follow-up questions.
 3. **Run the golden questions:** `python src/strainscope/ask.py --golden` scores every question in `tests/golden_questions.csv`. Add one of your own.
 4. **Optional, written answers:** install Ollama, `ollama pull llama3.2:3b`, set `STRAINSCOPE_ASK_BACKEND=local`, and a short answer that cites the passages appears above them. A hosted provider works the same way, with its key in `.env`.
 5. **Optional:** draw the figures with `python figures/make_phase6b_figures.py` and open `docs/interactive/ask_explorer.html`; compare `git grep` with the ranked search (the guide's §15).
@@ -351,24 +353,40 @@ Check the result with `git tag -n1`: both `v0.1.0` and `v0.1.1` are listed, each
 
 **Why.** By this stage the documentation is large; a newcomer's most frequent question is "where is that explained?". Ask StrainScope answers it with the passage itself and its link, and refuses rather than guesses when the documents don't cover something. You'll learn how a word search ranks passages (TF-IDF weighs rare words more; cosine similarity compares a question with a passage), why a search needs a gate before it shows anything, how a golden question set turns "does it still work?" into a test, and what retrieval-augmented generation, hallucinations and prompt injection are, with the rules that keep an optional language model fenced in: only answered questions reach it, it sees only its rules, the question and the passages, and it must cite them. Eight real lessons from the build are kept in the guide's §12.
 
-**Checkpoint.** `python src/strainscope/ask.py --stats` reports 859 sections from 45 files (384 document sections, 287 glossary entries, 188 code docstrings). "What is a balanced error rate?" is answered with the glossary's *Balanced error rate (BER)* (match 0.46); "What is the capital of France?" is refused because no document uses either word; "How do I run StrainScope in a Jupyter notebook?" gets the *closest* sections, marked as not a direct answer. `--golden` passes 61 of 61 (41 answered from a right section, 4 undocumented ones not answered, 16 off-topic questions and instructions refused) and reports the one known limitation. `pytest -q` → **207 passed, 1 skipped** (104 new: 98 in `tests/test_ask.py`, including a check that every link between the documents resolves, 5 for the new page in `tests/test_app.py`, and 1 for the `.env` reading in `tests/test_sources.py`; the skipped one is the known limitation).
+**Checkpoint.** `python src/strainscope/ask.py --stats` reports 979 sections from 53 files (416 document sections, 319 glossary entries, 244 code docstrings). "What is a balanced error rate?" is answered with the glossary's *Balanced error rate (BER)* (match 0.47); "What is the capital of France?" is refused because no document uses either word; "How do I run StrainScope in a Jupyter notebook?" gets the *closest* sections, marked as not a direct answer. `--golden` passes 61 of 61 (41 answered from a right section, 4 undocumented ones not answered, 16 off-topic questions and instructions refused) and reports the one known limitation. `pytest -q` → **207 passed, 1 skipped** (104 new: 98 in `tests/test_ask.py`, including a check that every link between the documents resolves, 5 for the new page in `tests/test_app.py`, and 1 for the `.env` reading in `tests/test_sources.py`; the skipped one is the known limitation).
 **Commit message:** `feat: add Ask StrainScope, answers from the project's own documents with links and a golden question set`. **Tag:** `v0.3.0` ("usable by anyone"), with the ritual in [`docs/07b-docs-assistant.md` §17](07b-docs-assistant.md#17-save-your-work-safety-gate-the-commit-ritual-and-the-v030-release).
 
 ---
 
 ## Stage 12: Phase 7, deployment and the AI layer
 
-**What.** `docs/08-deployment-ai.md`: deploy the app free on Streamlit Community Cloud (keys stored as host secrets, never in Git), with the shared-use switch that Stage 10 already built (`STRAINSCOPE_MODE=public` hides the real-data buttons and allows the database build only while there's no database yet) and the database built on first start from the committed results; add plain-language explanations of results; switch on Ask StrainScope's written answers in the online copy (built in Stage 11, with the key stored as a host secret); add a read-only **data assistant** (a question becomes a SQL query that runs through the same four guards as the SQL console, shown to you with its answer) and **GraphRAG** (answers built by walking the knowledge graph, citing the path).
+**What.** Follow [`docs/08-deployment-ai.md`](08-deployment-ai.md). In two sittings:
 
-**Why.** Results become usable by anyone with a link, and the AI features turn "read the tables" into "ask the project". Every answer stays traceable to a document, a query or a graph path, and every feature still works without any key (the AI parts just switch off).
+1. **Results in plain words:** `python src/strainscope/narrate.py STRAIN_0485` writes one strain's rank and reasons as a short paragraph, and `python src/strainscope/narrate.py --top 50` says what testing the 50 best strains would bring. In the app: the *In plain words* boxes on the Strain and Ranking pages.
+2. **Ask the data:** `python src/strainscope/ask_data.py "How many strains are there in each kingdom?"` finds the Query Cookbook recipe that answers it, shows its SQL and runs it read-only. Ask a question no recipe answers, a command that would change the database, and an off-topic one, and read the three other verdicts. `--show-request` prints what a language model would be sent (table and column names, never a row); `--golden` scores the 37 golden questions. In the app: the *Ask the data* page, which can hand any query to the SQL console.
+3. **Ask the graph:** `python src/strainscope/ask_graph.py "How does iturin suppress disease?"` answers with a route through the knowledge graph and numbered facts, each with its source; a question about a strain gets that strain's explanation; `--golden` scores 23 golden questions. In the app: the *Ask the graph* page, with the route drawn.
+4. **Rehearse the shared copy:** set the database aside, start the app with `STRAINSCOPE_MODE=public`, and watch it build the database on its first start; *About this copy* shows the version, the health check and the AI features.
+5. **Save and push** (the first commit below), because the online copy builds from GitHub.
+6. **Put it online:** sign in to Streamlit Community Cloud with GitHub, create an app from `akannan2987/strainscope`, branch `master`, file `app/streamlit_app.py`, choose its address and Python version, and paste `STRAINSCOPE_MODE = "public"` into its Secrets box. It installs `app/requirements.txt` (exact versions) and builds its database on the first visit.
+7. **Optional:** a language model for all three assistants (Ollama at home; a hosted provider online, with its key in the host's Secrets box and a daily cap of 200 requests); the interactive figures published with GitHub Pages; the figures with `python figures/make_phase7_figures.py`.
+8. **Second commit:** the online copy's address in the README and in this stage.
+
+![One shape, three assistants](../figures/three_assistants.png)
+
+**Why.** Until now, using StrainScope meant installing it, and asking it anything meant SQL or graph commands. A link anyone can open, and questions in plain words, make it usable by the people it's for. The phase also draws a clear line around the language model: every assistant answers on its own first (a passage, a tested recipe, a walk through the graph), a model may only rewrite what was found, and it is never sent a row of data or anything about a strain. You'll learn what deploying means and what a free host changes (it builds from GitHub, sleeps, starts again, and is shared); shared mode, a first-start build, pinned versions and secrets on a host; text-to-SQL with tested recipes first and a model's query only behind five guards; GraphRAG as walks with numbered, sourced facts; and why the plain-language explanations are written by rules. Ten real lessons from the build are kept in the guide's §14.
+
+![Ask the graph in the app: the route and the numbered facts](img/app_ask_graph.png)
+
+**Checkpoint.** `narrate.py STRAIN_0485` says *at rank 1 of 600*, *over 99 %*, *47 of those 50 strains were effective* and *10 routes like these*; `narrate.py --top 50` adds the chances up to **46.2**, against 47 effective in the simulated trial. `ask_data.py --golden` passes **37 of 37** (24 answered by the right recipe, 6 with no recipe that fits, 7 refused) and `ask_graph.py --golden` **23 of 23** (17 answered, 2 not covered, 4 refused); Ask StrainScope's golden set still passes 61 of 61. "How many strains are there in each kingdom?" runs the cookbook's section 3 recipe (Bacteria 267, Fungi 183, Yeast 95, Oomycete 55); "How are ituA and fenA connected?" walks `ituA -acts_by-> lipopeptide membrane attack <-acts_by- fenA`. The rehearsal builds the database on the first start and *About this copy* says *shared copy*. `pytest -q` → **353 passed, 1 skipped** (146 new: 69 in `tests/test_ask_data.py`, 43 in `tests/test_ask_graph.py`, 8 in `tests/test_narrate.py`, 7 in `tests/test_llm.py`, 6 in `tests/test_deploy.py`, 12 app test runs and 1 graph test). The online copy opens from its link, its *About this copy* lists the pinned versions, and Ask the data gives the same table as at home.
+**Commit messages:** `feat: add the online copy, plain-language explanations, Ask the data and Ask the graph`, then, after deploying, `docs: link the online app and the interactive figures`. No tag (v1.0.0 arrives with Phase 8; the ritual is in [`docs/08-deployment-ai.md` §19](08-deployment-ai.md#19-save-your-work-two-commits-before-and-after-deploying)).
 
 ---
 
 ## Stage 13: Phase 7b, the MCP server
 
-**What.** `docs/08b-mcp-server.md`: a small **Model Context Protocol** server. It's a standard "USB port" through which AI assistants can use StrainScope's tools directly: `ask_docs` (Stage 11's engine), `query_database` (read-only), `get_signature`, `rank_strain`, `explain_strain` (Phase 5's walks through the graph). Every call is validated and logged.
+**What.** `docs/08b-mcp-server.md`: a small **Model Context Protocol** server. It's a standard "USB port" through which AI assistants can use StrainScope's tools directly: `ask_docs` (Stage 11's engine), `ask_data` and `ask_graph` (Stage 12's assistants), `query_database` (read-only), `get_signature`, `rank_strain`, `explain_strain` (Phase 5's walks through the graph, and Stage 12's plain words). Every call is validated and logged.
 
-**Why.** It turns the repository from "code someone reads" into "a tool an assistant can use", reusing exactly the functions the app already calls: the service layer of Stage 10 (`query_database`, `score_and_explain`, `neighbourhood`) and the graph of Stage 9.
+**Why.** It turns the repository from "code someone reads" into "a tool an assistant can use", reusing exactly the functions the app already calls: the service layer of Stages 10 to 12 (`query_database`, `score_and_explain`, `neighbourhood`, `ask_docs`, `ask_data`, `ask_graph`, `explain_in_words`) and the graph of Stage 9.
 
 ---
 
@@ -449,6 +467,20 @@ python figures/make_phase6b_figures.py
 ollama pull llama3.2:3b
 export STRAINSCOPE_ASK_BACKEND=local                   # Windows PowerShell: $env:STRAINSCOPE_ASK_BACKEND = "local"
 
+# Stage 12, Phase 7: plain words, Ask the data, Ask the graph, the online copy     (docs/08-deployment-ai.md)
+python src/strainscope/narrate.py STRAIN_0485
+python src/strainscope/narrate.py --top 50
+python src/strainscope/ask_data.py "How many strains are there in each kingdom?"
+python src/strainscope/ask_data.py "How many oomycete strains carry olpA?" --show-request
+python src/strainscope/ask_data.py --golden
+python src/strainscope/ask_graph.py "How does iturin suppress disease?"
+python src/strainscope/ask_graph.py --golden
+export STRAINSCOPE_MODE=public                         # rehearse the shared copy; Windows PowerShell: $env:STRAINSCOPE_MODE = "public"
+python -m streamlit run app/streamlit_app.py           # Ctrl+C stops it; then: unset STRAINSCOPE_MODE (PowerShell: Remove-Item Env:STRAINSCOPE_MODE)
+python figures/make_phase7_figures.py
+python figures/make_phase6b_figures.py                 # again: its numbers grow with the documentation
+# then: commit and push (docs/08 section 19, part A), deploy on share.streamlit.io (section 9), second commit (part B)
+
 # Every stage ends with
 pytest -q
 ./check-public-safe.sh                                 # Windows: bash check-public-safe.sh in Git Bash
@@ -467,7 +499,7 @@ python -m streamlit run app/streamlit_app.py   # optional: the app, to look at t
 # ... work on the current stage ...
 ```
 
-Then the end-of-phase ritual (Stage 2) when the stage is complete.
+Then the end-of-phase ritual (Stage 2) when the stage is complete. Since Stage 12, every push to `master` also updates the online copy within a minute or so.
 
 ## When something goes wrong
 
@@ -500,6 +532,14 @@ Then the end-of-phase ritual (Stage 2) when the stage is complete.
 | `python src/strainscope/model.py compare` takes many minutes | normal on a laptop with few processor cores (about 250 model fits); for a quick trial add `--repeats 2` ([`docs/05-machine-learning.md` §16](05-machine-learning.md#16-what-could-go-wrong-mini-faq)) |
 | the graph has no pathway or chemical-class nodes although you fetched real data | the real tables reach the database only through `harmonize.py`: run it, then the three `publish` steps, then `python src/strainscope/graph.py all` ([`docs/06-knowledge-graph.md` §16](06-knowledge-graph.md#16-what-could-go-wrong-mini-faq)) |
 | `graph.py path` or `show` says `nothing in the graph is called ...` | check the spelling, and put names with spaces in quotes (`"disease suppression"`); the message suggests close matches |
+| Ask the data answers a different question from yours | its first line names the recipe it ran; ask more precisely, or open the query in the SQL console and change it ([`docs/08-deployment-ai.md` §13](08-deployment-ai.md#13-reading-the-results-like-a-careful-user)) |
+| Ask the data says *closest* for a question you're sure the cookbook answers | type the recipe's own question (it always runs), or pick it from the closest recipes ([`docs/08-deployment-ai.md` §6](08-deployment-ai.md#6-step-2-ask-the-data)) |
+| Ask the graph says the question names nothing it knows | use the graph's names (ituA, iturin, iron competition, disease suppression, STRAIN_0485); the Knowledge graph page's *Look something up* tab lists them |
+| the online copy says *local copy*, or shows real-data buttons | the `STRAINSCOPE_MODE = "public"` line is missing from its Secrets box, or sits below a `[section]` line; fix it and reboot the app ([`docs/08-deployment-ai.md` §9](08-deployment-ai.md#9-step-5-put-the-app-online-streamlit-community-cloud)) |
+| the online copy fails to install, or shows `ModuleNotFoundError` | `app/requirements.txt` must be on GitHub's `master`, and the main file path exactly `app/streamlit_app.py` (§9 of the same guide) |
+| the online copy shows an old version after a push | wait a minute; check that `master` was pushed (`git log origin/master -1`); reboot the app |
+| no written answers online, or `This copy has used its 200 model requests for today` | *About this copy* shows whether a model is set up and how much of today's cap is used; the cap starts again at midnight (UTC) ([`docs/08-deployment-ai.md` §10](08-deployment-ai.md#10-step-6-optional-a-language-model-for-the-three-assistants)) |
+| `test_scikit_learn_matches_the_saved_model` fails | you rebuilt the model with another scikit-learn; pin that version in `app/requirements.txt` |
 
 ## Every file in the repository, and where it is explained
 
@@ -514,7 +554,8 @@ Nothing in this repository is undocumented magic. Paths are relative to the proj
 | `strainscope.Rproj` | optional RStudio project file | [`docs/01-setup.md`](01-setup.md) Part I |
 | `.gitignore` | what Git must never save | [`docs/01-setup.md`](01-setup.md) Part G |
 | `check-public-safe.sh` | the pre-push safety gate | [`docs/01-setup.md`](01-setup.md) Part H |
-| `.env.example` | template for optional keys and settings (`.env` itself is never committed): the NCBI key, and Ask StrainScope's written answers | [`docs/02c-more-real-sources.md`](02c-more-real-sources.md), [`docs/07b-docs-assistant.md`](07b-docs-assistant.md) §8, §9 |
+| `.env.example` | template for optional keys and settings (`.env` itself is never committed): the NCBI key, the language model for the assistants, shared mode and the daily cap | [`docs/02c-more-real-sources.md`](02c-more-real-sources.md), [`docs/07b-docs-assistant.md`](07b-docs-assistant.md) §8, §9, [`docs/08-deployment-ai.md`](08-deployment-ai.md) §8, §10 |
+| `.streamlit/secrets.toml.example` | what goes in the online copy's Secrets box (a template; the real `.streamlit/secrets.toml` is never committed) | [`docs/08-deployment-ai.md`](08-deployment-ai.md) §1, §9, §10 |
 | `src/strainscope/generate_data.py` | the synthetic data generator | [`docs/02-data-generation.md`](02-data-generation.md) |
 | `src/strainscope/fetch_real.py`, `src/strainscope/sources/*.py` | real-data ingestion: the command and its source plugs | [`02b`](02b-real-data-ingestion.md), [`02c`](02c-more-real-sources.md) |
 | `src/strainscope/harmonize.py` | cleaning, the ledger, the database loader | [`docs/03-harmonization-qc.md`](03-harmonization-qc.md) |
@@ -524,16 +565,23 @@ Nothing in this repository is undocumented magic. Paths are relative to the proj
 | `src/strainscope/model.py` | machine learning: compare, calibrate, explain, final, publish; `load_model()` and `score_strains()` for the app | [`docs/05-machine-learning.md`](05-machine-learning.md) |
 | `src/strainscope/ontology.py` | the domain model: node types, relations, modes of action, the edge checker | [`docs/06-knowledge-graph.md`](06-knowledge-graph.md) §1, §3 |
 | `src/strainscope/graph.py` | the knowledge graph: build, analyse, explain, publish; the questions `why`, `path` and `show` | [`docs/06-knowledge-graph.md`](06-knowledge-graph.md) |
-| `src/strainscope/service.py` | the service layer behind the app: status, safe SQL, cookbook recipes, uploads (template, checks, scores, explanations), a strain's graph neighbourhood, the pipelines, `ask_docs`; the commands `status`, `template`, `score` | [`docs/07-app.md`](07-app.md) §1, §3, §8 |
+| `src/strainscope/service.py` | the service layer behind the app: status, safe SQL, cookbook recipes, uploads (template, checks, scores, explanations), a strain's graph neighbourhood, the pipelines, `ask_docs`, and since Phase 7 `ask_data`, `ask_graph`, `explain_in_words` and `release_info`; the commands `status`, `template`, `score` | [`docs/07-app.md`](07-app.md) §1, §3, §8, [`docs/08-deployment-ai.md`](08-deployment-ai.md) §4 |
 | `src/strainscope/ask.py` | Ask StrainScope: split, weigh, compare, decide; optional written answers; the golden questions; the command | [`docs/07b-docs-assistant.md`](07b-docs-assistant.md) |
+| `src/strainscope/llm.py` | the one connection to a language model for all three assistants: settings, one request, citation and number checks, the daily cap | [`docs/08-deployment-ai.md`](08-deployment-ai.md) §1, §3, §10 |
+| `src/strainscope/narrate.py` | results in plain words, by rules: one strain, and the "test the best N" shortlist; the command | [`docs/08-deployment-ai.md`](08-deployment-ai.md) §5 |
+| `src/strainscope/ask_data.py` | Ask the data: the recipe finder, a model's query behind the fifth guard, the golden questions, the command | [`docs/08-deployment-ai.md`](08-deployment-ai.md) §6 |
+| `src/strainscope/ask_graph.py` | Ask the graph (GraphRAG): finding names, walking the graph, numbered facts, the optional written answer, the golden questions, the command | [`docs/08-deployment-ai.md`](08-deployment-ai.md) §7 |
 | `app/streamlit_app.py`, `app/ui.py`, `app/charts.py` | the app: its front door (sidebar, page list), what the pages share, and every chart | [`docs/07-app.md`](07-app.md) §1, §4 |
-| `app/views/*.py` | the eight pages: Home, Ask StrainScope, Ranking, Strain page, Knowledge graph, Integration, Data, SQL console | [`docs/07-app.md`](07-app.md) §7 to 9, [`docs/07b-docs-assistant.md`](07b-docs-assistant.md) §6 |
+| `app/views/*.py` | the eleven pages: Home, About this copy, Ask StrainScope, Ask the data, Ask the graph, Ranking, Strain page, Knowledge graph, Integration, Data, SQL console | [`docs/07-app.md`](07-app.md) §7 to 9, [`docs/07b-docs-assistant.md`](07b-docs-assistant.md) §6, [`docs/08-deployment-ai.md`](08-deployment-ai.md) §5 to 8 |
+| `app/requirements.txt` | the online copy's packing list, with exact versions (Community Cloud reads it before `requirements.txt`) | [`docs/08-deployment-ai.md`](08-deployment-ai.md) §1, §3, §9 |
 | `.streamlit/config.toml` | the app's settings (colours, upload size, no usage statistics, no email question); committed, holds no secrets | [`docs/07-app.md`](07-app.md) §4 |
-| `tests/test_sources.py`, `tests/test_harmonize.py`, `tests/test_integrate.py`, `tests/test_model.py`, `tests/test_graph.py`, `tests/test_service.py`, `tests/test_app.py`, `tests/test_ask.py` | the automated checks (`test_app.py` clicks through the app without a browser; `test_ask.py` also checks that every link between the documents resolves) | each phase guide's *tests* section |
+| `tests/test_sources.py`, `tests/test_harmonize.py`, `tests/test_integrate.py`, `tests/test_model.py`, `tests/test_graph.py`, `tests/test_service.py`, `tests/test_app.py`, `tests/test_ask.py`, `tests/test_llm.py`, `tests/test_narrate.py`, `tests/test_ask_data.py`, `tests/test_ask_graph.py`, `tests/test_deploy.py` | the automated checks (`test_app.py` clicks through the app without a browser; `test_ask.py` also checks that every link between the documents resolves; `test_deploy.py` checks what the online copy relies on) | each phase guide's *tests* section |
+| `tests/conftest.py` | what several test files share: the stand-in language-model server, and a fresh daily cap for every test | [`docs/08-deployment-ai.md`](08-deployment-ai.md) §15 |
 | `tests/golden_questions.csv` | the golden questions for Ask StrainScope, and what must happen to each | [`docs/07b-docs-assistant.md`](07b-docs-assistant.md) §1, §7 |
+| `tests/golden_data_questions.csv`, `tests/golden_graph_questions.csv` | the golden questions for Ask the data and Ask the graph | [`docs/08-deployment-ai.md`](08-deployment-ai.md) §6, §7 |
 | `tests/test_safety_gate.py` | the safety gate's own tests | [`docs/01-setup.md`](01-setup.md) Part H, Stage 7.1 above |
 | `figures/make_phase*_figures.py`, `figures/make_illustrations.py`, `figures/*.png` | every figure and the script that draws it | each phase guide's *figures* section |
-| `figures/take_app_screenshots.py` | optional: the screenshots of the running app and the animated tour (needs Playwright) | [`docs/07-app.md`](07-app.md) §11 |
+| `figures/take_app_screenshots.py` | optional: the screenshots of the running app and the animated tour (needs Playwright) | [`docs/07-app.md`](07-app.md) §11, [`docs/08-deployment-ai.md`](08-deployment-ai.md) §12 |
 | `artifacts/integration/*.csv` | Phase 3's small result tables (committed; the app will read them) | [`docs/04-integration.md`](04-integration.md) §2, §9 |
 | `artifacts/model/*.csv`, `artifacts/model/model_card.json`, `artifacts/model/strainscope_model.joblib` | Phase 4's result tables, the saved model and its card (committed; the app and the MCP server will read them) | [`docs/05-machine-learning.md`](05-machine-learning.md) §2, §8 |
 | `artifacts/graph/nodes.csv`, `artifacts/graph/edges.csv`, `artifacts/graph/knowledge_layer.graphml`, `artifacts/graph/*.csv` | Phase 5's graph (two plain tables, plus a GraphML copy of the knowledge layer) and its result tables: hubs, communities, knowledge vs data, explanations (committed; the app will read them) | [`docs/06-knowledge-graph.md`](06-knowledge-graph.md) §2, §5 to 9 |
@@ -543,6 +591,8 @@ Nothing in this repository is undocumented magic. Paths are relative to the proj
 | `docs/interactive/*.html`, `docs/interactive/plotly.min.js` | the interactive charts (open in a browser; work offline) | each phase guide's *figures* section |
 | `docs/interactive/journey.html` | this Handbook's journey as a clickable page, built from this file | `figures/make_illustrations.py` |
 | `docs/interactive/ask_explorer.html` | how each golden question scored, and every section's score for a question you pick | `figures/make_phase6b_figures.py`, [`docs/07b-docs-assistant.md`](07b-docs-assistant.md) §10 |
+| `docs/interactive/assistants_explorer.html` | the golden questions of Ask the data and Ask the graph, and every recipe's score for a question you pick | `figures/make_phase7_figures.py`, [`docs/08-deployment-ai.md`](08-deployment-ai.md) §12 |
+| `docs/index.html`, `docs/.nojekyll` | the front page of the optional GitHub Pages site for the interactive figures, and the marker that publishes the folder as it is | [`docs/08-deployment-ai.md`](08-deployment-ai.md) §11 |
 | `data/` | generated data and the database: **never in Git**, rebuilt on demand | [`02`](02-data-generation.md), [`03`](03-harmonization-qc.md), [`04`](04-integration.md) |
 
 ## How this Handbook is maintained

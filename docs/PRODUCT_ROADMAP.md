@@ -93,7 +93,7 @@ Everything inside the "StrainScope core" box is this repository (solid boxes are
 **What it is.** A question box over the project's own documentation that answers with passages and links, optionally writes a short grounded answer, and refuses questions that are not about StrainScope. Full design in [`docs/ROADMAP.md`](ROADMAP.md#ask-strainscope-the-documentation-assistant-in-detail).
 **Required?** Yes. The question a reader starting from zero asks most often is "where is X explained?", and the documentation grows with every phase.
 **Constraints.** Every answer cites its sources; out-of-scope questions are refused *before* any language model runs; a golden question set runs with the tests; the language-model backend (local Ollama or a hosted provider) is optional and switched on by environment variable; only documentation text is ever sent.
-**Verdict: Required now.** Level 1 (find and quote) and the optional level 2 (grounded answers) are built in Phase 6b ([`docs/07b-docs-assistant.md`](07b-docs-assistant.md)); level 3 (in the online app, and the `ask_docs` MCP tool) comes in Phases 7 and 7b. **Trigger for embedding-based search:** questions phrased differently from the documents start being missed (the golden set already records one such question as a known limitation).
+**Verdict: Required now.** Level 1 (find and quote) and the optional level 2 (grounded answers) are built in Phase 6b ([`docs/07b-docs-assistant.md`](07b-docs-assistant.md)); level 3 is built in the online copy of Phase 7 ([`docs/08-deployment-ai.md`](08-deployment-ai.md)), and the `ask_docs` MCP tool comes in Phase 7b. **Trigger for embedding-based search:** questions phrased differently from the documents start being missed (the golden set already records one such question as a known limitation).
 *Prepared today by:* `ask_docs()` in the service layer, which returns an answer as plain data, ready to become the MCP tool and an API endpoint; the golden question set, which will measure any better search against the current one.
 
 ### A5. Desktop or mobile apps, app-store distribution
@@ -151,24 +151,23 @@ Everything inside the "StrainScope core" box is this repository (solid boxes are
 
 ### C1. Plain-language explanations of results
 
-**What it is.** Short written explanations of a strain's rank, a figure or a signature, generated from the computed numbers and the knowledge graph, with nothing made up.
-**Verdict: Required now (Phase 7).** It works without any key (template text). When a language model is configured, it only rephrases the facts it's given.
-*Prepared today by:* Phase 5 already writes a template explanation for every strain (`artifacts/graph/explanations.csv`): its strongest mechanism paths, data-only flags and missing weapons, each with its sources, plus the full count of mechanism paths.
+**What it is.** Short written explanations of a strain's rank and of what testing the best N strains would bring, generated from the computed numbers and the knowledge graph, with nothing made up.
+**Verdict: Required now; built in Phase 7** (`src/strainscope/narrate.py`, the *In plain words* boxes on the Strain and Ranking pages). The text is written by rules from the results, so every number in it can be traced, and a test checks that for all 600 strains. I decided against letting a language model rephrase it: the model would have to be sent a strain's results, which the AI layer never does. **Trigger for model-written wording:** readers find the rule-written paragraphs hard to follow; then only with a model on the same computer, and never for uploads.
+*Built on:* Phase 5's explanation of every strain (`artifacts/graph/explanations.csv`): its strongest mechanism paths, data-only flags and missing weapons, each with its sources, plus the full count of mechanism paths.
 
 ### C2. Data assistant: questions answered with SQL
 
-**What it is.** "Which oomycete strains carry the strongest antifungal signature?" becomes a SQL query on the **read-only** database; the query is shown alongside the answer so it can be checked.
-**Verdict: Required now (Phase 7)**, with guardrails: read-only connection, query shown, row limits, refusal when the question is outside the schema.
+**What it is.** "Which strains are borderline?" becomes a SQL query on the **read-only** database; the query is shown alongside the answer so it can be checked.
+**Verdict: Required now; built in Phase 7** as *Ask the data* (`src/strainscope/ask_data.py`). A tested Query Cookbook recipe answers whenever one fits; a language model writes a new query only when none does, and is sent the table and column names but never a row. Guardrails: instructions, changes and off-topic questions are refused before anything runs; a model's query passes a fifth guard (one read-only statement, no file functions) and the SQL console's four (read-only, no file access, a time limit, a row limit); every query is shown and can be opened in the console; 37 golden questions run with the tests.
 
 ### C3. GraphRAG: answers by walking the knowledge graph
 
 **What it is.** Answers built by following edges in the graph (strain → gene → compound → pathway) and citing the path. (It's a bit like asking for directions and getting the whole route along with the destination.)
-**Verdict: Required now (Phase 7).**
-*Prepared today by:* Phase 5's `graph.py path`, `why` and `show` return routes with a source on every step, and prefer a mechanism to a statistics-only shortcut. GraphRAG adds a language model that chooses which walks to take and phrases the answer.
+**Verdict: Required now; built in Phase 7** as *Ask the graph* (`src/strainscope/ask_graph.py`). Code finds the things a question names and chooses the walks (Phase 5's `path` and `show`, which prefer a mechanism to a statistics-only shortcut), so the retrieval can be tested; each step becomes a numbered fact with its source. An optional language model only phrases the answer, must cite the facts, and may not add a number; a question about a strain is answered by rules and never reaches a model. 23 golden questions run with the tests. **Trigger for a model that chooses the walks:** questions that name nothing in the graph turn out to be common and answerable.
 
 ### C4. MCP server: StrainScope as a tool for AI assistants
 
-**What it is.** A Model Context Protocol server: a standard "USB port" through which an assistant can call `ask_docs`, `query_database`, `get_signature`, `rank_strain` and `explain_strain`. Every tool is read-only, and every call is validated and logged.
+**What it is.** A Model Context Protocol server: a standard "USB port" through which an assistant can call `ask_docs`, `ask_data`, `ask_graph`, `query_database`, `get_signature`, `rank_strain` and `explain_strain`. Every tool is read-only, and every call is validated and logged.
 **Verdict: Required now (Phase 7b).**
 
 ### C5. Ontologies and a graph database
@@ -193,7 +192,7 @@ Everything inside the "StrainScope core" box is this repository (solid boxes are
 
 | Item | What it is | Verdict | Trigger |
 |---|---|---|---|
-| **D1. Hosting the app** | Streamlit Community Cloud (free) | **Required now (Phase 7)** | n/a |
+| **D1. Hosting the app** | Streamlit Community Cloud (free): the online copy in shared mode, exact package versions, secrets in the host's box, the database built on the first start, a health page | **Required now; built in Phase 7** | n/a |
 | **D2. Continuous integration** | tests run automatically on Windows, macOS and Linux at every push | **Required now (Phase 8)** | n/a |
 | **D3. Containers** (Docker, Podman) | the whole toolbox (Python, R, packages) in one portable box | **Optional (Phase 8)** | a user who cannot install R, or a hosting platform that requires a container |
 | **D4. Continuous deployment** | every tested change goes live automatically | Recommended later | a hosted service with users who expect updates |
@@ -210,16 +209,16 @@ These are **required now**, as constraints on the design rather than as technolo
 
 | Constraint | What it means for StrainScope | Status |
 |---|---|---|
-| **Secrets** | API keys live only in the environment (`.env` or the host's secret store), and never in Git or in logs | designed in: `.gitignore` + the pre-push safety gate ([`docs/01-setup.md`](01-setup.md) Part H), [`02c`](02c-more-real-sources.md) |
+| **Secrets** | API keys live only in the environment (`.env` or the host's secret store), and never in Git or in logs | designed in: `.gitignore` + the pre-push safety gate ([`docs/01-setup.md`](01-setup.md) Part H), [`02c`](02c-more-real-sources.md); the online copy's Secrets box and its committed template since Phase 7 ([`docs/08-deployment-ai.md`](08-deployment-ai.md) §1) |
 | **Source licences** | KEGG is for academic use only, so a commercial product needs a KEGG licence or an open alternative; every real row carries its attribution | designed in: an `attribution` column travels with the data ([`02b`](02b-real-data-ingestion.md)) |
 | **Disclosing simulated data** | synthetic data and its limits are stated wherever a number appears | designed in: README, every guide, every result printout |
-| **Confidential strain data** | a company's strain collection and trial results are trade secrets | hosted deployments need access control and encryption (B2, D7); the AI layer sends only documentation text to external models, never data |
+| **Confidential strain data** | a company's strain collection and trial results are trade secrets | hosted deployments need access control and encryption (B2, D7); the AI layer sends a model only text that is public in the repository (documentation passages, table and column names, facts about concepts from the graph), never a row of data, a strain's results or an upload |
 | **Access and benefit-sharing** (Nagoya Protocol) | microbial strains collected from another country's environment may carry legal obligations on use and on sharing benefits | out of scope for public reference data; a real programme tracks each strain's origin and permits (a column to add with B1) |
 | **Plant-protection regulation** (e.g. EU Regulation 1107/2009; US EPA biopesticide registration) | a microbial product needs a regulatory dossier, including its mode of action and safety data | StrainScope is a **research decision-support tool** rather than a dossier; what it offers regulatory work is sourced mode-of-action evidence (C3, C5) |
 | **Personal data** (GDPR) | none is processed; user accounts would be the first personal data | designed in: strain identifiers are not personal; revisit with A1 |
-| **Uploaded strain data** | somebody's own strains are their business | designed in (Phase 6): an upload lives in the browser tab's memory and is never written to disk; the shared mode (`STRAINSCOPE_MODE=public`) hides the real-data buttons and allows the database build only while there's no database yet; Streamlit's usage statistics are switched off |
-| **Querying without harm** | a SQL box on a shared site is an open door unless it's guarded | designed in (Phase 6): read-only, file access off and locked, a 10-second limit, a 10,000-row cap; the Phase 7 data assistant goes through the same guards |
-| **A language model that can't invent or leak** | an AI answer must be checkable, and must never carry data or keys to a provider | designed in (Phase 6b): written answers are off by default; only a question the search answered confidently reaches a model, with nothing but the question and up to three passages; answers must cite the passages or aren't shown; a local option (Ollama) keeps everything on the computer; a hosted key lives in `.env` or the host's secret store |
+| **Uploaded strain data** | somebody's own strains are their business | designed in (Phase 6): an upload is kept in the app's memory for that browser tab only and never written to disk; the shared mode (`STRAINSCOPE_MODE=public`) hides the real-data buttons and allows the database build only on the first start; Streamlit's usage statistics are switched off; the online copy keeps no record of visitors (Phase 7) |
+| **Querying without harm** | a SQL box on a shared site is an open door unless it's guarded | designed in (Phase 6): read-only, file access off and locked, a 10-second limit, a 10,000-row cap; since Phase 7 the data assistant goes through the same guards, and a model's query passes a fifth guard first (one read-only statement, no file functions) |
+| **A language model that can't invent or leak** | an AI answer must be checkable, and a request must never carry data to a provider, or a key anywhere but its own provider | designed in (Phases 6b and 7): models are off by default and every assistant answers without one; a model is asked only about a question the assistant has already judged in scope (Ask StrainScope and Ask the graph: one the search answered; Ask the data: one no tested recipe fits); a model is sent documentation passages, table and column names or facts about concepts, never rows, a strain's results or uploads; answers must cite what they were given (and Ask the graph's may add no number) or they aren't shown; a local option (Ollama) keeps everything on the computer; a hosted key lives in `.env` or the host's secret store; a daily cap limits requests on a shared copy |
 
 ---
 
@@ -252,9 +251,9 @@ For orientation only; there is no product to sell.
 | **Clean** | documented rules with a ledger; a shared database | six rules + ledger; DuckDB; read-only SQL console; cookbook | Phase 2 ✅; B2 later |
 | **Integrate** | genes and chemistry read together; graded signatures | DIABLO + Python twin; controls; stability; R↔Python contract | Phase 3 ✅ |
 | **Predict** | calibrated predictions with uncertainty | four models on the same folds; leak-proof pipeline; calibrated elastic net; model card; out-of-fold ranking | Phase 4 ✅ |
-| **Explain** | knowledge graph, explanations, GraphRAG | the knowledge graph (ontology, sourced edges, real KEGG/RefMet/BacDive context, Phase 3 and 4 evidence); hubs, communities, knowledge vs data; an explanation for every strain; `why` / `path` / `show` questions | Phase 5 ✅; Phase 7; C5 later |
-| **Serve** | app, docs assistant, data assistant, MCP server | the Streamlit app on a tested service layer: ranking with likely / borderline / unlikely bands, strain pages, the graph, integration, uploads, a guarded SQL console; Ask StrainScope, answering from the documents with links, refusing what they don't cover, optional written answers; runs on Windows, macOS and RHEL 8 | Phases 6 and 6b ✅; 7, 7b; A1/A2 later |
-| **Operate** | one-command pipeline, CI, releases; later scheduling and monitoring | tests (208, the app's and the golden questions included), a tested safety gate, a test that every link between the documents resolves, three-branch workflow, tagged releases (v0.1.0, v0.1.1, v0.2.0, v0.3.0); a health check (`service.py status`, the app's Home page); the database rebuilt from one button | Phase 8; B5, D4, D7 later |
+| **Explain** | knowledge graph, explanations, GraphRAG | the knowledge graph (ontology, sourced edges, real KEGG/RefMet/BacDive context, Phase 3 and 4 evidence); hubs, communities, knowledge vs data; an explanation for every strain; `why` / `path` / `show` questions; plain-language explanations by rules; GraphRAG (Ask the graph) | Phases 5 and 7 ✅; C5 later |
+| **Serve** | app, docs assistant, data assistant, MCP server | the Streamlit app on a tested service layer: ranking with likely / borderline / unlikely bands, strain pages, the graph, integration, uploads, a guarded SQL console; Ask StrainScope, Ask the data and Ask the graph, each answering on its own and refusing what it can't answer, with an optional model; runs on Windows, macOS and RHEL 8, and online on Streamlit Community Cloud | Phases 6, 6b and 7 ✅; 7b; A1/A2 later |
+| **Operate** | one-command pipeline, CI, releases; later scheduling and monitoring | tests (354, the app's and three golden question sets included), a tested safety gate, a test that every link between the documents resolves, three-branch workflow, tagged releases (v0.1.0, v0.1.1, v0.2.0, v0.3.0); a health check (`service.py status`, the app's Home page, *About this copy*); the database rebuilt from one button, and by itself on a shared copy's first start; the online copy redeployed on every push, with pinned versions | Phase 8; B5, D4, D7 later |
 
 ## Sequencing summary
 

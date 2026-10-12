@@ -229,7 +229,7 @@ python figures/make_phase2c_figures.py
 |---|---|---|
 | Generate synthetic data | `python src/strainscope/generate_data.py` | the one-command pipeline (Phase 8) |
 | Probe / fetch real data (**now five sources**) | `python src/strainscope/fetch_real.py [--probe] [--source ...]` | the app's **Upload · Synthetic · Fetch-real** picker, per source |
-| Manage an API key | `.env` (from `.env.example`) or `export` | the deployed app's secrets console (Phase 7: same idea, hosted) |
+| Manage an API key | `.env` (from `.env.example`) or `export` | the online copy's Secrets box ([Phase 7](08-deployment-ai.md#9-step-5-put-the-app-online-streamlit-community-cloud): same idea, hosted) |
 | Clean + build the database | `python src/strainscope/harmonize.py` | runs automatically inside the pipeline |
 | Question the data | `python src/strainscope/sql.py` + the [Cookbook](QUERY_COOKBOOK.md) | the app's SQL console, cookbook built in |
 
