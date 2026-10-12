@@ -55,7 +55,7 @@ Everything a person needs from StrainScope, as a list, with where each piece is 
 | ask the data anything in SQL without being able to break it | Phases 2 and 6 | ✅ |
 | run the app on their own computer or a VM with one command | Phase 6 | ✅ |
 | ask questions about the project itself and get linked answers | Phase 6b | ✅ |
-| open the app from a link, with nothing installed | Phase 7 | 🔧 built; online after the first deployment ([guide §9](08-deployment-ai.md#9-step-5-put-the-app-online-streamlit-community-cloud)) |
+| open the app from a link, with nothing installed | Phase 7 | ✅ online at [strainscope.streamlit.app](https://strainscope.streamlit.app) ([guide §9](08-deployment-ai.md#9-step-5-put-the-app-online-streamlit-community-cloud)) |
 | read results in plain language, ask the data in plain language, get answers that cite the graph | Phase 7 | ✅ |
 | let an AI assistant use StrainScope's tools safely | Phase 7b | ⏳ |
 | rebuild everything with one command (or one button) | Phase 8 | ⏳ |

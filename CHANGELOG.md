@@ -8,6 +8,8 @@ Each step is explained in [`docs/HANDBOOK.md`](docs/HANDBOOK.md), the day-0-to-p
 
 Phase 7: the online copy and the AI layer ([`docs/08-deployment-ai.md`](docs/08-deployment-ai.md)). No tag: v1.0.0 arrives with Phase 8.
 
+The online copy runs at https://strainscope.streamlit.app and the interactive figures are published at https://akannan2987.github.io/strainscope/ (both since 2026-10-12).
+
 ### Added
 - **The online copy.** The app runs on Streamlit Community Cloud in shared mode (`STRAINSCOPE_MODE = "public"` in the host's Secrets box, which Streamlit puts into the environment). `app/requirements.txt` is the online copy's packing list, with exact versions (Community Cloud reads it before `requirements.txt`), scikit-learn pinned to the version in the model card. On the first start without a database, the app builds one by itself (about 15 seconds, once per running copy, behind a lock so a second visitor waits instead of building again; a failed build isn't retried on every click). Messages that would ask a visitor to run a command say what they can do instead and keep the command for the owner. `.streamlit/secrets.toml.example` is the template for the Secrets box.
 - **About this copy** (`app/views/about.py`): the version (read from this changelog by `service.release_info()`), local or shared copy, the health check, the AI features and what each may send to a model, the daily cap, and the package versions. The health check (`service.py status`) gains an *AI features (optional)* line.

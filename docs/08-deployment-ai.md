@@ -505,7 +505,7 @@ The host builds from GitHub, so **first save and push this phase's work: do §19
 
 1. **Sign in.** Go to [share.streamlit.io](https://share.streamlit.io), press *Continue to sign-in*, and choose *Continue with GitHub*. Fill in the short form.
 2. **Connect GitHub.** A new account can't see your repositories yet; the next page asks you to connect your GitHub account. Allow it. (GitHub shows what it's granting; you can withdraw it later in GitHub's settings under *Applications*.)
-3. **Create the app.** Press *Create app* (top right), then *Yup, I have an app*. Fill in:
+3. **Create the app.** Press *Create app* (top right), then choose *Deploy a public app from GitHub* and press *Deploy now*. Fill in:
    - **Repository:** `akannan2987/strainscope` (yours, if you forked it)
    - **Branch:** `master`
    - **Main file path:** `app/streamlit_app.py`
@@ -521,7 +521,7 @@ The host builds from GitHub, so **first save and push this phase's work: do §19
      Leave the model lines out for now (§10). Press *Save*.
 5. **Deploy.** Press *Deploy*. A log scrolls by while the host installs `app/requirements.txt`; most apps are ready within a few minutes.
 
-**You should see** your app at `https://<your-name>.streamlit.app`, first with *Preparing this copy*, then the Home page. Check four things, in this order:
+**You should see** your app at `https://<your-name>.streamlit.app` (this project's copy is [strainscope.streamlit.app](https://strainscope.streamlit.app)), first with *Preparing this copy*, then the Home page. Check four things, in this order:
 
 1. **About this copy** says *StrainScope v0.3.0 with the changes listed under [Unreleased]* and *This is a **shared copy***, every health line is ✓ apart from the two optional ones, and *Versions of the main packages* lists the exact versions of `app/requirements.txt`.
 2. **Ask the data**, *Which strains are borderline?*: the same table as on your computer.
@@ -602,7 +602,7 @@ The interactive figures in `docs/interactive/` open in a browser, but only after
 3. Under *Build and deployment*, *Source*, choose *Deploy from a branch*.
 4. Choose the branch `master` and the folder `/docs`, then press *Save*.
 
-**You should see**, after a minute or two, the address `https://<your-github-name>.github.io/strainscope/` (for this repository, `akannan2987`) at the top of the same page. On a free GitHub account, Pages works for public repositories only, which this one is. It opens `docs/index.html`: the front page, with a card for every interactive figure. `docs/.nojekyll` tells GitHub to publish the files as they are, without its page builder (called Jekyll), so nothing is changed on the way. §19 part B adds the address to the README.
+**You should see**, after a minute or two, the address `https://<your-github-name>.github.io/strainscope/` (this project's is [akannan2987.github.io/strainscope](https://akannan2987.github.io/strainscope/)) at the top of the same page. On a free GitHub account, Pages works for public repositories only, which this one is. It opens `docs/index.html`: the front page, with a card for every interactive figure. `docs/.nojekyll` tells GitHub to publish the files as they are, without its page builder (called Jekyll), so nothing is changed on the way. §19 part B adds the address to the README.
 
 ---
 

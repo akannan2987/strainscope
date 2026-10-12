@@ -2,7 +2,7 @@
 
 ![StrainScope: multi-omics · machine learning · beneficial microbes](docs/img/strainscope_logo.svg)
 
-**Live app:** on your own computer ([how](#the-app)), and online with nothing to install (the address is added here after the first deployment, [Stage 12](docs/HANDBOOK.md#stage-12-phase-7-deployment-and-the-ai-layer)) · **Version:** v0.3.0, usable by anyone, plus Phase 7: the online copy, plain-language explanations, Ask the data and Ask the graph (tagged with v1.0.0 after Phase 8)
+**Live app:** [strainscope.streamlit.app](https://strainscope.streamlit.app), online with nothing to install, or on your own computer ([how](#the-app)) · **Interactive figures:** [akannan2987.github.io/strainscope](https://akannan2987.github.io/strainscope/) · **Version:** v0.3.0, usable by anyone, plus Phase 7: the online copy, plain-language explanations, Ask the data and Ask the graph (tagged with v1.0.0 after Phase 8)
 · ![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
 ![R](https://img.shields.io/badge/R-4.x-276DC3?logo=r)
 ![Streamlit](https://img.shields.io/badge/Streamlit-app-FF4B4B?logo=streamlit&logoColor=white)
@@ -192,8 +192,9 @@ deployment fast and free.
 ![The StrainScope app: the ranking, a strain's reasons, the knowledge graph, the SQL console and an upload](docs/img/app_tour.gif)
 
 The app shows everything the analysis found, without any code to write. It runs
-online with nothing to install (Phase 7; the address is at the top of this page
-once deployed), or on your own computer. After the setup in
+online at [strainscope.streamlit.app](https://strainscope.streamlit.app) with nothing to install (Phase 7; after a
+quiet spell it sleeps, and the button on the page wakes it), or on your own
+computer. After the setup in
 [`docs/01-setup.md`](docs/01-setup.md), from the project folder:
 
 ```bash
@@ -344,7 +345,7 @@ means, matching the build log below. Nothing is shown before it exists.*
   ![The golden questions: how well each one matched](figures/golden_scores.png)
 
   Optional written answers come from a model on your own computer (Ollama) or a hosted one, only for questions the search answered, and only from the passages found, which they must cite. Ask with `python src/strainscope/ask.py "your question"` or on the app's *Ask StrainScope* page; explore the scores in `docs/interactive/ask_explorer.html`. This completes **v0.3.0**.
-- **Phase 7 (deployment and the AI layer):** ✅ the app goes online on Streamlit Community Cloud in shared mode, with exact package versions, settings kept in the host's Secrets box, a database built on its first start and a health page. Three assistants share one shape: find first, decide before showing anything, and let an optional language model do no more than rewrite what was found. Ask the data answers with a tested SQL recipe (or a model's query behind five guards, the model never seeing a row), Ask the graph with walks through the knowledge graph as numbered, sourced facts, and every strain's rank can be read in plain words, written by rules. 37 and 23 new golden questions keep the two new assistants in check:
+- **Phase 7 (deployment and the AI layer):** ✅ the app goes online on Streamlit Community Cloud ([strainscope.streamlit.app](https://strainscope.streamlit.app)) in shared mode, with exact package versions, settings kept in the host's Secrets box, a database built on its first start and a health page. Three assistants share one shape: find first, decide before showing anything, and let an optional language model do no more than rewrite what was found. Ask the data answers with a tested SQL recipe (or a model's query behind five guards, the model never seeing a row), Ask the graph with walks through the knowledge graph as numbered, sourced facts, and every strain's rank can be read in plain words, written by rules. 37 and 23 new golden questions keep the two new assistants in check:
 
   ![The golden questions of Ask the data and Ask the graph](figures/assistant_golden_scores.png)
 

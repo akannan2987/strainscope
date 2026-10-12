@@ -327,7 +327,7 @@ first appears. If a term is missing, that's a documentation bug worth fixing.
 - **Deploying (deployment)**: running the app on a computer that is on all day and reachable from the internet, so anyone with the link can use it.
 - **Hosting / host**: the service that provides that computer and runs your app on it, rather like a landlord who provides the shop, the power and the opening hours while you run the business.
 - **Streamlit Community Cloud**: a free host for Streamlit apps. It builds the app from a GitHub repository, gives it an address on `streamlit.app` and updates it on every push.
-- **App address (subdomain)**: the first part of the online copy's address (`<a-name>.streamlit.app`), chosen when the app is created.
+- **App address (subdomain)**: the first part of the online copy's address (`<a-name>.streamlit.app`), chosen when the app is created. StrainScope's is `strainscope.streamlit.app`.
 - **Entry point (main file path)**: the file a host runs to start the app: `app/streamlit_app.py`.
 - **Redeploy**: the host installing and starting the app again, which Community Cloud does by itself after every push to the branch it watches.
 - **Sleeping app**: an online app with no visitors for 12 hours is paused; the next visitor wakes it with a button, and it may start again from a fresh copy of the repository.
