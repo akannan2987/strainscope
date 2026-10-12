@@ -485,7 +485,9 @@ def twin(blocks_dir: Path = BLOCKS, artifacts_dir: Path = ARTIFACTS,
     board, stability = cross_validate_models(g, m, o, repeats=repeats)
     stability = stability.merge(annotations[["feature", "block", "role", "arsenal"]],
                                 on="feature", how="left")
-    stability = stability.sort_values("selection_frequency", ascending=False)
+    # Features picked equally often go in name order, so the table is the same on
+    # every computer (Phase 8 found ties ordered differently on an ARM processor).
+    stability = stability.sort_values(["selection_frequency", "feature"], ascending=[False, True])
     python_signature = stability.loc[stability["selection_frequency"] >= 0.8, "feature"].tolist()
 
     corr = cross_block_correlations(g, m)

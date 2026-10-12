@@ -249,7 +249,7 @@ So Ask StrainScope now gives the model the best passage and, of the next two, on
 
 | Question | Matches of the three passages shown | Given to the model |
 |---|---|---|
-| "What is a balanced error rate?" | 0.47, 0.27, 0.20 | [1] only |
+| "What is a balanced error rate?" | 0.47, 0.26, 0.20 | [1] only |
 | "Why is the data simulated?" | 0.17, 0.16, 0.15 | all three |
 
 Of the 49 starter and golden questions the search answers, 27 now send one passage and 22 send two or three. (Three quarters of the best *match* is a different rule from the gate's 75 % of the question's *words*, described in [Phase 6b §1](07b-docs-assistant.md#the-gate-answered-closest-or-refused); they just happen to use the same share.)

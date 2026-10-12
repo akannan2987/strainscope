@@ -49,7 +49,7 @@ Everything a person needs from StrainScope, as a list, with where each piece is 
 
 | A user can... | Built in | Status |
 |---|---|---|
-| rebuild every number from scratch, identically, on Windows, macOS or RHEL 8 | Phases 0 to 5 | ✅ |
+| rebuild every number from scratch, identically, on Windows, macOS or RHEL 8 | Phases 0 to 5 | ✅ (checked at every push since Phase 8; on ARM processors, such as Macs with an M chip, the random forest's numbers differ slightly: [why](09-packaging.md#18-notes-from-the-build-kept-on-purpose)) |
 | read why every step exists, from a blank laptop on ([Handbook](HANDBOOK.md), guides, [Glossary](GLOSSARY.md), [interactive journey](interactive/journey.html)) | every phase | ✅ living |
 | see the ranking, each strain's reasons and the knowledge graph without writing code | Phase 6 | ✅ |
 | bring their own strains and get them checked, scored and explained, privately | Phase 6 | ✅ |

@@ -33,7 +33,7 @@ Ask StrainScope is a librarian first. Every answer is a passage quoted **word fo
 
    ![A word found everywhere tells you little](../figures/word_weights.png)
 
-   In StrainScope's documents, "data" appears in 567 of the 1,655 passages and gets a weight of 2.1; "winsorise" appears in 3 and gets 7.0. Common little words ("the", "is", "how") are dropped altogether; they're called **stop words**. Words are also reduced to the form the documents use, so "strains" finds "strain", "scoring" finds "score" and "ranked" finds "rank". A section's heading counts three times, because a heading says what its section is about.
+   In StrainScope's documents, "data" appears in 568 of the 1,663 passages and gets a weight of 2.1; "winsorise" appears in 3 and gets 7.0. Common little words ("the", "is", "how") are dropped altogether; they're called **stop words**. Words are also reduced to the form the documents use, so "strains" finds "strain", "scoring" finds "score" and "ranked" finds "rank". A section's heading counts three times, because a heading says what its section is about.
 3. **Compare.** The question gets word weights the same way, and each passage gets a **match** score from 0 (no words in common) to 1 (the same words in the same proportions). The measure is **cosine similarity**. Two shopping lists match well when they're mostly about the same things, however long each list is. The best passage of each section stands for that section, and the three best sections are shown.
 4. **Decide**, before anything is shown (next part).
 
@@ -236,7 +236,7 @@ python src/strainscope/ask.py "What is a balanced error rate?"
       docs/GLOSSARY.md#phase-3-multi-omics-integration-doc-04
       - **Balanced error rate (BER)**: the average of the error on each outcome group. Unlike plain accuracy it can't be gamed by always guessing the common group: that lazy strategy scores 0.50, exactly like a coin.
 
-  [2] The scoreboard   (match 0.27)
+  [2] The scoreboard   (match 0.26)
       docs/05-machine-learning.md#the-scoreboard
       (picture: The model scoreboard)
 
@@ -285,8 +285,8 @@ python src/strainscope/ask.py --stats
 **You should see** the typo corrected on the first line (`✓ Reading "calibraton" as "calibration". Best match: "Calibration" in docs/GLOSSARY.md.`), and then:
 
 ```
-  1194 sections from 61 files: 528 document sections, 381 glossary entries, 285 code docstrings.
-  4,187 different words. Written answers: off (search only; nothing leaves this computer).
+  1198 sections from 61 files: 528 document sections, 383 glossary entries, 287 code docstrings.
+  4,206 different words. Written answers: off (search only; nothing leaves this computer).
 ```
 
 **If instead:**

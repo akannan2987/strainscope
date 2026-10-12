@@ -36,7 +36,7 @@ It knows several **plans**, the same lists the app's buttons run (`database`, `p
 | `real` | fetches the five public databases, then rebuilds with their tables | a few minutes; needs the internet |
 | `probe` | asks the public databases what a fetch would bring | under a minute |
 
-A cake recipe that only works in its author's kitchen isn't much of a recipe. The test of a good one is that a stranger, in another kitchen, gets the same cake. That's what **reproducible** means here: the same inputs and the same code give the same results on any computer. `python src/strainscope/pipeline.py compare` checks it. It compares every number in the result files (`artifacts/`) with the version in Git's last commit, and calls two numbers the same when they're within 0.001 of each other, because a different processor or package version can move the fourth decimal (§18 has the real case). A few lines describe the computer rather than the result (package versions, how long DIABLO ran), and `compare` leaves those out and says so.
+A cake recipe that only works in its author's kitchen isn't much of a recipe. The test of a good one is that a stranger, in another kitchen, gets the same cake. That's what **reproducible** means here: the same inputs and the same code give the same results on any computer. `python src/strainscope/pipeline.py compare` checks it. It compares every number in the result files (`artifacts/`) with the version in Git's last commit, and calls two numbers the same when they're within 0.001 of each other, because a different processor or package version can move the fourth decimal (§18 has the real case). A few lines describe the computer rather than the result (package versions, how long DIABLO ran), and `compare` leaves those out and says so. One kind of processor is a known exception: on an ARM processor (a Mac with an M chip, for example), the random forest, one of the models Phase 4 compares, comes out slightly different, and `compare` lists its numbers apart (§18 explains why).
 
 ![One command, five steps](../figures/one_command.png)
 
@@ -165,10 +165,11 @@ All paths are relative to the project folder.
 
 | Path | New / changed | Its job |
 |---|---|---|
-| `src/strainscope/pipeline.py` | new | the one-command pipeline: the plans, `--list`, `--from`, `--quiet`, the summary, and `compare` |
+| `src/strainscope/pipeline.py` | new | the one-command pipeline: the plans, `--list`, `--from`, `--quiet`, the summary, and `compare` (with `--all`, and the random forest set apart on ARM processors) |
 | `src/strainscope/service.py` | changed | the `everything` plan; `pipeline_events()`, which reports each step as it runs |
-| `src/strainscope/model.py` | changed | ties in the ranking in strain-id order |
+| `src/strainscope/model.py`, `src/strainscope/integrate.py` | changed | ties in a fixed order: the ranking and the hard strains by strain id, the feature importance and Phase 3's Python selection by feature name |
 | `artifacts/model/predictions.csv`, `artifacts/graph/nodes.csv`, `artifacts/graph/explanations.csv` | changed | the ranking with that order: 67 strains from rank 98 down moved by one place or more; nothing above rank 98 changed |
+| `artifacts/model/feature_importance.csv`, `artifacts/model/hard_strains.csv`, `artifacts/integration/python_selection.csv` | changed | the same numbers, with tied rows in name order |
 | `src/strainscope/mcp_server.py` | changed | `config --write` and `config --remove` for Claude Desktop's settings file |
 | `src/strainscope/ask.py` | changed | also reads `CONTRIBUTING.md` and `SECURITY.md`; a picture in an answer keeps its description |
 | `app/views/data.py`, `app/ui.py`, `app/streamlit_app.py` | changed | the *Rebuild everything from scratch* button and the comparison after it; readable colours, chart toolbars and picture descriptions (§10) |
@@ -208,7 +209,7 @@ chmod +x .githooks/pre-push
 
 ```bash
 python src/strainscope/pipeline.py database --quiet
-pytest -q                     # 443 passed, 1 skipped
+pytest -q                     # 446 passed, 1 skipped
 git switch develop
 git add -A
 git commit -m "feat: release 1.0: one-command pipeline, tests on every system, container, licence and citation"
@@ -330,6 +331,8 @@ git status --short
  M artifacts/model/strainscope_model.joblib
 ```
 
+Sometimes there's a ninth, `artifacts/integration/python_scoreboard.csv`: one of its numbers can move in the fourth decimal from one run to the next (§18), which `compare` forgives.
+
 **What it means:** the committed graph includes real reference data (100 BacDive strains, KEGG pathways, RefMet classes) fetched on my computer; without those tables, the rebuilt graph is smaller. The model card records the package versions of whoever built it, and the saved model's bytes change with them. All the numbers, as the next step shows, are the same. Leave the rebuilt files where they are for now; §7 ends by putting the committed ones back.
 
 **If instead:**
@@ -366,7 +369,9 @@ python src/strainscope/pipeline.py compare
 
 **What it means:** every number of Phases 3, 4 and 5 that you just rebuilt from the seed matches the committed one, on your computer. That is the promise of the first row of the [product checklist](ROADMAP.md#what-finished-means-the-product-checklist), checked. The *not compared* lines say where the check stops: the four graph tables can only match when your database has the same real tables as mine (`python src/strainscope/pipeline.py real` fetches them, but the public databases change over time, so a later fetch may differ a little), the GraphML file repeats `nodes.csv` and `edges.csv`, and the model file's bytes depend on package versions. One more limit, which no line names: without R, step 3 doesn't rerun DIABLO, so the DIABLO files match because nothing rewrote them. CI has no R either (§3, *What we leave out*), which is why DIABLO is rebuilt by hand on a computer with R.
 
-**If instead** a file is marked `✗`, the lines under it name the row, the column and both numbers. A difference in the fourth decimal is already forgiven; a bigger one means the computation itself changed (a new package version that behaves differently, or a change you made). CI runs the same comparison on every system at every push, so it shows whether the difference is yours or everyone's.
+**On a Mac with an M chip** (or another ARM processor), you'll see one more kind of line, `· as expected on this ARM processor:`, for the files that hold the random forest's numbers (`oof_predictions.csv` and `scoreboard.csv`, sometimes `hard_strains.csv`), and the last line counts the *other* compared files that match. §18 explains why.
+
+**If instead** a file is marked `✗`, the lines under it name the row, the column and both numbers (`compare --all` lists every difference, not only the first three of each file). A difference in the fourth decimal is already forgiven; a bigger one means the computation itself changed (a new package version that behaves differently, or a change you made). CI runs the same comparison on every system at every push, so it shows whether the difference is yours or everyone's.
 
 ---
 
@@ -551,7 +556,7 @@ The commit is already made (§4). The checks come first, as always:
 
 ```bash
 git status --short            # prints nothing
-pytest -q                     # 443 passed, 1 skipped
+pytest -q                     # 446 passed, 1 skipped
 ./check-public-safe.sh        # must end with: SAFE TO PUSH  (Windows: bash check-public-safe.sh in Git Bash)
 ```
 
@@ -564,6 +569,8 @@ git push origin develop develop:beta develop:master
 ```
 
 Now open the repository on GitHub and click the **Actions** tab. **You should see** a run of the workflow *tests* for your commit, with a yellow dot while it runs. Click it: the eleven jobs are listed on the left, each with its own dot (*Linux, Python 3.12*, ..., *RHEL 8 (UBI 8), Python 3.12*, *online copy (app/requirements.txt), Python 3.14*, *keyboard and screen-reader check*, *safety gate and pyflakes*, *container (Dockerfile)*). They run side by side; the first run takes longest, because every computer downloads its packages. When every dot is a **green tick**, the repository's front page shows a green tick next to your commit too.
+
+**If instead** no run for your commit appears within a minute or two, start one by hand: click *tests* in the list on the left, then **Run workflow**, keep *Branch: master*, and click the green **Run workflow** (§18 has the time this happened).
 
 **If instead** the Actions tab shows *Workflows aren't being run on this forked repository* (your repository started as a fork of someone else's), click **I understand my workflows, go ahead and enable them**, then push again or use **Run workflow**.
 
@@ -672,13 +679,16 @@ The second redraws Phase 6b's pictures, whose numbers grow with the documentatio
 ## 18. Notes from the build (kept on purpose)
 
 - **Two computers, two orders of ties.** The first full rebuild on a Linux computer gave every strain exactly the committed chance (to four decimals) but put 54 strains in a different order than the ranking committed from my Mac. All of them shared their chance with another strain, and the sorting step left such ties in whatever order it happened to produce. None was in the top 50, so no headline number moved. Ties are now put in strain-id order (`src/strainscope/model.py`, `final`); 67 ranks from rank 98 down changed once, in the committed files, and the ranking is now the same on every computer.
-- **A fourth decimal that moves.** Rebuilding with a newer scikit-learn (1.9.1 instead of 1.9.0, on Python 3.12) moved one AUC in Phase 3's Python scoreboard from 0.9211 to 0.9212. A lasso model is fitted step by step until the changes become tiny, and tiny is where versions and computers differ. That's why `compare` uses a tolerance.
+- **A fourth decimal that moves.** Rebuilding with a newer scikit-learn (1.9.1 instead of 1.9.0, on Python 3.12) moved one AUC in Phase 3's Python scoreboard from 0.9211 to 0.9212. Later the same number moved between two runs on one Linux computer, so not even one computer promises the fourth decimal. A lasso model is fitted step by step until the changes become tiny, and tiny is where versions and computers differ. That's why `compare` uses a tolerance.
 - **The graph remembers my real data.** The committed graph was built with the real tables fetched in Phases 1b and 1c, which aren't in Git. A rebuild without them gives a smaller graph, so `compare` skips the four tables that hold reference data unless the database has real tables, and says so.
 - **A darker colour that came out lighter.** The first fix for the faint captions gave them a darker grey, and the check then measured them even fainter: Streamlit draws the whole caption see-through, so any colour came out at 60 %. Making the caption solid fixed it.
 - **The check checked itself first.** Its first run reported tabs and dropdown arrows as unreachable. Streamlit leaves them out of the Tab order on purpose (other tabs are reached with the arrow keys, a chosen item is removed with Backspace), so the check now skips what's marked that way. On the answered Ask pages it also started its walk halfway down the page, where the question box had left the focus; every walk now starts at the top.
 - **Streamlit's version matters.** With Streamlit 1.57, 5 of the 14 page views fail: dropdowns and tabs without a visible focus, a dropdown's *Clear all* button the Tab key never reaches, and one empty dropdown whose placeholder is too faint. With 1.65, all pass. The online copy and CI use 1.65.
 - **Edit Config opened Finder.** On my Mac, Claude Desktop's *Edit Config* showed the settings file in Finder instead of opening it, so step 3 of Phase 7b meant finding an editor for it first. That's where `config --write` comes from; it keeps a dated backup every time.
 - **A new README line pushed out an old question.** After this phase's golden questions were added, an old one, "What mess is added to the data on purpose?", was refused. Besides single words, the search weighs pairs of neighbouring words once the small ones are dropped (`ngram_range=(1, 2)` in `src/strainscope/ask.py`). A line new in the README's contents ended with one of the question's words, and the next line starts with another, so the search found a pair there that the question has and the section answering it doesn't. The best match fell from 0.126 to 0.102, under the 0.12 line. Rewording the README line brought the match back over 0.12, about as close to it as before; the meaning-based search deferred in Phase 7 ([`docs/07b-docs-assistant.md`](07b-docs-assistant.md)) wouldn't be thrown by two neighbouring words like this.
+- **The first push started no tests.** When Phase 8 was pushed, GitHub ran its Pages build and Dependabot's first checks on the new commit, but no run of *tests*. The tests did run within a minute, on Dependabot's first two pull requests (newer versions of two of the actions CI uses), and those runs found the problems of the next two notes. I didn't find out why the push itself started nothing; §12 says how to start a run by hand.
+- **Ties again, and the random forest, on ARM Macs.** Both macOS jobs failed at the comparison. GitHub's Macs have Apple's M chips, which are ARM processors, unlike my Intel Mac, where the same rebuild matched all 38 files. Two things differed there. Three more tables had rows with equal numbers in another order (Phase 3's Python selection, the feature importance and the hard strains), so ties there now go in name order too, and a test checks the committed tables. And the random forest came out a little different: its out-of-fold chance for STRAIN_0002 was 0.1694 instead of 0.1706, and the forest's balanced error rate 0.367 instead of 0.3632. The elastic net, the ranking and every other number matched. The likely cause: an ARM processor can do a multiplication and an addition in one step and round once, where the code built for the Intel and AMD processors of the other jobs rounds twice, and inside scikit-learn's tree code such a last-digit difference can tip the choice between two almost equal splits. That can't be changed from this project, so `compare` now lists the random forest's numbers apart on an ARM processor and checks everything else as before.
+- **Git wouldn't read the folder inside the RHEL 8 image.** One test failed on RHEL 8: the app's comparison said the folder had no Git history. Inside the image the job runs as the administrator, but the folder belongs to GitHub's own user, and Git won't read a folder that belongs to another user until it's marked as safe. The job now marks it first, and the test no longer leans on the folder's history, so it also passes in a copy downloaded as a zip file.
 - **Security updates ignore the target branch.** Caught in Dependabot's documentation while setting it up, before anything ran: its monthly suggestions can be sent to develop, but its separate security-update pull requests always go to the default branch, master, which would skip develop. So only the alerts are switched on (§13), and a security fix is made on develop like any other change.
 
 ---
@@ -689,9 +699,9 @@ The second redraws Phase 6b's pictures, whose numbers grow with the documentatio
 pytest -q
 ```
 
-**You should see:** `443 passed, 1 skipped`. The 409 tests from before (408 passed and the skipped one, Phase 7b, [`docs/08b-mcp-server.md`](08b-mcp-server.md)) are joined by 35 new ones; the skipped one is still Ask StrainScope's known limitation.
+**You should see:** `446 passed, 1 skipped`. The 409 tests from before (408 passed and the skipped one, Phase 7b, [`docs/08b-mcp-server.md`](08b-mcp-server.md)) are joined by 38 new ones; the skipped one is still Ask StrainScope's known limitation.
 
-- **`tests/test_pipeline.py` (17):** every plan names scripts that exist, and `everything` runs Phases 1 to 5 in order; `--list`; a run with its summary and health check; `--from`, and a start outside the plan, refused; a failing step that stops the rest and says how to carry on; `--quiet`, which still shows the end of a failed step; Ctrl+C, which stops the running step and frees the lock; `compare`, which forgives the fourth decimal, names the row and column of a real difference, leaves out the computer's lines and the package versions, says why it skipped a file, and needs the Git history; and the app's button, which is there on your own computer, greyed out on a shared copy, and compares after a rebuild.
+- **`tests/test_pipeline.py` (20):** every plan names scripts that exist, and `everything` runs Phases 1 to 5 in order; `--list`; a run with its summary and health check; `--from`, and a start outside the plan, refused; a failing step that stops the rest and says how to carry on; `--quiet`, which still shows the end of a failed step; Ctrl+C, which stops the running step and frees the lock; `compare`, which forgives the fourth decimal, names the row and column of a real difference, leaves out the computer's lines and the package versions, says why it skipped a file, needs the Git history, lists every difference with `--all`, and sets the random forest apart on an ARM processor (but not the elastic net); the committed tables, whose ties are in a fixed order; and the app's button, which is there on your own computer, greyed out on a shared copy, and compares after a rebuild.
 - **`tests/test_mcp.py` (4 new):** `config --write` adds the entry and keeps every other setting, with one backup and nothing changed a second time; `config --remove` takes only the entry out; a broken file is left alone and a missing folder refused; the settings file's place on macOS and Windows.
 - **`tests/test_deploy.py` (5 new):** the citation file has the newest release's version and date; the licence is MIT; the container runs the online copy's packages on Python 3.14 and keeps secrets out; CI covers three systems, RHEL 8, the online copy and the accessibility check; Dependabot leaves scikit-learn alone and targets develop.
 - **`tests/test_safety_gate.py` (3 new):** the hook lets a clean push through, stops one with a key in a new file, and is marked runnable.
@@ -745,6 +755,8 @@ Both run the same five scripts in the same order. By hand you see each one's rep
 - **`pipeline.py` stops at step 3 or 4 with a long error:** the summary names the step; run that step's script on its own to see its full message (for example `python src/strainscope/model.py all`), fix it with its guide's FAQ, then carry on with `--from`.
 - **`compare` says `compare needs Git and the project's Git history`:** you downloaded the project as a zip file. Clone it with Git instead ([Handbook, Stage 2](HANDBOOK.md#stage-2-version-control-and-the-safety-gate)).
 - **`compare` marks `predictions.csv` or `explanations.csv` as different, from row 98 down:** the commit of §4 is missing. `compare` compares with the last commit, which then still has the old order of ties; commit as in §4 and run it again.
+- **`compare` on a Mac with an M chip lists the random forest's numbers as `as expected on this ARM processor`:** that's right, and the check still passes (§6, §18). Anything marked `✗` there is a real difference.
+- **`compare` says it needs the Git history, although you cloned the project:** Git won't read a folder that belongs to another user (in a container, or after copying the folder as the administrator). Mark it as safe once: `git config --global --add safe.directory` followed by the folder's full path.
 - **`git status` lists result files after a rebuild:** expected (§5). `git restore artifacts/` brings back the committed ones (end of §7); don't commit rebuilt graph files from a computer without the real tables.
 - **A CI job fails but everything passes at home:** read the job's log; the system or Python version in its name is the clue. A package that has just released a new version is a common cause (§18, *A fourth decimal that moves*, and decision 6); `pip install` the same version at home to reproduce it.
 - **Only the *RHEL 8 (UBI 8), Python 3.12* job fails, at *Install Git*:** the image couldn't reach Red Hat's package servers that day. Re-run the job from its page (**Re-run jobs**).
@@ -762,7 +774,7 @@ Both run the same five scripts in the same order. By hand you see each one's rep
 
 ```bash
 python src/strainscope/pipeline.py database --quiet
-pytest -q                     # 443 passed, 1 skipped
+pytest -q                     # 446 passed, 1 skipped
 git switch develop
 git add -A
 git commit -m "feat: release 1.0: one-command pipeline, tests on every system, container, licence and citation"

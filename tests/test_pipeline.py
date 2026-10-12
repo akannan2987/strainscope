@@ -10,7 +10,11 @@ that:
     step stops the rest and says how to carry on, `--quiet` still shows the
     end of a failed step, and Ctrl+C stops the running step;
   * `compare` finds a changed number, forgives rounding, leaves out the lines
-    that describe the computer, and says why it skipped what it skipped;
+    that describe the computer, says why it skipped what it skipped, lists
+    every difference with --all, and on an ARM processor sets the random
+    forest's numbers apart;
+  * the committed result tables put ties in a fixed order, so a rebuild on
+    any processor writes them the same way;
   * the app's Data page offers the rebuild on your own computer only.
 The tests run tiny stand-in steps instead of the real scripts, so they take
 seconds and never touch the results in artifacts/.
@@ -213,6 +217,70 @@ def test_compare_needs_git_history(tmp_path):
     assert not pipeline.git_ready(tmp_path)
 
 
+@pytest.mark.skipif(not HAS_GIT, reason="needs Git")
+def test_compare_sets_the_random_forest_apart_on_an_arm_processor(tmp_path, monkeypatch, capsys):
+    def git(*args):
+        subprocess.run(["git", "-c", "user.name=t", "-c", "user.email=t@example.com", *args], cwd=tmp_path,
+                       check=True, capture_output=True)
+    board = "model_key,ber_mean\nelastic_net,0.1275\nrandom_forest,0.3632\n"
+    oof = "strain_id,p_elastic_net,p_random_forest\nSTRAIN_0001,0.1756,0.1223\n"
+    (tmp_path / "artifacts/model").mkdir(parents=True)
+    (tmp_path / "artifacts/model/scoreboard.csv").write_text(board, encoding="utf-8")
+    (tmp_path / "artifacts/model/oof_predictions.csv").write_text(oof, encoding="utf-8")
+    git("init", "-q")
+    git("add", "-A")
+    git("commit", "-q", "-m", "results")
+    (tmp_path / "artifacts/model/scoreboard.csv").write_text(board.replace("0.3632", "0.367"), encoding="utf-8")
+    (tmp_path / "artifacts/model/oof_predictions.csv").write_text(oof.replace("0.1223", "0.1194"),
+                                                                    encoding="utf-8")
+    monkeypatch.setattr(pipeline, "ARM", False)            # an Intel or AMD processor: two differences
+    assert sorted(pipeline.compare(tmp_path, tmp_path / "no.duckdb")["differ"]) == [
+        "model/oof_predictions.csv", "model/scoreboard.csv"]
+    monkeypatch.setattr(pipeline, "ARM", True)             # an ARM processor: set apart, still a match
+    result = pipeline.compare(tmp_path, tmp_path / "no.duckdb")
+    assert result["differ"] == {} and sorted(result["expected"]) == ["model/oof_predictions.csv",
+                                                                     "model/scoreboard.csv"]
+    assert pipeline.print_compare(result) == 0
+    out = capsys.readouterr().out
+    assert "as expected on this ARM processor" in out and "All 0 other compared files match" in out
+    (tmp_path / "artifacts/model/scoreboard.csv").write_text(
+        board.replace("0.3632", "0.367").replace("0.1275", "0.2"), encoding="utf-8")
+    result = pipeline.compare(tmp_path, tmp_path / "no.duckdb")   # the winner's numbers must still match
+    assert result["differ"] == {"model/scoreboard.csv": ["row 1 (elastic_net), ber_mean: 0.1275 committed, 0.2 now"]}
+
+
+def test_compare_all_lists_every_difference(capsys):
+    result = {"matched": [], "skipped": {}, "expected": {},
+              "differ": {"model/scoreboard.csv": [f"row {i} (x), y: 1 committed, 2 now" for i in range(1, 6)]}}
+    assert pipeline.print_compare(result) == 1
+    out = capsys.readouterr().out
+    assert "row 3 (x)" in out and "row 4 (x)" not in out and "... and 2 more (--all lists them)" in out
+    pipeline.print_compare(result, show_all=True)
+    out = capsys.readouterr().out
+    assert "row 5 (x)" in out and "more" not in out
+
+
+def test_committed_tables_put_ties_in_a_fixed_order():
+    """Rows with the same number go in name order, so a rebuild on any processor
+    writes the same file (Phase 8 found ties in another order on ARM Macs)."""
+    import pandas as pd
+    art = ROOT / "artifacts"
+
+    def in_order(table, keys, ascending):
+        again = table.sort_values(keys, ascending=ascending, kind="mergesort")
+        return again.index.equals(table.index)
+    pred = pd.read_csv(art / "model/predictions.csv")
+    assert in_order(pred, ["probability", "strain_id"], [False, True])
+    sel = pd.read_csv(art / "integration/python_selection.csv")
+    assert in_order(sel, ["selection_frequency", "feature"], [False, True])
+    imp = pd.read_csv(art / "model/feature_importance.csv")
+    for _, part in imp.groupby("model_key", sort=False):
+        assert in_order(part, ["importance_mean", "feature"], [False, True])
+        assert part["rank"].tolist() == list(range(1, len(part) + 1))
+    hard = pd.read_csv(art / "model/hard_strains.csv")
+    assert in_order(hard, ["distance_to_cutoff", "strain_id"], [True, True])
+
+
 # =============================================================================
 # The app's button
 # =============================================================================
@@ -236,6 +304,7 @@ def test_the_rebuild_button_runs_the_plan_and_compares(stand_in_steps, monkeypat
     from test_app import open_app
     monkeypatch.setattr(pipeline, "compare", lambda root, db: {"matched": ["model/scoreboard.csv"] * 31,
                                                                "differ": {}, "skipped": {}})
+    monkeypatch.setattr(pipeline, "git_ready", lambda root: True)   # also in a copy without Git history
     at = open_app("views/data.py")
     at.button(key="build_everything").click().run()
     assert not at.exception

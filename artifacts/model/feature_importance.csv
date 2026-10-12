@@ -40,15 +40,15 @@ elastic_net,accC,0.0002,0.00089,False,decoy,Accessory noise,genomics,False,38,Fa
 elastic_net,surfactin,0.0001,0.00066,False,signal,Bacteria,metabolomics,False,39,True
 elastic_net,beaS,8e-05,0.00107,False,signal,Fungi,genomics,False,40,True
 elastic_net,ef1a,0.0,0.0,False,housekeeping,Housekeeping,genomics,True,41,False
-elastic_net,ssu_rRNA,0.0,0.0,False,housekeeping,Housekeeping,genomics,True,42,False
-elastic_net,rpb1,0.0,0.0,False,housekeeping,Housekeeping,genomics,True,43,False
+elastic_net,rpb1,0.0,0.0,False,housekeeping,Housekeeping,genomics,True,42,False
+elastic_net,ssu_rRNA,0.0,0.0,False,housekeeping,Housekeeping,genomics,True,43,False
 elastic_net,accD,-1e-05,0.00025,False,decoy,Accessory noise,genomics,False,44,False
 elastic_net,nifH,-3e-05,0.00156,False,decoy,Plant-growth (other trait),genomics,False,45,False
 elastic_net,accA,-0.00013,0.00029,False,decoy,Accessory noise,genomics,False,46,False
 elastic_net,bg_metabolite_4,-0.00026,0.00039,False,decoy,Background chemistry,metabolomics,False,47,False
 elastic_net,bg_metabolite_5,-0.00033,0.00103,False,decoy,Background chemistry,metabolomics,False,48,False
-elastic_net,iaaM,-0.00046,0.00345,False,decoy,Plant-growth (other trait),genomics,False,49,False
-elastic_net,gcd,-0.00046,0.00133,False,decoy,Plant-growth (other trait),genomics,False,50,False
+elastic_net,gcd,-0.00046,0.00133,False,decoy,Plant-growth (other trait),genomics,False,49,False
+elastic_net,iaaM,-0.00046,0.00345,False,decoy,Plant-growth (other trait),genomics,False,50,False
 elastic_net,acdS,-0.00052,0.0013,False,decoy,Plant-growth (other trait),genomics,False,51,False
 elastic_net,bg_metabolite_2,-0.00071,0.002,False,decoy,Background chemistry,metabolomics,False,52,False
 gradient_boosting,kingdom,0.05662,0.01564,True,"context (kingdom label, used for centring)",Kingdom label,context,False,1,False
@@ -81,14 +81,14 @@ gradient_boosting,chiA,0.00155,0.00481,False,signal,Cross-kingdom,genomics,False
 gradient_boosting,srfAA,0.00044,0.00319,False,signal,Bacteria,genomics,False,28,True
 gradient_boosting,iaaM,0.00025,0.00085,False,decoy,Plant-growth (other trait),genomics,False,29,False
 gradient_boosting,nifH,0.00018,0.00041,False,decoy,Plant-growth (other trait),genomics,False,30,False
-gradient_boosting,beaS,0.00015,0.00034,False,signal,Fungi,genomics,False,31,True
-gradient_boosting,accE,0.00015,0.00402,False,decoy,Accessory noise,genomics,False,32,False
+gradient_boosting,accE,0.00015,0.00402,False,decoy,Accessory noise,genomics,False,31,False
+gradient_boosting,beaS,0.00015,0.00034,False,signal,Fungi,genomics,False,32,True
 gradient_boosting,bg_metabolite_2,2e-05,0.00688,False,decoy,Background chemistry,metabolomics,False,33,False
-gradient_boosting,ssu_rRNA,0.0,0.0,False,housekeeping,Housekeeping,genomics,True,34,False
-gradient_boosting,olpA,0.0,0.0,False,signal,Oomycete,genomics,False,35,False
-gradient_boosting,ech42,0.0,0.0,False,signal,Fungi,genomics,False,36,False
-gradient_boosting,ef1a,0.0,0.0,False,housekeeping,Housekeeping,genomics,True,37,False
-gradient_boosting,rpb1,0.0,0.0,False,housekeeping,Housekeeping,genomics,True,38,False
+gradient_boosting,ech42,0.0,0.0,False,signal,Fungi,genomics,False,34,False
+gradient_boosting,ef1a,0.0,0.0,False,housekeeping,Housekeeping,genomics,True,35,False
+gradient_boosting,olpA,0.0,0.0,False,signal,Oomycete,genomics,False,36,False
+gradient_boosting,rpb1,0.0,0.0,False,housekeeping,Housekeeping,genomics,True,37,False
+gradient_boosting,ssu_rRNA,0.0,0.0,False,housekeeping,Housekeeping,genomics,True,38,False
 gradient_boosting,acdS,-0.00012,0.00027,False,decoy,Plant-growth (other trait),genomics,False,39,False
 gradient_boosting,gcd,-0.00013,0.00029,False,decoy,Plant-growth (other trait),genomics,False,40,False
 gradient_boosting,prb1,-0.00014,0.00032,False,signal,Cross-kingdom,genomics,False,41,False

@@ -74,7 +74,7 @@ jobs:
       - name: Rebuild everything from scratch
         run: python src/strainscope/pipeline.py everything --quiet
       - name: Compare the rebuilt results with the committed ones
-        run: python src/strainscope/pipeline.py compare
+        run: python src/strainscope/pipeline.py compare --all
 
   rhel8:
     name: RHEL 8 (UBI 8), Python 3.12
@@ -88,6 +88,11 @@ jobs:
         run: command -v git || dnf install -y git
       - name: Get the code
         uses: actions/checkout@v6
+      # Inside the image the job runs as the administrator, but the project
+      # folder belongs to GitHub's own user, and Git refuses to read a folder
+      # that belongs to someone else unless it's marked as safe.
+      - name: Let Git read the project folder
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - name: Install the packages (requirements.txt)
         run: python -m pip install -r requirements.txt
       - name: Build the database (the quick plan)
@@ -97,7 +102,7 @@ jobs:
       - name: Rebuild everything from scratch
         run: python src/strainscope/pipeline.py everything --quiet
       - name: Compare the rebuilt results with the committed ones
-        run: python src/strainscope/pipeline.py compare
+        run: python src/strainscope/pipeline.py compare --all
 
   online-copy:
     name: online copy (app/requirements.txt), Python 3.14

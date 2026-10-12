@@ -384,7 +384,7 @@ means, matching the build log below. Nothing is shown before it exists.*
   ![A strain's page: the reasons behind its rank, and its corner of the knowledge graph](docs/img/app_strain.png)
 
   An uploaded copy of a library strain gets exactly the explanation of the original (a test checks every strain of a hand-made project), and a slightly different score, because the ranking uses out-of-fold predictions while an upload is scored by the final model. Run it with `python -m streamlit run app/streamlit_app.py`; the guide is [`docs/07-app.md`](docs/07-app.md).
-- **Phase 6b (Ask StrainScope):** ✅ a documentation assistant that searches every guide, glossary entry and docstring (1194 sections) and answers with the matching passages, word for word, with links. Before anything is shown, a gate of four checks decides between *answered*, *closest* and *refused*, and 70 golden questions keep it in check: every in-scope one is answered from a right section, every off-topic question and instruction is refused, and one known limitation is reported rather than hidden. No single score threshold separates the two groups; the extra checks do:
+- **Phase 6b (Ask StrainScope):** ✅ a documentation assistant that searches every guide, glossary entry and docstring (1198 sections) and answers with the matching passages, word for word, with links. Before anything is shown, a gate of four checks decides between *answered*, *closest* and *refused*, and 70 golden questions keep it in check: every in-scope one is answered from a right section, every off-topic question and instruction is refused, and one known limitation is reported rather than hidden. No single score threshold separates the two groups; the extra checks do:
 
   ![The golden questions: how well each one matched](figures/golden_scores.png)
 
@@ -649,7 +649,7 @@ strainscope/
 │                                     ask_graph, ranking, strain, knowledge_graph,
 │                                     integration, data, sql_console                ✅
 │
-├── tests/                         ← automated checks (pytest): 444 today           ✅
+├── tests/                         ← automated checks (pytest): 447 today           ✅
 │   ├── test_sources.py            ← ingestion parsers, offline
 │   ├── test_harmonize.py          ← cleaning rules and the database loader
 │   ├── test_integrate.py          ← integration, grading, the R ↔ Python contract
@@ -749,7 +749,7 @@ python figures/make_phase8_figures.py     # redraw the Phase 8 figures + release
 python src/strainscope/graph.py why STRAIN_0485   # why does this strain rank first?
 
 # Check everything
-pytest -q                                 # 443 passed, 1 skipped
+pytest -q                                 # 446 passed, 1 skipped
 python tools/check_accessibility.py      # optional: keyboard and screen-reader check (needs Playwright)
 
 # Or run the app in a container: only Docker (or Podman) and this folder needed

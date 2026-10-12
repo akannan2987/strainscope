@@ -29,13 +29,16 @@ and one check, which builds nothing:
   compare     compare the results in artifacts/ with the committed ones (Git's
               last commit): every number to within 0.001, every word exactly.
               Run it after `everything` to see that a rebuild from scratch
-              gives the same results on your computer.
+              gives the same results on your computer. On an ARM processor
+              (a Mac with an M chip, for example), the random forest's numbers
+              are listed apart: see ARM_SENSITIVE below.
 
 USAGE
 -----
     python src/strainscope/pipeline.py                 everything
     python src/strainscope/pipeline.py database        the quick one
     python src/strainscope/pipeline.py compare         rebuilt results vs committed ones
+    python src/strainscope/pipeline.py compare --all   the same, with every difference listed
     python src/strainscope/pipeline.py --list          the plans and their steps; runs nothing
     python src/strainscope/pipeline.py --from 4        start at step 4 (after fixing a failed step)
     python src/strainscope/pipeline.py --quiet         only the steps and the summary
@@ -50,6 +53,7 @@ import argparse
 import csv
 import io
 import json
+import platform
 import subprocess
 import sys
 import time
@@ -80,6 +84,22 @@ NOT_COMPARED = {
 # RefMet classes). They can only match when the database has the real tables.
 REAL_DATA_TABLES = ("graph/nodes.csv", "graph/edges.csv", "graph/hubs.csv", "graph/graph_summary.csv")
 ID_COLUMNS = ("strain_id", "node_id", "feature", "key", "approach", "model_key")   # names a row in a message
+
+# ARM processors (Apple's M chips, and some Linux servers) can do a
+# multiplication and an addition in one step and round once, where the usual
+# Intel and AMD processors round twice. Inside scikit-learn's tree code that
+# changes which of two almost equal splits a tree takes, so the random forest
+# (one of the models Phase 4 compares, not the one behind the ranking) comes
+# out slightly different on them. On such a computer, `compare` lists these
+# numbers apart instead of counting them as a difference. Everything else must
+# still match. (Found by the automatic tests on GitHub's ARM Macs, Phase 8.)
+ARM = platform.machine().lower() in ("arm64", "aarch64")
+ARM_SENSITIVE = {
+    "model/oof_predictions.csv": {"columns": {"p_random_forest", "p_random_forest_sd",
+                                              "correct_share_random_forest"}},
+    "model/scoreboard.csv": {"rows": {"random_forest"}},
+    "model/hard_strains.csv": {"columns": {"missed_by_all_models"}},   # missed by every model, the forest too
+}
 
 
 # =============================================================================
@@ -198,26 +218,44 @@ def same_cell(old: str, new: str) -> bool:
     return abs(a - b) <= TOLERANCE
 
 
-def compare_tables(old_text: str, new_text: str, skip_keys: set[str] = frozenset()) -> list[str]:
-    """Differences between two CSV texts, as sentences (empty when they match).
-    Rows whose first cell is in skip_keys are left out (a key,value table's
-    lines about the computer)."""
+def table_differences(old_text: str, new_text: str, skip_keys: set[str] = frozenset()) -> tuple[list, list]:
+    """The differences between two CSV texts: (cells, problems). `cells` holds
+    one (row number, row name, column, committed, now) per cell that differs;
+    `problems` the differences in shape (columns, number of rows). Rows whose
+    first cell is in skip_keys are left out (a key,value table's lines about
+    the computer)."""
     old = [r for r in csv.reader(io.StringIO(old_text)) if not (r and r[0] in skip_keys)]
     new = [r for r in csv.reader(io.StringIO(new_text)) if not (r and r[0] in skip_keys)]
     if not old or not new:
-        return ["one of the two is empty"]
+        return [], ["one of the two is empty"]
     if old[0] != new[0]:
-        return [f"the columns differ: {', '.join(old[0])} committed, {', '.join(new[0])} now"]
+        return [], [f"the columns differ: {', '.join(old[0])} committed, {', '.join(new[0])} now"]
     if len(old) != len(new):
-        return [f"{len(old) - 1} rows committed, {len(new) - 1} now"]
+        return [], [f"{len(old) - 1} rows committed, {len(new) - 1} now"]
     names = [c for c in ID_COLUMNS if c in old[0]]
     who = old[0].index(names[0]) if names else 0      # the column that names a row in messages
-    problems = []
-    for row_number, (a, b) in enumerate(zip(old[1:], new[1:]), start=1):
-        for column, x, y in zip(old[0], a, b):
-            if not same_cell(x, y):
-                problems.append(f"row {row_number} ({a[who]}), {column}: {x} committed, {y} now")
-    return problems
+    cells = [(row_number, a[who], column, x, y)
+             for row_number, (a, b) in enumerate(zip(old[1:], new[1:]), start=1)
+             for column, x, y in zip(old[0], a, b) if not same_cell(x, y)]
+    return cells, []
+
+
+def _sentence(cell: tuple) -> str:
+    row_number, name, column, x, y = cell
+    return f"row {row_number} ({name}), {column}: {x} committed, {y} now"
+
+
+def compare_tables(old_text: str, new_text: str, skip_keys: set[str] = frozenset()) -> list[str]:
+    """Differences between two CSV texts, as sentences (empty when they match)."""
+    cells, problems = table_differences(old_text, new_text, skip_keys)
+    return problems + [_sentence(c) for c in cells]
+
+
+def arm_expected(rel: str, cell: tuple) -> bool:
+    """True when this cell is one of the random forest's numbers that an ARM
+    processor is expected to change (ARM_SENSITIVE)."""
+    rule = ARM_SENSITIVE.get(rel, {})
+    return cell[2] in rule.get("columns", ()) or cell[1] in rule.get("rows", ())
 
 
 def compare_json(old_text: str, new_text: str, skip: tuple[str, ...] = ("versions",)) -> list[str]:
@@ -246,10 +284,12 @@ def has_real_tables(db_path: Path = sv.DB_PATH) -> bool:
 
 def compare(root: Path = ROOT, db_path: Path = sv.DB_PATH) -> dict:
     """Compare every committed result file in artifacts/ with the one on disk.
-    Returns {"matched": [...], "differ": {path: [sentences]}, "skipped": {path: reason}}."""
+    Returns {"matched": [...], "differ": {path: [sentences]}, "skipped": {path: reason},
+    "expected": {path: [sentences]}}; the last holds, on an ARM processor only,
+    files whose only differences are the random forest's numbers (ARM_SENSITIVE)."""
     artifacts = root / "artifacts"
     real = has_real_tables(db_path)
-    out = {"matched": [], "differ": {}, "skipped": {}}
+    out = {"matched": [], "differ": {}, "skipped": {}, "expected": {}}
     for path in sorted(artifacts.rglob("*")):
         if not path.is_file():
             continue
@@ -269,7 +309,14 @@ def compare(root: Path = ROOT, db_path: Path = sv.DB_PATH) -> dict:
         if path.suffix == ".json":
             problems = compare_json(old, new)
         elif path.suffix == ".csv":
-            problems = compare_tables(old, new, COMPUTER_LINES.get(rel, set()))
+            cells, problems = table_differences(old, new, COMPUTER_LINES.get(rel, set()))
+            if ARM and rel in ARM_SENSITIVE:
+                expected = [c for c in cells if arm_expected(rel, c)]
+                cells = [c for c in cells if not arm_expected(rel, c)]
+                if expected and not cells and not problems:
+                    out["expected"][rel] = [_sentence(c) for c in expected]
+                    continue
+            problems = problems + [_sentence(c) for c in cells]
         else:
             problems = [] if old == new else ["the text differs"]
         if problems:
@@ -279,9 +326,10 @@ def compare(root: Path = ROOT, db_path: Path = sv.DB_PATH) -> dict:
     return out
 
 
-def print_compare(result: dict) -> int:
+def print_compare(result: dict, show_all: bool = False) -> int:
     print("  ── StrainScope: the results in artifacts/ against the committed ones ──")
     print(f"  Committed means Git's last commit. Numbers count as the same within {TOLERANCE}.")
+    shown = None if show_all else 3
     by_folder: dict[str, int] = {}
     for rel in result["matched"]:
         by_folder[rel.split("/")[0]] = by_folder.get(rel.split("/")[0], 0) + 1
@@ -289,10 +337,18 @@ def print_compare(result: dict) -> int:
         print(f"  ✓ artifacts/{folder}/: {n} file(s) match")
     for rel, problems in result["differ"].items():
         print(f"  ✗ artifacts/{rel}:")
-        for p in problems[:3]:
+        for p in problems[:shown]:
             print(f"      {p}")
-        if len(problems) > 3:
-            print(f"      ... and {len(problems) - 3} more")
+        if len(problems) > len(problems[:shown]):
+            print(f"      ... and {len(problems) - 3} more (--all lists them)")
+    expected = result.get("expected", {})
+    for rel, cells in expected.items():
+        print(f"  · as expected on this ARM processor: artifacts/{rel}, {len(cells)} of the random forest's numbers")
+        for p in cells[:None if show_all else 1]:
+            print(f"      {p}")
+    if expected:
+        print("      (ARM processors round some sums inside the tree code differently; "
+              "docs/09-packaging.md, notes from the build)")
     reasons: dict[str, list[str]] = {}
     for rel, why in result["skipped"].items():
         reasons.setdefault(why, []).append(f"artifacts/{rel}")
@@ -305,6 +361,9 @@ def print_compare(result: dict) -> int:
         print(f"\n  {len(result['differ'])} file(s) differ from the committed results. If you changed the code "
               "on purpose, that's expected; otherwise docs/09-packaging.md (what could go wrong) helps.")
         return 1
+    if expected:
+        print(f"\n  All {len(result['matched'])} other compared files match the committed results.")
+        return 0
     print(f"\n  All {len(result['matched'])} compared files match the committed results.")
     return 0
 
@@ -326,6 +385,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--from", dest="start", type=int, default=1, metavar="N",
                         help="start at step N (after fixing a step that failed)")
     parser.add_argument("--quiet", action="store_true", help="only the steps and the summary")
+    parser.add_argument("--all", dest="show_all", action="store_true",
+                        help="with compare: list every difference, not only the first three of each file")
     args = parser.parse_args(argv)
     if args.list:
         print_plans()
@@ -335,7 +396,7 @@ def main(argv: list[str] | None = None) -> int:
             print("  compare needs Git and the project's Git history: it reads the committed results "
                   "from the last commit. A folder downloaded as a zip file has no history; clone it instead.")
             return 1
-        return print_compare(compare())
+        return print_compare(compare(), args.show_all)
     total = len(sv.PIPELINES[args.plan]["steps"])
     if not 1 <= args.start <= total:
         parser.error(f"--from must be a step of '{args.plan}': 1 to {total}")

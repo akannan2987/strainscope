@@ -393,7 +393,8 @@ first appears. If a term is missing, that's a documentation bug worth fixing.
 - **Reproducible**: the same inputs and the same code give the same results on any computer. A stranger following the recipe in another kitchen gets the same cake.
 - **`compare`**: `python src/strainscope/pipeline.py compare`, which checks every number in the result files (`artifacts/`) against the version in Git's last commit, and lists what it leaves out and why.
 - **Tolerance**: how far apart two numbers may be and still count as the same. `compare` uses 0.001, because a different processor or package version can move the fourth decimal.
-- **Tie (in a ranking)**: two strains with the same chance. Since Phase 8 they're ordered by strain id, so the ranking is the same on every computer.
+- **Tie (in a table of results)**: two rows with the same number, such as two strains with the same chance or two features that are equally important. Since Phase 8, ties go in strain-id or name order, so every result table is written the same way on every computer.
+- **ARM processor**: a family of processors (Apple's M chips, most phones, some servers) other than the Intel and AMD ones most PCs use. An ARM processor can do a multiplication and an addition in one step and round once, so a long calculation can end a few last digits apart. In StrainScope that shows only in the random forest of Phase 4, and `compare` lists those numbers apart on an ARM processor.
 - **Exit code**: the number a program hands back when it ends; 0 means it went well. The pipeline returns 0, 1 (a step failed, or a result differs) or 130 (stopped with Ctrl+C), so other programs, such as CI, can tell what happened.
 
 ### Tests on every push
@@ -405,6 +406,7 @@ first appears. If a term is missing, that's a documentation bug worth fixing.
 - **Matrix**: one job run several times with different settings, here every combination of three systems and two Python versions.
 - **Green tick / red cross**: GitHub's marks next to a commit: every job passed, or at least one failed (its log says where).
 - **UBI (Universal Base Image)**: Red Hat's free container images of its own system. The *rhel8* job runs inside `ubi8/python-312`, which is RHEL 8 with Python 3.12, because GitHub has no RHEL machines.
+- **Safe directory (Git)**: a folder Git has been told to trust although it belongs to another user (`git config --global --add safe.directory <folder>`). Git refuses to read such a folder otherwise, which is what happened inside the RHEL 8 image in CI.
 - **pyflakes**: a small checker that reads Python files and reports mistakes such as unused imports or misspelt names, without running them.
 
 ### Containers
@@ -420,7 +422,7 @@ first appears. If a term is missing, that's a documentation bug worth fixing.
 - **Citation File Format** (`CITATION.cff`): a small file saying how to cite a project; GitHub turns it into a **Cite this repository** button.
 - **Contribution guide** (`CONTRIBUTING.md`): how a change travels from an idea to a release, and what it must pass.
 - **Security policy** (`SECURITY.md`): how to report a security problem privately, before it becomes public.
-- **Private vulnerability reporting**: GitHub's way for someone to report a security problem that only the maintainer sees (*Security*, *Advisories*, *Report a vulnerability*).
+- **Private vulnerability reporting**: GitHub's way to report a security problem so that only the reporter and the maintainer see it (*Security*, *Advisories*, *Report a vulnerability*).
 - **Issue form**: a short form GitHub shows when someone opens a new issue, from a file in `.github/ISSUE_TEMPLATE/`.
 - **Fork**: your own copy of someone else's repository on GitHub, where you can change things and then propose them back with a pull request.
 - **Dependabot**: GitHub's helper that watches the packages a project uses: **alerts** for versions with a known security problem, and **version updates**, pull requests with newer versions (`.github/dependabot.yml`).
@@ -434,7 +436,7 @@ first appears. If a term is missing, that's a documentation bug worth fixing.
 - **Keyboard trap**: a place on a page the focus can enter but not leave with the keyboard.
 - **Accessibility tree**: the browser's list of what's on a page (headings, paragraphs, buttons, fields) with their names, which is what a screen reader reads.
 - **Alt text**: the description of a picture that a screen reader reads instead of it.
-- **axe-core**: an open-source engine of accessibility rules that most checkers use; `tools/check_accessibility.py` runs it on every page of the app.
+- **axe-core**: an open-source engine of accessibility rules that many checkers use; `tools/check_accessibility.py` runs it on every page of the app.
 - **Playwright**: a library that drives a real browser from a program; the screenshots and the accessibility check use it.
 - **Landmark**: a region of a page a screen reader can jump to (the main part, the navigation, ...).
 

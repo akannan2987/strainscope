@@ -440,12 +440,18 @@ def show_comparison() -> None:
                 "(a folder downloaded as a zip file has none).")
         return
     result = pipeline.compare(ROOT, DB_PATH)
+    expected = result.get("expected", {})
     if result["differ"]:
         st.warning(f"{len(result['differ'])} result file(s) differ from the committed ones: "
                    + ", ".join(f"`artifacts/{p}`" for p in result["differ"]) + ".")
     else:
-        st.success(f"All {len(result['matched'])} compared result files match the committed ones "
+        other = " other" if expected else ""
+        st.success(f"All {len(result['matched'])}{other} compared result files match the committed ones "
                    f"(numbers within {pipeline.TOLERANCE}).")
+    if expected:
+        st.info("This computer has an ARM processor, which rounds some sums inside the random forest's "
+                "code differently, so its numbers differ a little here, as expected: "
+                + ", ".join(f"`artifacts/{p}`" for p in expected) + ".")
     with st.expander("What was compared"):
         for rel, problems in result["differ"].items():
             st.markdown(f"**artifacts/{rel}**: " + "; ".join(problems[:3]))

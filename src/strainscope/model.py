@@ -732,7 +732,8 @@ def explain(db_path: Path = DB_PATH, artifacts_dir: Path = ARTIFACTS,
         imp["block"] = [("context" if f == "kingdom" else ann.loc[f, "block"])
                         for f in imp["feature"]]
         imp["dropped_by_preparation"] = imp["feature"].isin(dropped)
-        imp = imp.sort_values("importance_mean", ascending=False)
+        # Equal importances go in name order, the same on every computer (Phase 8).
+        imp = imp.sort_values(["importance_mean", "feature"], ascending=[False, True])
         imp["rank"] = np.arange(1, len(imp) + 1)
         tables.append(imp)
         picked = [f for f in imp.loc[imp["reliably_important"], "feature"] if f != "kingdom"]
@@ -843,7 +844,7 @@ def error_analysis(X: pd.DataFrame, y: np.ndarray, outcome: pd.DataFrame,
         "correct_share": oof[f"correct_share_{winner}"].to_numpy(),
         "distance_to_cutoff": np.round(distance, 2), "n_missing": n_missing,
         "missed_by_all_models": missed_by_all})[hard_mask]
-    hard = hard.sort_values("distance_to_cutoff").reset_index(drop=True)
+    hard = hard.sort_values(["distance_to_cutoff", "strain_id"]).reset_index(drop=True)   # ties: id order
     return errors, hard
 
 
