@@ -26,7 +26,10 @@ SAFE BY DEFAULT
 ---------------
 The console opens the database READ-ONLY. You can look at anything and break
 nothing, and it can't collide with a pipeline run holding the file. (This is
-also why the "database is locked" worry doesn't apply here.)
+also why the "database is locked" worry doesn't apply here.) Since Phase 6 it
+uses the same connection as the app's SQL console (safe_connect in
+src/strainscope/service.py): file access is switched off too, so a query can
+only see the tables in the database, never other files on the computer.
 
 If the database file doesn't exist yet, the console says so and tells you the
 one command that builds it.
@@ -38,7 +41,10 @@ import argparse
 import sys
 from pathlib import Path
 
-import duckdb
+# Make `strainscope` importable no matter where the script is run from.
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from strainscope.service import safe_connect  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
 DB_PATH = ROOT / "data" / "processed" / "strainscope.duckdb"
@@ -54,7 +60,7 @@ Recipes to paste: docs/QUERY_COOKBOOK.md
 def run_query(sql: str, db_path: Path = DB_PATH):
     """Run one query read-only and return the result as a DataFrame.
     (Factored out so the tests can call it directly.)"""
-    con = duckdb.connect(str(db_path), read_only=True)
+    con = safe_connect(db_path)
     try:
         return con.execute(sql).fetchdf()
     finally:

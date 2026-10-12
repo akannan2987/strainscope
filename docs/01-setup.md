@@ -268,7 +268,7 @@ Now we create the project's skeleton and link it to the empty GitHub repo.
    - `data/raw/` and `data/processed/`: generated data before and after cleaning.
    - `tests/`: automated checks that prove the code works.
    - `docs/`: this tutorial (the docs you're reading).
-   - `.streamlit/`: configuration for the app when deployed (empty until Phase 6; Git ignores empty folders, so it appears on GitHub only once it holds a file).
+   - `.streamlit/`: the app's settings file, `.streamlit/config.toml` (it arrives with Phase 6, [`docs/07-app.md`](07-app.md) §4; until then the folder is empty, and Git ignores empty folders, so it appears on GitHub only once it holds a file).
 4. Add a few starter files. **The three files below (`.gitignore`, `requirements.txt` and the placeholder `README.md`) come with this project as ready-made files. Save each one into the project root (the folder with `docs/` in it) instead of typing them out.** Saving the files avoids copy-paste mistakes that can scramble a multi-line file in some terminals.
 
    - **`.gitignore`**: the list of files Git should never save. Save the provided `.gitignore` into the project root.

@@ -168,6 +168,8 @@ If an ontology is a "family tree for concepts" (the rules of what connects to wh
 ### Box 8: Streamlit App · *frontend, deployed to the cloud*
 **What it does:** the website. A person opens a URL and can browse strains, see predictions and the reasons behind them, run their own SQL queries in a safe read-only console, view the knowledge graph, and rank new candidate strains.
 **Why it exists:** results that nobody can open and try aren't much use to anyone. The app turns the analysis into something a non-specialist can *use*. Streamlit lets us build this entire web page in plain Python, with no web-development knowledge needed. We deploy it free on Streamlit Community Cloud, which connects to your GitHub repo and gives it a public URL; every time you push new code, the site updates itself.
+**How it talks to the rest:** through a thin **service layer**, `src/strainscope/service.py`, the counter between the kitchen and the dining room (a restaurant calls it the *pass*). It reads the artifacts and the database, runs SQL behind four guards, and checks, scores and explains uploaded strains. The terminal (`python src/strainscope/service.py ...`), the app, and later Boxes 9 to 12 all go through it, so every way in gives the same answers.
+**✅ Built in Phase 6 (on your computer; online in Phase 7):** [`docs/07-app.md`](07-app.md). Seven pages: Home, Ranking, Strain page, Knowledge graph, Integration, Data (including uploads of your own strains) and a SQL console with the cookbook built in.
 
 ### Box 9: AI Explanation Layer · *frontend feature (staged)*
 **What it does:** turns a model's terse output ("top features: phlD gene, surfactin, siderophore") into a plain sentence a non-specialist can read.
@@ -253,8 +255,8 @@ Every box in the diagram is built and explained by one numbered document in `doc
 | 3 | [`docs/04-integration.md`](04-integration.md) | Box 4: multi-omics integration (DIABLO in R + a Python twin) → `artifacts/integration/` | ✅ |
 | 4 | [`docs/05-machine-learning.md`](05-machine-learning.md) | Boxes 5-6: ML models + careful evaluation → `artifacts/model/` (ranking, model, model card) | ✅ |
 | 5 | [`docs/06-knowledge-graph.md`](06-knowledge-graph.md) | Box 7: the knowledge graph → `artifacts/graph/` (graph, communities, explanations) | ✅ |
-| 6 | `docs/07-app.md` | Box 8: the Streamlit app (local first) | ⏳ next |
-| 6b | `docs/07b-docs-assistant.md` | Box 11: Ask StrainScope, the documentation assistant | ⏳ |
+| 6 | [`docs/07-app.md`](07-app.md) | Box 8: the Streamlit app on your computer, on a service layer (`src/strainscope/service.py`) | ✅ |
+| 6b | `docs/07b-docs-assistant.md` | Box 11: Ask StrainScope, the documentation assistant | ⏳ next |
 | 7 | `docs/08-deployment-ai.md` | Box 8 online + Boxes 9-10: free public deployment, explanations, data assistant, GraphRAG | ⏳ |
 | 7b | `docs/08b-mcp-server.md` | Box 12: the MCP server | ⏳ |
 | 8 | `docs/09-packaging.md` | the whole picture: one-command pipeline, cross-platform CI, LICENSE, CHANGELOG, the 1.0 tag | ⏳ |

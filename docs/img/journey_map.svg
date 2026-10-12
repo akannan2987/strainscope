@@ -53,14 +53,14 @@
 <text x="974" y="321" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16" font-weight="700" fill="#4CAF7D">✓</text>
 <text x="948" y="401" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13.5" font-weight="600" fill="#1F2933">Knowledge graph</text>
 <text x="948" y="418" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#5f6b7a">Phase 5</text>
-<circle cx="805" cy="345" r="34" fill="#FFF3CD" stroke="#C9A227" stroke-width="4"/>
-<text x="805" y="355" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="28" font-weight="700" fill="#C9A227">10</text>
-<text x="831" y="321" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16" font-weight="700" fill="#C9A227">▶</text>
+<circle cx="805" cy="345" r="34" fill="#E6F4EA" stroke="#4CAF7D" stroke-width="4"/>
+<text x="805" y="355" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="28" font-weight="700" fill="#4CAF7D">10</text>
+<text x="831" y="321" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16" font-weight="700" fill="#4CAF7D">✓</text>
 <text x="805" y="401" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13.5" font-weight="600" fill="#1F2933">The app</text>
 <text x="805" y="418" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#5f6b7a">Phase 6</text>
-<circle cx="662" cy="345" r="34" fill="#F5F5F5" stroke="#8A94A6" stroke-width="4"/>
-<text x="662" y="355" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="28" font-weight="700" fill="#8A94A6">11</text>
-<text x="688" y="321" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16" font-weight="700" fill="#8A94A6"></text>
+<circle cx="662" cy="345" r="34" fill="#FFF3CD" stroke="#C9A227" stroke-width="4"/>
+<text x="662" y="355" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="28" font-weight="700" fill="#C9A227">11</text>
+<text x="688" y="321" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16" font-weight="700" fill="#C9A227">▶</text>
 <text x="662" y="401" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13.5" font-weight="600" fill="#1F2933">Ask StrainScope</text>
 <text x="662" y="418" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5" fill="#5f6b7a">Phase 6b</text>
 <circle cx="519" cy="345" r="34" fill="#F5F5F5" stroke="#8A94A6" stroke-width="4"/>

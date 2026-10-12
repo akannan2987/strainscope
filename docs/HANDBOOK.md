@@ -2,7 +2,7 @@
 
 # The StrainScope Handbook: from day 0 to the finished product
 
-**Handbook version:** 1.4 · **Last updated:** 2026-10-11 · **Repository state it describes:** version **v0.2.0**. Phases 0 → 5 are built and tested (data, real sources, cleaning, database, multi-omics integration, machine learning, the knowledge graph), along with the v0.1.1 fix release. The analysis is complete; Phase 6 (the app) is next. 61 automated tests.
+**Handbook version:** 1.5 · **Last updated:** 2026-10-12 · **Repository state it describes:** version **v0.2.0 plus Phase 6**. Phases 0 → 6 are built and tested (data, real sources, cleaning, database, multi-omics integration, machine learning, the knowledge graph, and the app), along with the v0.1.1 fix release. Phase 6b (Ask StrainScope) is next and completes v0.3.0. 104 automated tests.
 
 **This is the one document to read first, and the one to come back to.** It walks the whole journey in order (understanding the project, preparing a blank computer, building every phase, releasing, and what lies beyond), explaining *why* at every step and linking to the specialised guide that holds the detail. You should never have to hunt through the repository to find out what to do next; if you ever do, that's a defect in this Handbook.
 
@@ -12,11 +12,32 @@
 
 **Paths.** Every file is named by its path from the project folder (the folder that contains `README.md`), for example `src/strainscope/integrate.py` or `docs/04-integration.md`. Files in the project folder itself (`README.md`, `CHANGELOG.md`, `renv.lock`, `check-public-safe.sh`) have no folder in front.
 
+**Every stage has the same parts:** *What* (what you do, with the commands), *Why* (the reason it exists, in plain words), a *Checkpoint* (how you know it worked, with the real numbers) and the *commit message* that saves it. The specialised guide linked in each stage holds every step with its expected output; this Handbook holds the thread that ties them together. At the end, [The whole build, command by command](#the-whole-build-command-by-command) lists every command in order on one page.
+
+### Only want to use the app?
+
+To explore StrainScope before building it, you need Python and Git (and nothing else: no R, no GitHub account). Install them with [`docs/01-setup.md`](01-setup.md) Parts B and D, then, in a terminal, from the folder where you keep projects:
+
+```bash
+git clone https://github.com/akannan2987/strainscope.git
+cd strainscope
+python -m venv .venv                      # RHEL 8: python3.12 -m venv .venv
+source .venv/bin/activate                 # Windows PowerShell: .\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+python -m streamlit run app/streamlit_app.py
+```
+
+The app opens in your browser. If it says there's no database yet, press *Build the database now* on its Home page (about 15 seconds). Stage 10 explains every page. Next time, only the last command is needed (after `cd strainscope` and the `activate` line).
+
+![The StrainScope app: rank strains, see why, ask the data](img/app_tour.gif)
+
 ---
 
 ## The journey at a glance
 
 ![The StrainScope journey, from a blank laptop to a finished product](img/journey_map.svg)
+
+*Prefer to click? [`docs/interactive/journey.html`](interactive/journey.html) is the same journey as an interactive page: pick any stage to see what you do, why, and how you know you're done, with links to the guide. It's built from this Handbook by `figures/make_illustrations.py`, so the two always agree. Download it and open it in a browser; it works offline.*
 
 ```mermaid
 flowchart TB
@@ -41,9 +62,9 @@ flowchart TB
     classDef done fill:#E6F4EA,stroke:#4CAF7D,color:#0B3D2E;
     classDef next fill:#FFF3CD,stroke:#C9A227,color:#4A3B00;
     classDef later fill:#F5F5F5,stroke:#B0B0B0,color:#555555,stroke-dasharray:4 3;
-    class S0,S1,S2,S3,S4,S5,S6,S7,S8,S9 done
-    class S10 next
-    class S11,S12,S13,S14,S15 later
+    class S0,S1,S2,S3,S4,S5,S6,S7,S8,S9,S10 done
+    class S11 next
+    class S12,S13,S14,S15 later
     style FOUND fill:#F5F9FF,stroke:#B9D2FF,color:#0B2545
     style DATA fill:#F5F9FF,stroke:#B9D2FF,color:#0B2545
     style ANALYSIS fill:#F5F9FF,stroke:#B9D2FF,color:#0B2545
@@ -65,8 +86,8 @@ flowchart TB
 | 7.1 | Fix | Fix release v0.1.1: a safer safety gate, copy-safe commands | [`docs/01-setup.md` Part H](01-setup.md#the-pre-push-safety-gate-check-public-safesh), [`CHANGELOG.md`](../CHANGELOG.md) | ~20 min | ✅ |
 | 8 | Prediction | Phase 4: machine learning, measured carefully | [`docs/05-machine-learning.md`](05-machine-learning.md) | ~3½ h (3 sittings) | ✅ |
 | 9 | Graph | Phase 5: the knowledge graph | [`docs/06-knowledge-graph.md`](06-knowledge-graph.md) | ~3 h (2 sittings) | ✅ |
-| 10 | App | Phase 6: the app | `docs/07-app.md` | 3-4 h | ⏳ next |
-| 11 | Assistant | Phase 6b: Ask StrainScope, the documentation assistant | `docs/07b-docs-assistant.md` | 2-3 h | ⏳ |
+| 10 | App | Phase 6: the app | [`docs/07-app.md`](07-app.md) | 3-4 h (2 sittings) | ✅ |
+| 11 | Assistant | Phase 6b: Ask StrainScope, the documentation assistant | `docs/07b-docs-assistant.md` | 2-3 h | ⏳ next |
 | 12 | Cloud | Phase 7: deployment and the AI layer | `docs/08-deployment-ai.md` | 3-4 h | ⏳ |
 | 13 | MCP | Phase 7b: the MCP server | `docs/08b-mcp-server.md` | 2 h | ⏳ |
 | 14 | Release | Phase 8: packaging and release 1.0 | `docs/09-packaging.md` | 2-3 h | ⏳ |
@@ -96,7 +117,7 @@ Times are hands-on estimates for a beginner following the guides; they don't cou
 
 **Why.** You install Python (the engine), an editor, Git (the save-game system), a GitHub account, R (for one specialist step), and two *sealed toolboxes* (`.venv` for Python, `renv` for R) that record exact package versions so a stranger can rebuild your setup identically. I put all the setup at the front on purpose: after this stage, daily work is the same handful of short commands on every operating system.
 
-**Platform promise.** The code uses `pathlib` for every file path and plain cross-platform tools, so the same commands run on all three systems. Where an operating system really does differ (installing Python, activating the environment, PowerShell quoting), the guides show each variant side by side.
+**Platform promise.** The code uses `pathlib` for every file path and plain cross-platform tools, so the same commands run on all three systems, the app included (`python -m streamlit run app/streamlit_app.py` is one command everywhere). Where an operating system really does differ (installing Python, activating the environment, PowerShell quoting, opening a firewall port on a RHEL 8 virtual machine), the guides show each variant side by side.
 
 **Checkpoint.** Your prompt shows `(.venv)`; `python -c "import pandas, sklearn, duckdb, networkx, streamlit; print('env OK')"` prints `env OK`; `Rscript -e 'renv::status()'` reports no issues; `ls renv.lock` shows the file.
 
@@ -290,16 +311,29 @@ Check the result with `git tag -n1`: both `v0.1.0` and `v0.1.1` are listed, each
 **Why.** Phase 4 ranks the strains; this phase says *why*. In a table, relationships are scattered across rows and columns, while a graph lets you walk along them: STRAIN_0485 carries fenA, which makes fengycin, which attacks the pathogen's membrane, which suppresses disease. You'll learn the words that describe any network (node, edge, degree, hub, path, community, betweenness), why the ontology comes before the data, why every edge carries its source, and the difference between a *mechanism* ("this is how it works") and a *statistical association* ("these go together in the data"). The graph keeps the two apart, so it can flag a feature the model leans on that nothing explains. The walks built here are what the app's strain page (Stage 10), GraphRAG (Stage 12) and the MCP server (Stage 13) will use. Four real lessons from the build are kept in the guide's §12.
 
 **Checkpoint.** `build` reports 679 nodes and 8,096 edges without the real tables (more with them: pathway, chemical-class and reference-strain nodes, with KEGG, RefMet and BacDive as sources), every edge allowed by the ontology and with a source. `analyse` finds four communities that match the planted arsenals (purity 0.94, adjusted Rand index 0.93); the most connected genes are the housekeeping genes, which carry no information; 30 features are confirmed by both the mechanism and the data, and one (`accE`, Phase 4's decoy) has statistical support and no mechanism. `explain`: all of the top 50 strains have at least one mechanism path; `graph.py path ituA "disease suppression"` answers with the two-step mechanism and `path accE "disease suppression"` with the statistic alone. `pytest -q` → **61 passed**. The [graph explorer](interactive/graph_explorer.html) opens in a browser.
+
+**With the real tables** (a full fetch of Phases 1b and 1c, as committed in `artifacts/graph/`), `build` reported **795 nodes and 8,218 edges**. The 116 extra nodes are 100 BacDive reference strains, 8 RefMet chemical classes, 5 KEGG pathway maps and 3 more genera; the 122 extra edges are 100 `belongs_to` and 3 `in_kingdom` (BacDive), 9 `in_pathway` (KEGG), and 6 `classified_as` and 4 `subclass_of` (RefMet). In `analyse`, two real compounds join the bridges: disease suppression stays the biggest (betweenness 0.28), followed by **pyrrolnitrin and HCN (0.05 each)**, which sit in several KEGG pathways. The communities, the knowledge-vs-data verdicts and the explanations don't change, because they're computed from the strains, not from the reference data.
 **Commit message:** `feat: add the knowledge graph with ontology, sourced edges, communities and explanations`, then tagged **v0.2.0** ("the analysis is complete"; the ritual is in [`docs/06-knowledge-graph.md` §17](06-knowledge-graph.md#17-save-your-work-safety-gate-the-commit-ritual-and-the-v020-release)).
 
 ---
 
 ## Stage 10: Phase 6, the app
 
-**What.** `docs/07-app.md`: a Streamlit app where you choose data (**Upload · Synthetic · Fetch-real**), explore the integration results, rank strains, open a strain's page with its explanation and graph neighbourhood (from Phase 5's `artifacts/graph/`), view the graph, and query everything in the built-in SQL console with the cookbook one click away.
+**What.** Follow [`docs/07-app.md`](07-app.md). In two sittings:
 
-**Why.** Results are far more useful to other people once they can click around in them. Streamlit turns Python into a web page without needing web-development knowledge; the app reads only the small `artifacts/` files, which keeps it fast.
-**Checkpoint (planned).** `streamlit run app/streamlit_app.py` opens the app locally on all three operating systems.
+1. **Check what the app will read:** `python src/strainscope/service.py status`. Every phase's results should show a ✓; if the database is missing, the output points to the five commands that build it (or let the app do it with one button).
+2. **Start the app:** `python -m streamlit run app/streamlit_app.py`. A browser tab opens at `http://localhost:8501`; Ctrl+C in the terminal stops it. The same command works on Windows, macOS and RHEL 8.
+3. **Take the tour:** *Home* (the headline numbers and a health check), *Ranking* (every strain best first, and the slider that asks "if we can test N strains, how many would work?"), *Strain page* (one strain's score, the reasons behind it and its corner of the knowledge graph), *Knowledge graph* (the network, a path finder, a look-up), *Integration* (Phase 3 on one page).
+4. **Score your own strains** on the *Data* page: download the example (twelve library strains, renamed), upload it, read the checks, see the ranked result, switch the Ranking and Strain pages to your upload. Then break the file on purpose and read the messages. The same from a terminal: `python src/strainscope/service.py template my_strains.csv --example`, then `python src/strainscope/service.py score my_strains.csv` (delete the three `my_strains*.csv` files afterwards, so they stay out of your commit).
+5. **Ask the database** in the *SQL console*: pick a recipe from the Query Cookbook, run it, then try `DELETE FROM phenotype;` and watch it refused.
+6. **Optional:** run the app on a RHEL 8 virtual machine and reach it through an SSH tunnel (`ssh -L 8501:localhost:8501 your-user@your-vm`); draw the figures with `python figures/make_phase6_figures.py`; build the smallest possible Streamlit page yourself (the guide's §15).
+
+![The Strain page: why the top strain ranks first, and its corner of the graph](img/app_strain.png)
+
+**Why.** Until now, using StrainScope meant opening a terminal and knowing which script to run. A screening scientist wants to ask "which 50 strains, and why?" without learning Python. The app puts every result a click away, and the upload lets anyone bring their own strains and get them checked, scored by the saved model and explained by the knowledge graph. You'll learn how Streamlit turns a script into a web page and why every click runs the script again (caching and session state keep that quick); why the app sits on a thin **service layer** (`src/strainscope/service.py`) that the terminal, the app and later Ask StrainScope and the MCP server all share; how to let anyone type SQL behind four guards (read-only, no file access, a 10-second limit, a 10,000-row cap; the terminal console now shares the first two); how to accept somebody else's file safely; and why an uploaded copy of a library strain scores slightly differently (the ranking uses out-of-fold scores, an upload the final model). Seven real lessons from the build are kept in the guide's §12.
+
+**Checkpoint.** `service.py status` shows ✓ for the database, the three phases' results and the saved model. The app opens on all three operating systems; the Ranking page labels 75 strains likely, 103 borderline and 422 unlikely; the Home page shows 600 strains (145 effective), a balanced error of 0.128 (AUC 0.948), 47 effective among the top 50 (chance: about 12) and, with the committed graph, 795 nodes and 8,218 edges. STRAIN_0485's page lists the fenA, hcnA and pvdA mechanism paths and the `accE` statistics-only flag. The example upload scores twelve strains with two notes and no errors, EXAMPLE_01 first at 99.98 %; changing a gene call to `2` gives ``Gene column `ituA` must hold 0 or 1 (or yes/no); found 2 on row 2.`` The SQL console refuses `DELETE` and file reads. `pytest -q` → **104 passed** (43 new: 23 for the service layer, 20 that click through the app).
+**Commit message:** `feat: add the Streamlit app with ranking, strain pages, graph, uploads and a safe SQL console`. There's no tag this time (v0.3.0 arrives with Stage 11; the ritual is in [`docs/07-app.md` §17](07-app.md#17-save-your-work-safety-gate-and-the-commit-ritual)).
 
 ---
 
@@ -314,7 +348,7 @@ Check the result with `git tag -n1`: both `v0.1.0` and `v0.1.1` are listed, each
 
 ## Stage 12: Phase 7, deployment and the AI layer
 
-**What.** `docs/08-deployment-ai.md`: deploy the app free on Streamlit Community Cloud (keys stored as host secrets, never in Git); add plain-language explanations of results; switch on grounded answers in Ask StrainScope; add a read-only **data assistant** (a question becomes a SQL query on the read-only database, shown to you with its answer) and **GraphRAG** (answers built by walking the knowledge graph, citing the path).
+**What.** `docs/08-deployment-ai.md`: deploy the app free on Streamlit Community Cloud (keys stored as host secrets, never in Git), with the shared-use switch that Stage 10 already built (`STRAINSCOPE_MODE=public` hides the real-data buttons and allows the database build only while there's no database yet) and the database built on first start from the committed results; add plain-language explanations of results; switch on grounded answers in Ask StrainScope; add a read-only **data assistant** (a question becomes a SQL query that runs through the same four guards as the SQL console, shown to you with its answer) and **GraphRAG** (answers built by walking the knowledge graph, citing the path).
 
 **Why.** Results become usable by anyone with a link, and the AI features turn "read the tables" into "ask the project". Every answer stays traceable to a document, a query or a graph path, and every feature still works without any key (the AI parts just switch off).
 
@@ -324,7 +358,7 @@ Check the result with `git tag -n1`: both `v0.1.0` and `v0.1.1` are listed, each
 
 **What.** `docs/08b-mcp-server.md`: a small **Model Context Protocol** server. It's a standard "USB port" through which AI assistants can use StrainScope's tools directly: `ask_docs`, `query_database` (read-only), `get_signature`, `rank_strain`, `explain_strain` (Phase 5's walks through the graph). Every call is validated and logged.
 
-**Why.** It turns the repository from "code someone reads" into "a tool an assistant can use", reusing exactly the functions the app already calls.
+**Why.** It turns the repository from "code someone reads" into "a tool an assistant can use", reusing exactly the functions the app already calls: the service layer of Stage 10 (`query_database`, `score_and_explain`, `neighbourhood`) and the graph of Stage 9.
 
 ---
 
@@ -344,6 +378,65 @@ Check the result with `git tag -n1`: both `v0.1.0` and `v0.1.1` are listed, each
 
 ---
 
+## The whole build, command by command
+
+Every command from a set-up computer to today, in order, on one page. Each block says which stage it belongs to and where every step is explained with its expected output. Run them from the project folder with `(.venv)` active. (Stage 1, the setup itself, differs by operating system, so it stays in [`docs/01-setup.md`](01-setup.md).) After every stage: `pytest -q`, `./check-public-safe.sh`, then the commit ritual of Stage 2.
+
+```bash
+# Stage 3, Phase 1: the synthetic library            (docs/02-data-generation.md)
+python src/strainscope/generate_data.py
+python figures/make_phase1_figures.py
+
+# Stage 4, Phase 1b: real data (optional, needs the internet)     (docs/02b-real-data-ingestion.md)
+python src/strainscope/fetch_real.py --probe
+python src/strainscope/fetch_real.py
+python figures/make_phase2b_figures.py
+
+# Stage 5, Phase 1c: two more sources; an optional NCBI key goes in .env     (docs/02c-more-real-sources.md)
+cp .env.example .env                                   # Windows PowerShell: Copy-Item .env.example .env
+python src/strainscope/fetch_real.py --source ncbi_datasets
+python src/strainscope/fetch_real.py --source metabolomics_wb
+python figures/make_phase2c_figures.py
+
+# Stage 6, Phase 2: cleaning and the database        (docs/03-harmonization-qc.md)
+python src/strainscope/harmonize.py
+python figures/make_phase2_figures.py
+python src/strainscope/sql.py ".tables"
+
+# Stage 7, Phase 3: integration                       (docs/04-integration.md)
+python src/strainscope/integrate.py prepare
+Rscript -e 'renv::restore()'      # once per machine: mixOmics and its helpers from renv.lock (Windows: swap the quotes)
+Rscript R/diablo_integration.R
+python src/strainscope/integrate.py twin
+python src/strainscope/integrate.py publish
+python figures/make_phase3_figures.py
+
+# Stage 8, Phase 4: machine learning                  (docs/05-machine-learning.md)
+python src/strainscope/model.py all                    # compare, calibrate, explain, final, publish
+python figures/make_phase4_figures.py
+
+# Stage 9, Phase 5: the knowledge graph               (docs/06-knowledge-graph.md)
+python src/strainscope/graph.py all                    # build, analyse, explain, publish
+python src/strainscope/graph.py why STRAIN_0485
+python src/strainscope/graph.py path ituA "disease suppression"
+python src/strainscope/graph.py show iturin
+python figures/make_phase5_figures.py
+
+# Stage 10, Phase 6: the app                          (docs/07-app.md)
+python src/strainscope/service.py status
+python -m streamlit run app/streamlit_app.py           # Ctrl+C stops it
+python src/strainscope/service.py template my_strains.csv --example
+python src/strainscope/service.py score my_strains.csv
+rm my_strains*.csv                                     # Windows PowerShell: Remove-Item my_strains*.csv
+python figures/make_phase6_figures.py
+
+# Every stage ends with
+pytest -q
+./check-public-safe.sh                                 # Windows: bash check-public-safe.sh in Git Bash
+```
+
+Two rules keep this list working. The order matters, because each stage reads what the stage before it wrote. And `src/strainscope/harmonize.py` rebuilds the database from scratch, so whenever you re-run it, re-run the three `publish` steps (`integrate.py publish`, `model.py publish`, `graph.py publish`) or press *Build the database* in the app, which does all of that.
+
 ## Every session, after setup
 
 ```bash
@@ -351,6 +444,7 @@ cd ~/projects/strainscope                 # Windows PowerShell: cd $HOME\project
 source .venv/bin/activate                 # Windows PowerShell: .\.venv\Scripts\Activate.ps1
 git switch develop && git pull --ff-only origin develop
 pytest -q                                 # everything still green?
+python -m streamlit run app/streamlit_app.py   # optional: the app, to look at the results (Ctrl+C stops it)
 # ... work on the current stage ...
 ```
 
@@ -372,6 +466,12 @@ Then the end-of-phase ritual (Stage 2) when the stage is complete.
 | `./check-public-safe.sh: Permission denied` | the file lost its runnable mark when downloaded: `chmod +x check-public-safe.sh` (macOS/Linux) |
 | a push fails with `HTTP 400` / `RPC failed` | [`docs/01-setup.md`](01-setup.md) Part H, "If a push fails partway" |
 | a word you don't know | the [Glossary](GLOSSARY.md), and from Stage 11 also `python src/strainscope/ask.py "what is ...?"` |
+| `streamlit` is "not recognized" / "command not found" | start the app with `python -m streamlit run app/streamlit_app.py` ([`docs/07-app.md` §16](07-app.md#16-what-could-go-wrong-mini-faq)) |
+| `Port 8501 is already in use` | another copy of the app is running: Ctrl+C in its terminal, or add `--server.port 8502` |
+| the app says there's no database yet | press *Build the database now* on its Home page, or run the five commands in [`docs/07-app.md` §5](07-app.md#5-step-1-check-what-the-app-will-read) |
+| an upload is refused | the red message names the column and the spreadsheet row; every check is listed in [`docs/07-app.md` §8](07-app.md#8-step-4-score-your-own-strains) |
+| the app on a VM doesn't open from your laptop | use an SSH tunnel, or open port 8501 ([`docs/07-app.md` §10](07-app.md#10-step-6-run-it-on-another-computer-or-a-virtual-machine)) |
+| `Could not set lock on file ... strainscope.duckdb` | something else is writing to the database (a script, or the app's build button); wait for it and retry |
 | a ready-made SQL question | the [Query Cookbook](QUERY_COOKBOOK.md) |
 | a figure looks wrong or is missing | re-run the phase's figure script in `figures/` (each guide names it) |
 | `model built with scikit-learn X, running Y`, or `Can't get attribute 'KingdomPrep'` | rebuild the model: `python src/strainscope/model.py final` ([`docs/05-machine-learning.md` §16](05-machine-learning.md#16-what-could-go-wrong-mini-faq)) |
@@ -402,15 +502,22 @@ Nothing in this repository is undocumented magic. Paths are relative to the proj
 | `src/strainscope/model.py` | machine learning: compare, calibrate, explain, final, publish; `load_model()` and `score_strains()` for the app | [`docs/05-machine-learning.md`](05-machine-learning.md) |
 | `src/strainscope/ontology.py` | the domain model: node types, relations, modes of action, the edge checker | [`docs/06-knowledge-graph.md`](06-knowledge-graph.md) §1, §3 |
 | `src/strainscope/graph.py` | the knowledge graph: build, analyse, explain, publish; the questions `why`, `path` and `show` | [`docs/06-knowledge-graph.md`](06-knowledge-graph.md) |
-| `tests/test_sources.py`, `tests/test_harmonize.py`, `tests/test_integrate.py`, `tests/test_model.py`, `tests/test_graph.py` | the automated checks | each phase guide's *tests* section |
+| `src/strainscope/service.py` | the service layer behind the app: status, safe SQL, cookbook recipes, uploads (template, checks, scores, explanations), a strain's graph neighbourhood, the pipelines; the commands `status`, `template`, `score` | [`docs/07-app.md`](07-app.md) §1, §3, §8 |
+| `app/streamlit_app.py`, `app/ui.py`, `app/charts.py` | the app: its front door (sidebar, page list), what the pages share, and every chart | [`docs/07-app.md`](07-app.md) §1, §4 |
+| `app/views/*.py` | the seven pages: Home, Ranking, Strain page, Knowledge graph, Integration, Data, SQL console | [`docs/07-app.md`](07-app.md) §7 to 9 |
+| `.streamlit/config.toml` | the app's settings (colours, upload size, no usage statistics, no email question); committed, holds no secrets | [`docs/07-app.md`](07-app.md) §4 |
+| `tests/test_sources.py`, `tests/test_harmonize.py`, `tests/test_integrate.py`, `tests/test_model.py`, `tests/test_graph.py`, `tests/test_service.py`, `tests/test_app.py` | the automated checks (`test_app.py` clicks through the app without a browser) | each phase guide's *tests* section |
 | `tests/test_safety_gate.py` | the safety gate's own tests | [`docs/01-setup.md`](01-setup.md) Part H, Stage 7.1 above |
 | `figures/make_phase*_figures.py`, `figures/make_illustrations.py`, `figures/*.png` | every figure and the script that draws it | each phase guide's *figures* section |
+| `figures/take_app_screenshots.py` | optional: the screenshots of the running app and the animated tour (needs Playwright) | [`docs/07-app.md`](07-app.md) §11 |
 | `artifacts/integration/*.csv` | Phase 3's small result tables (committed; the app will read them) | [`docs/04-integration.md`](04-integration.md) §2, §9 |
 | `artifacts/model/*.csv`, `artifacts/model/model_card.json`, `artifacts/model/strainscope_model.joblib` | Phase 4's result tables, the saved model and its card (committed; the app and the MCP server will read them) | [`docs/05-machine-learning.md`](05-machine-learning.md) §2, §8 |
 | `artifacts/graph/nodes.csv`, `artifacts/graph/edges.csv`, `artifacts/graph/knowledge_layer.graphml`, `artifacts/graph/*.csv` | Phase 5's graph (two plain tables, plus a GraphML copy of the knowledge layer) and its result tables: hubs, communities, knowledge vs data, explanations (committed; the app will read them) | [`docs/06-knowledge-graph.md`](06-knowledge-graph.md) §2, §5 to 9 |
 | `docs/*.md` | the tutorial, glossary, cookbook, roadmaps and this Handbook | this table |
-| `docs/img/*.svg` | the logo, icon and journey map | `figures/make_illustrations.py` |
+| `docs/img/*.svg` | the logo, icon, wordmark (the app's sidebar) and journey map | `figures/make_illustrations.py` |
+| `docs/img/app_*.png`, `docs/img/app_tour.gif` | screenshots of the running app | `figures/take_app_screenshots.py`, [`docs/07-app.md`](07-app.md) §11 |
 | `docs/interactive/*.html`, `docs/interactive/plotly.min.js` | the interactive charts (open in a browser; work offline) | each phase guide's *figures* section |
+| `docs/interactive/journey.html` | this Handbook's journey as a clickable page, built from this file | `figures/make_illustrations.py` |
 | `data/` | generated data and the database: **never in Git**, rebuilt on demand | [`02`](02-data-generation.md), [`03`](03-harmonization-qc.md), [`04`](04-integration.md) |
 
 ## How this Handbook is maintained
@@ -420,8 +527,9 @@ It is a living document and the **first** one to update. At the end of every pha
 1. Flip the stage's status in the table at the top and write the real checkpoint numbers into the stage. (Stage headings carry no status marks on purpose: their link addresses then never change.)
 2. Link the phase guide that now exists.
 3. Update the version, date and repository state at the top.
-4. Make the same status change in [`docs/ROADMAP.md`](ROADMAP.md), the README's *Build log*, and the `STAGES` list in `figures/make_illustrations.py` (then re-run it, so the journey map matches).
-5. Add a line to `CHANGELOG.md`.
+4. Make the same status change in [`docs/ROADMAP.md`](ROADMAP.md), the README's *Build log*, and the `STAGES` list in `figures/make_illustrations.py`, then re-run `python figures/make_illustrations.py`. It redraws the journey map and rebuilds `docs/interactive/journey.html` from this Handbook, so the clickable journey always says what the stages here say.
+5. Add the stage's new commands to [The whole build, command by command](#the-whole-build-command-by-command).
+6. Add a line to `CHANGELOG.md`.
 
 Small changes between phases (a fix, a renamed command, a new FAQ entry) update the Handbook in the same commit too. **If the Handbook falls behind the code, treat that as a bug.**
 

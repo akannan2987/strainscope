@@ -3,9 +3,11 @@
 [← README](../README.md) · [Handbook](HANDBOOK.md) · [All docs in order](../README.md#the-tutorial-in-order) · [Glossary](GLOSSARY.md)
 
 Every query below is tested and runs against `data/processed/strainscope.duckdb`
-(built in [Phase 2](03-harmonization-qc.md)). Run them with the project's own
-SQL console. It's read-only, so you can explore without any fear of breaking
-something:
+(built in [Phase 2](03-harmonization-qc.md)). Run them in the app's **SQL
+console**, where every recipe on this page is one click away ([`docs/07-app.md`
+§9](07-app.md#9-step-5-the-sql-console)), or with the project's own console in a
+terminal. Both are read-only and can't touch files on your computer, so you can
+explore without any fear of breaking something:
 
 ```bash
 # one query, straight from the shell:
@@ -536,5 +538,7 @@ isn't effective.
 
 ---
 
-*Recipes are added as the project grows, and the app's SQL console (Phase 6) will
-ship with this cookbook built in.*
+*Recipes are added as the project grows. The app's SQL console reads its menu
+from this file, so a new recipe here (a bold, quoted question followed by a
+fenced `sql` code block) shows up in the app without changing any code; a test
+checks that every recipe is found and runs.*

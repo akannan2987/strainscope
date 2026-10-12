@@ -4,7 +4,7 @@
 
 **Prerequisites:** Phases 2 to 4 complete: the database `data/processed/strainscope.duckdb` exists, and `artifacts/integration/` (Phase 3) and `artifacts/model/` (Phase 4) hold their results. The graph still builds without the Phase 3 and 4 results (it says what it skipped), but the rankings and explanations need them. The real tables from Phases 1b and 1c are optional: when they're in the database the graph uses them, and when they aren't it says so. **No R and no internet needed:** this phase is pure Python.
 **Learning goal:** after this phase you will understand what a graph (a network) is and the handful of words that describe one; what an ontology is and why it's written before any data is loaded; how a knowledge graph differs from a table, and why every connection in it carries its source; the difference between a *mechanism* ("this is how it works") and a *statistical association* ("these go together in the data"); how to find hubs and communities, and how to grade communities against a known answer; and how to answer "why does this strain rank here?" by walking the graph.
-**Why this phase exists in a real workflow:** Phase 4 gave a screening team a ranked list. The next question is always *why*: "why is STRAIN_0485 first, and why is STRAIN_0220 last?" A score alone can't answer that. The knowledge graph links each strain to the weapons it carries, each weapon to the way it works, and each way of working to the outcome, with a source on every step. That turns a number into an argument a scientist can check. It's also the foundation for later phases: the app's graph view (Phase 6), GraphRAG answers (Phase 7) and the MCP server (Phase 7b) all walk this graph.
+**Why this phase exists in a real workflow:** Phase 4 gave a screening team a ranked list. The next question is always *why*: "why is STRAIN_0485 first, and why is STRAIN_0220 last?" A score alone can't answer that. The knowledge graph links each strain to the weapons it carries, each weapon to the way it works, and each way of working to the outcome, with a source on every step. That turns a number into an argument a scientist can check. It's also the foundation for later phases: the app's strain pages and graph view (Phase 6, [`docs/07-app.md`](07-app.md)), GraphRAG answers (Phase 7) and the MCP server (Phase 7b) all walk this graph.
 
 **Session plan** (about 3 hours in total, in two sittings):
 - **Session A (~1.5 h):** concepts (§1 to 3), get the files (§4), build the graph (§5), hubs and communities (§6).
@@ -105,7 +105,7 @@ flowchart TB
     style G fill:#F5F9FF,stroke:#B9D2FF,color:#0B2545
 ```
 
-What runs where: everything on your laptop, in well under a minute. The graph itself is two plain tables in `artifacts/graph/` (`nodes.csv` and `edges.csv`, committed because the app will read them), plus a copy of the knowledge layer in GraphML, a standard format that Gephi and Cytoscape open directly and Neo4j can import (through its APOC plugin).
+What runs where: everything on your laptop, in well under a minute. The graph itself is two plain tables in `artifacts/graph/` (`nodes.csv` and `edges.csv`, committed because the app reads them), plus a copy of the knowledge layer in GraphML, a standard format that Gephi and Cytoscape open directly and Neo4j can import (through its APOC plugin).
 
 ---
 
@@ -190,7 +190,7 @@ It takes a few seconds. **You should see** (this is a run without the real table
 - `belongs_to` also lists `BacDive (DSMZ)` as a source, and three more relations appear: `in_pathway` (from KEGG), `classified_as` and `subclass_of` (from RefMet);
 - the `note: no real tables yet` line disappears.
 
-Your exact counts depend on what the live APIs returned when you fetched. The genus nodes also pick up NCBI genome counts and median genome sizes as attributes.
+Your exact counts depend on what the live APIs returned when you fetched. (A full fetch in October 2026 gave 795 nodes and 8,218 edges; [Handbook Stage 9](HANDBOOK.md#stage-9-phase-5-the-knowledge-graph) lists what the extra 116 nodes and 122 edges are. That's the graph committed in `artifacts/graph/`.) The genus nodes also pick up NCBI genome counts and median genome sizes as attributes.
 
 **If instead** you see `No database at ...`, run `python src/strainscope/harmonize.py` first. If you see `note: no Phase 4 results` or `note: no Phase 3 results`, the graph was built without those statistical edges: run `python src/strainscope/model.py all` (and `python src/strainscope/integrate.py all`), then build again. If you see `The graph breaks the ontology; nothing was saved`, an edge broke a rule. That only happens if `src/strainscope/ontology.py` or the input tables were edited; the message names the first problem edges.
 
@@ -226,7 +226,7 @@ python src/strainscope/graph.py analyse
 
 **What it means, part by part.**
 
-- **Hubs.** The nodes touching the most strains are the three housekeeping genes, which nearly every microbe carries, and then accessory genes. They're hubs and they tell you nothing about which strain works, in the way "the" turns up in every entry of a library catalogue. Among the concepts, `disease suppression` is the big hub (39 neighbours: the 8 modes of action that lead to it and the 31 features with a statistical edge to it) and the biggest bridge: it links so many concepts that many shortest routes between two of them run through it. With the real tables, compounds that sit in several KEGG pathways can also appear among the bridges.
+- **Hubs.** The nodes touching the most strains are the three housekeeping genes, which nearly every microbe carries, and then accessory genes. They're hubs and they tell you nothing about which strain works, in the way "the" turns up in every entry of a library catalogue. Among the concepts, `disease suppression` is the big hub (39 neighbours: the 8 modes of action that lead to it and the 31 features with a statistical edge to it) and the biggest bridge: it links so many concepts that many shortest routes between two of them run through it. With the real tables, compounds that sit in several KEGG pathways can also appear among the bridges (in the October 2026 fetch, pyrrolnitrin and HCN at 0.05 each, behind disease suppression at 0.28). The communities, the knowledge-vs-data verdicts and the explanations come out the same with or without the real tables, because they're computed from the strains.
 - **Communities.** Four communities, and they match the kingdoms' arsenals almost exactly: purity 0.94 and an adjusted Rand index of 0.93. The bacterial weapons form one tight group, the fungal ones another, and the yeast and oomycete weapons their own small groups. Three plant-growth genes (acdS, nifH, gcd) sit with the bacteria because they're common in bacteria in this library, which is the point to remember: a community means these features turn up in the same strains, and it says nothing about whether they work together. The accessory genes and background compounds have no strong ties at all, which is what "no link to anything" should look like. `chiA` has none either: it's spread across bacteria, fungi and oomycetes, so it doesn't belong to any one kingdom's group.
 - **Knowledge vs data.** 30 features have both a known mechanism and statistical support. Two have a mechanism the data didn't pick up (`ech42` and `prb1`). Both are enzymes with no compound measured, so in this simulation their planted effect is smaller than that of a weapon whose compound adds to the score. `chiA` and `glcA` are enzymes too, but more strains carry them (193 and 179, against 112 each), which gives the statistics more to work with. One has statistical support and no mechanism: `accE`, the decoy Phase 4 already flagged. The graph puts it in the "treat with care" box automatically. The remaining 15 have no link to disease suppression (the four plant-growth genes do have a mechanism, but for a different outcome).
 
@@ -265,7 +265,7 @@ python src/strainscope/graph.py explain
 
 Sometimes a strain produces a compound without carrying the gene that makes it. The explanation says so: either "its gene call is missing" or "without carrying the gene that makes it (background noise just over the line, or a spike?)". Both happen in this library: Phase 1 planted about 1 % wild readings, and a few ordinary background readings land just over the 4x line. The graph is how you notice them, one strain at a time.
 
-Every strain's explanation is saved in `artifacts/graph/explanations.csv`, one row per reason shown (up to three mechanism paths, any data-only flags and up to two missing weapons), with the walk and its sources; the column `mechanism_paths` holds the full count. That file is what the app's strain page will show in Phase 6.
+Every strain's explanation is saved in `artifacts/graph/explanations.csv`, one row per reason shown (up to three mechanism paths, any data-only flags and up to two missing weapons), with the walk and its sources; the column `mechanism_paths` holds the full count. That file is what the app's Strain page shows ([`docs/07-app.md` §7](07-app.md#7-step-3-a-tour-of-the-app)).
 
 ---
 
@@ -469,13 +469,13 @@ None needs the network or the real database.
 | Task | Manual (learn) | Automatic (ship) |
 |---|---|---|
 | Generate synthetic data | `python src/strainscope/generate_data.py` | the one-command pipeline (Phase 8) |
-| Fetch real data | `python src/strainscope/fetch_real.py [--probe] [--source ...]` | the app's **Upload · Synthetic · Fetch-real** picker |
+| Fetch real data | `python src/strainscope/fetch_real.py [--probe] [--source ...]` | the app's **Data** page, *Real data* tab |
 | Clean + build the database | `python src/strainscope/harmonize.py` | the one-command pipeline (Phase 8) |
 | Integrate (Phase 3) | `integrate.py prepare` → `Rscript R/diablo_integration.R` → `integrate.py twin` → `integrate.py publish` | `python src/strainscope/integrate.py all` |
 | Machine learning (Phase 4) | `model.py compare` → `calibrate` → `explain` → `final` → `publish` | `python src/strainscope/model.py all` |
 | **Knowledge graph (this phase)** | `graph.py build` → `analyse` → `explain` → `publish` | **`python src/strainscope/graph.py all`** |
-| Ask why / how / what | `graph.py why ...`, `graph.py path ... ...`, `graph.py show ...` | the app's strain page and graph view (Phase 6), GraphRAG (Phase 7) |
-| Question the data | `python src/strainscope/sql.py` + the [Cookbook](QUERY_COOKBOOK.md) | the app's SQL console, cookbook built in |
+| Ask why / how / what | `graph.py why ...`, `graph.py path ... ...`, `graph.py show ...` | the app's Strain page and Knowledge graph page ([`docs/07-app.md`](07-app.md)), GraphRAG (Phase 7) |
+| Question the data | `python src/strainscope/sql.py` + the [Cookbook](QUERY_COOKBOOK.md) | the app's SQL console, cookbook built in ([`docs/07-app.md` §9](07-app.md#9-step-5-the-sql-console)) |
 
 ---
 
@@ -573,4 +573,4 @@ Then update the [Handbook](HANDBOOK.md) Stage 9 checkpoint if anything about you
 - Give a weapon a second mode of action. In `src/strainscope/ontology.py`, add `"toxin production"` to the modes of `hcnA` and `HCN`, and rebuild. Which strains' explanations change?
 - Write a cookbook query that lists the ten strains with the most mechanism paths (hint: `kg_explanations`, column `mechanism_paths`).
 
-**Next:** `docs/07-app.md` (arrives with the phase; [Handbook Stage 10](HANDBOOK.md#stage-10-phase-6-the-app)) covers **Phase 6**, the Streamlit app. Everything built so far gets buttons: choose data, browse the ranking, open a strain's page with its explanation and graph neighbourhood, and query the database in a built-in SQL console with the cookbook one click away.
+**Next:** [`docs/07-app.md`](07-app.md) ([Handbook Stage 10](HANDBOOK.md#stage-10-phase-6-the-app)) covers **Phase 6**, the Streamlit app. Everything built so far gets buttons: browse the ranking, open a strain's page with its explanation and its corner of this graph, find paths, upload your own strains to have them scored and explained, and query the database in a built-in SQL console with the cookbook one click away.

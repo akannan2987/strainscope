@@ -261,9 +261,41 @@ first appears. If a term is missing, that's a documentation bug worth fixing.
 - **Recursive query (SQL)**: a query that keeps joining a table to its own results, which is how a database walks a graph (`WITH RECURSIVE`, Cookbook §10).
 - **Graph database (Neo4j)**: a database built to store and query graphs for many users at once. Deferred until the graph outgrows memory ([roadmap](ROADMAP.md#deferred-items-and-their-triggers)).
 
+## Phase 6: the app (doc 07)
+
+- **Web app**: a program you use through a browser. Ours runs on your own computer: Streamlit starts a small web server, and your browser talks to it.
+- **Streamlit**: the Python library that turns a script into a web page. `st.slider(...)` draws a slider, `st.dataframe(...)` a table; there's no HTML or JavaScript to write.
+- **Widget**: anything on the page you can click or type into: a slider, a dropdown (Streamlit says *selectbox*), a button, a text box, a file uploader.
+- **Rerun**: what Streamlit does on every click: it runs the page's script again from the top with the new values, then redraws the page. It's why the code needs no "when this changes, update that" wiring.
+- **Cache** (`st.cache_data`, `st.cache_resource`): a shelf of ready-made results, so slow things (reading a file, loading the graph) happen once instead of on every rerun. Ours are labelled with the file's last-changed time, so a rebuilt file is read again by itself.
+- **Session state** (`st.session_state`): a small notebook Streamlit keeps for each browser tab; your upload and the strain you picked survive reruns there, and disappear when the tab closes.
+- **Callback**: a small function a button or widget runs *before* the page reruns. It's the one moment Streamlit allows changing another widget's value.
+- **Multipage app / navigation**: an app split into pages (ours has seven, in `app/views/`), listed in the sidebar by `st.navigation`.
+- **Query parameter**: the part of a web address after `?`, like `?strain=STRAIN_0485`. The Strain page reads and writes it, so a link opens on a chosen strain.
+- **Service layer**: a thin set of functions between the screens and the real work (`src/strainscope/service.py`), so the terminal, the app and later tools ask the same questions in the same way. In a restaurant it's the *pass*, the counter between kitchen and dining room.
+- **localhost** and **port**: *localhost* means "this computer"; a *port* is a numbered door on it. The app listens at `http://localhost:8501`.
+- **Headless**: running a program without opening a window or a browser, as on a server or a VM with no screen (`--server.headless true`).
+- **Virtual machine (VM)**: a computer simulated by software on a bigger computer. It behaves like a separate machine with its own address and is often used without a screen.
+- **SSH (secure shell)**: a program that opens an encrypted terminal on another computer (`ssh your-user@your-vm`); the commands you type then run there.
+- **Docstring**: the block of plain text in triple quotes at the top of a Python file or function, written for the person reading the code.
+- **SSH tunnel**: a private corridor through an SSH connection: `ssh -L 8501:localhost:8501 user@vm` makes the VM's port 8501 appear on your laptop's port 8501, without opening anything on the VM.
+- **Firewall / opening a port**: the firewall decides which doors of a computer the network may knock on; `sudo firewall-cmd --add-port=8501/tcp` opens one on RHEL 8.
+- **Read-only guard**: the database is opened so it can be read but never changed (CREATE, INSERT, UPDATE, DELETE are refused).
+- **External access (switched off)**: DuckDB's setting that lets a query read or write files and the internet; the console turns it off and locks the setting.
+- **Timeout**: a time limit after which a running query is stopped (10 seconds in the console).
+- **Upload validation**: checking somebody else's file before using it, and saying in plain words which column and which row are wrong. *Errors* stop the scoring, *warnings* say what was assumed, *notes* are for information.
+- **Template**: an empty file with the right column names, to fill in (`python src/strainscope/service.py template FILE.csv`).
+- **Out-of-fold vs final model**: the library's ranking comes from models that never saw each strain (out-of-fold, a fair test). A new strain is scored by the final model, which learned from all 600. A copy of a library strain therefore gets a slightly different number as an upload.
+- **Borderline (likely / borderline / unlikely)**: the bands next to every predicted chance: above 70 % likely, 30 % to 70 % borderline, below 30 % unlikely. "Effective" means suppressing disease by at least 65 % in the trial, and strains just either side of that line are much alike, so for a middling chance the app says *borderline* instead of a confident yes or no.
+- **Health check**: a list of what the app needs and whether it's there, with the fix for anything missing (`python src/strainscope/service.py status`, and the app's Home page).
+- **Shared mode** (`STRAINSCOPE_MODE=public`): an environment variable for an app other people can reach. It hides the real-data buttons and allows the database build only while there's no database yet (a first start).
+- **AppTest**: Streamlit's test runner; it plays the app the way a browser would, in memory, so the tests can open pages, press buttons and read what was drawn (`tests/test_app.py`).
+- **Playwright**: a library that drives a real browser from Python; only the optional screenshot script uses it (`figures/take_app_screenshots.py`).
+- **`tmux`**: a terminal program that keeps a command running after you log out of a remote machine.
+
 ## The Handbook, releases and the planned phases (docs HANDBOOK, ROADMAP, PRODUCT_ROADMAP)
 
-- **Handbook**: [`docs/HANDBOOK.md`](HANDBOOK.md), the one living document that walks the whole journey from a blank laptop to the finished product and links every specialised guide. Read it first; it's updated in the same commit as every change.
+- **Handbook**: [`docs/HANDBOOK.md`](HANDBOOK.md), the one living document that walks the whole journey from a blank laptop to the finished product and links every specialised guide. Read it first; it's updated in the same commit as every change. [`docs/interactive/journey.html`](interactive/journey.html) is the same journey as a clickable page, built from the Handbook.
 - **Roadmap**: the ordered plan of what gets built next and why ([`docs/ROADMAP.md`](ROADMAP.md)); the **product roadmap** looks beyond this repository ([`docs/PRODUCT_ROADMAP.md`](PRODUCT_ROADMAP.md)).
 - **Verdict / trigger**: in the product roadmap, every technology gets a verdict (*required now · recommended later · optional · not needed*) and a trigger, which is the observable event that would change it. The idea is to justify each tool instead of piling them up.
 - **Tag (Git)**: a bookmark on one exact commit, named with a version number (`v0.1.0`), so anyone can return to that state. *Annotated* tags (`git tag -a`) also record who, when and why.

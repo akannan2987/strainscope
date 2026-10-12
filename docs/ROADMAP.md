@@ -34,13 +34,36 @@ This document covers this repository only: everything needed for a complete, usa
 | 3.1 | Fix release | [`CHANGELOG.md`](../CHANGELOG.md), [`docs/01-setup.md` Part H](01-setup.md#the-pre-push-safety-gate-check-public-safesh) | the safety gate also checks new files (and force-added ignored ones), with its own tests (`tests/test_safety_gate.py`); every documented command, commit and tag message in plain keyboard characters | ✅ | **v0.1.1** |
 | 4 | Machine learning | [`docs/05-machine-learning.md`](05-machine-learning.md) | leak-proof pipelines (preparation re-learned inside every fold, the Phase 3 leak measured and closed, a real leak shown on noise); a baseline, an elastic net (tuned by nested cross-validation), a random forest and gradient boosting on the same folds; class weights; calibration (Platt scaling); permutation importance graded against the planted truth; error analysis; the calibrated winner saved with a model card; out-of-fold ranking in `artifacts/model/` | ✅ | none |
 | 5 | Knowledge graph & networks | [`docs/06-knowledge-graph.md`](06-knowledge-graph.md) | the domain model written first (`src/strainscope/ontology.py`: ten node types, eleven relations, a mode of action for every weapon); a NetworkX graph strain → gene → compound → mode of action → outcome, with real KEGG pathways, RefMet classes and BacDive strains when fetched, Phase 3's gene ↔ product correlations and Phase 4's importances; a source on every edge, checked against the ontology; hubs, communities graded against the planted arsenals, knowledge vs data; explanations of every ranking as walks through the graph; `why`, `path` and `show` questions; results in the database (`kg_*`) and `artifacts/graph/` | ✅ | **v0.2.0** |
-| 6 | The app | `docs/07-app.md` | the Streamlit app: data picker (Upload · Synthetic · Fetch-real), integration and ranking views, a page per strain with its explanation and graph neighbourhood, the graph view, the SQL console with the cookbook built in | ⏳ next | none |
-| 6b | Ask StrainScope: the documentation assistant | `docs/07b-docs-assistant.md` | `python src/strainscope/ask.py "question"` and an app tab: answers from the project's own documents with links to the exact section; refuses questions outside the project; starter questions and "you might also ask"; a golden question set in the tests (details below) | ⏳ | **v0.3.0** |
-| 7 | Deployment + AI layer | `docs/08-deployment-ai.md` | free public deployment (Streamlit Community Cloud), secrets on the host; plain-language explanations of results; grounded answers in Ask StrainScope; a read-only data assistant (question → SQL → answer, with guardrails); GraphRAG (answers by walking the graph) | ⏳ | none |
+| 6 | The app | [`docs/07-app.md`](07-app.md) | a thin, tested service layer (`src/strainscope/service.py`) shared by the terminal, the app and the later AI features; a Streamlit app with seven pages: Home (headline numbers, a health check), Ranking ("if we can test N strains, how many would work?", *likely / borderline / unlikely* bands, the model's report), a page per strain (its reasons as walks through the graph, its corner of the graph), the knowledge graph (network, path finder, look-up, communities), integration, Data (the library; **upload your own strains**: checked, scored, explained, never stored; real data) and a SQL console behind four guards with the cookbook built in; cross-platform start, SSH-tunnel and firewall recipes for RHEL 8 VMs; a shared-use switch (`STRAINSCOPE_MODE=public`) | ✅ | none |
+| 6b | Ask StrainScope: the documentation assistant | `docs/07b-docs-assistant.md` | `python src/strainscope/ask.py "question"` and an app tab: answers from the project's own documents with links to the exact section; refuses questions outside the project; starter questions and "you might also ask"; a golden question set in the tests (details below) | ⏳ next | **v0.3.0** |
+| 7 | Deployment + AI layer | `docs/08-deployment-ai.md` | free public deployment (Streamlit Community Cloud) in shared mode (`STRAINSCOPE_MODE=public`, built in Phase 6), secrets on the host, the database built on first start from the committed results; a health page and error messages a visitor can act on; plain-language explanations of results; grounded answers in Ask StrainScope; a read-only data assistant (question → SQL → answer, through the SQL console's four guards); GraphRAG (answers by walking the graph); optionally the interactive pages in `docs/interactive/` published with GitHub Pages, so they open with one click | ⏳ | none |
 | 7b | MCP server | `docs/08b-mcp-server.md` | a small Model Context Protocol server exposing read-only tools (`ask_docs`, `query_database`, `get_signature`, `rank_strain`, `explain_strain`) so AI assistants can use StrainScope directly, with every call validated and logged | ⏳ | none |
-| 8 | Packaging & release | `docs/09-packaging.md` | the one-command pipeline (`python src/strainscope/pipeline.py`); tests on Windows, macOS and Linux at every push (continuous integration); LICENSE (MIT), CHANGELOG, uninstall guide; an optional container; an optional Git *pre-push hook* that runs the safety gate automatically, so nobody can forget it; the 1.0 tag | ⏳ | **v1.0.0** |
+| 8 | Packaging & release | `docs/09-packaging.md` | the one-command pipeline (`python src/strainscope/pipeline.py`), also behind a button in the app; tests on Windows, macOS and Linux at every push (continuous integration), the app's own tests included; LICENSE (MIT), a citation file (`CITATION.cff`), a contribution guide and issue templates for people who want to help; automatic alerts for outdated or unsafe dependencies; a keyboard and screen-reader check of the app; CHANGELOG, uninstall guide; an optional container; an optional Git *pre-push hook* that runs the safety gate automatically, so nobody can forget it; the 1.0 tag | ⏳ | **v1.0.0** |
 
 Guides without links don't exist yet. Each one appears when its phase is built.
+
+### What "finished" means: the product checklist
+
+Everything a person needs from StrainScope, as a list, with where each piece is (or will be) built. When every row says ✅, this repository is a complete product; what a larger, multi-user version would add is in the [product roadmap](PRODUCT_ROADMAP.md).
+
+| A user can... | Built in | Status |
+|---|---|---|
+| rebuild every number from scratch, identically, on Windows, macOS or RHEL 8 | Phases 0 to 5 | ✅ |
+| read why every step exists, from a blank laptop on ([Handbook](HANDBOOK.md), guides, [Glossary](GLOSSARY.md), [interactive journey](interactive/journey.html)) | every phase | ✅ living |
+| see the ranking, each strain's reasons and the knowledge graph without writing code | Phase 6 | ✅ |
+| bring their own strains and get them checked, scored and explained, privately | Phase 6 | ✅ |
+| ask the data anything in SQL without being able to break it | Phases 2 and 6 | ✅ |
+| run the app on their own computer or a VM with one command | Phase 6 | ✅ |
+| ask questions about the project itself and get linked answers | Phase 6b | ⏳ next |
+| open the app from a link, with nothing installed | Phase 7 | ⏳ |
+| read results in plain language, ask the data in plain language, get answers that cite the graph | Phase 7 | ⏳ |
+| let an AI assistant use StrainScope's tools safely | Phase 7b | ⏳ |
+| rebuild everything with one command (or one button) | Phase 8 | ⏳ |
+| trust that every change was tested on three operating systems | Phase 8 | ⏳ |
+| reuse, cite and contribute (licence, citation file, contribution guide, issue templates) | Phase 8 | ⏳ |
+| install, update and uninstall cleanly, or run it in a container | Phase 8 | ⏳ |
+| rely on its safety: secrets never committed, read-only data access, uploads never stored, dependency alerts | Phases 1c, 6 and 8 | ✅ / ⏳ |
+| use it with a keyboard or a screen reader (colour is never the only signal) | Phases 6 and 8 | ✅ / ⏳ |
 
 ### Why this order
 
@@ -81,6 +104,10 @@ A question box over StrainScope's own documentation. You type something like *"h
 | Production web stack (FastAPI back end + React/TypeScript front end + PostgreSQL) | 🔒 | more than one regular user, logins, or a request for a richer interface than Streamlit (see the [product roadmap](PRODUCT_ROADMAP.md)) |
 | Embedding-based search for Ask StrainScope | 🔒 | word-based search misses questions phrased differently from the documents; a small local embedding model is then added behind the same interface |
 | Read-only AI agent that plans multi-step analyses | 🔒 | the MCP server (7b) is stable, since an agent can only be as safe as the tools it's allowed to call |
+| Batch correction for uploaded strains | 🔒 | the first upload from a real lab: uploads with a `batch_id` column would get Phase 2's median scaling before scoring (today the app says uploads must already be on the library's scale) |
+| Uploading genomes instead of gene calls (FASTA or GFF files, gene calls computed on the way in) | 🔒 | users with sequenced strains and no gene table; needs an annotation step such as antiSMASH (product roadmap A3) |
+| Saved views and notes per user in the app | 🔒 | a second regular user (it needs logins, which is the production web stack above) |
+| Usage analytics for the app | 🔒 | a public deployment whose owner needs to know what people use; today Streamlit's own statistics are switched off on purpose (`.streamlit/config.toml`) |
 | Pinned dependency versions (lock file for Python) | 🔒 | the first time an upgrade breaks a test (`renv.lock` already pins the R side) |
 
 ## Version tags
@@ -89,7 +116,7 @@ A **tag** is a bookmark on one exact commit, named with a version number, so any
 
 - **v0.1.0**: data foundation and integration (Phases 0 to 3), taking you from a blank laptop to a graded multi-omics signature.
 - **v0.2.0**: the analysis is complete (Phases 4 and 5), with predictions and the knowledge graph. *Released with Phase 5.*
-- **v0.3.0**: usable by anyone (Phases 6 and 6b), with the app and Ask StrainScope.
+- **v0.3.0**: usable by anyone (Phases 6 and 6b), with the app and Ask StrainScope. *Phase 6 is built; the tag comes with Phase 6b.*
 - **v1.0.0**: released (Phases 7 and 8). It's online, with the AI layer, the MCP server, the one-command pipeline and cross-platform CI.
 
 Between those, **patch releases** (the third number: v0.1.1, v0.1.2, ...) ship fixes found through real use. Each one is tested, documented in [`CHANGELOG.md`](../CHANGELOG.md) and the [Handbook](HANDBOOK.md), and tagged like any other version. So far:

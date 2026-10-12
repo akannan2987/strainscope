@@ -4,7 +4,7 @@
 
 **Prerequisites:** Phase 2 complete, so the database `data/processed/strainscope.duckdb` exists (rebuild it any time with `python src/strainscope/generate_data.py` then `python src/strainscope/harmonize.py`). Phase 3 is recommended but not required: if its results are present, this phase compares itself with DIABLO; if not, that one comparison is skipped. **No R needed:** this phase is pure Python.
 **Learning goal:** after this phase you will understand what a prediction model is and how four very different kinds work (a baseline, an elastic net, a random forest, gradient boosting); why preparation must be learned *inside* each cross-validation fold, and what a real leak looks like; why accuracy lies when winners are rare; how to tune a model without peeking (nested cross-validation); what calibration is and how to check it; how to ask a model what it relies on (permutation importance); how to study its mistakes; and how to save a model responsibly, with a model card.
-**Why this phase exists in a real workflow:** Phase 3 answered *which* genes and chemicals matter. A screening team's next question is practical: *"we can afford to test 50 strains next season. Which 50?"* Answering it takes a model that predicts, a number that says how much to trust each prediction, and a clear record of where the model goes wrong. This phase builds all of that, and saves the result in a form the app (Phase 6), the AI layer (Phase 7) and the MCP server (Phase 7b) will use.
+**Why this phase exists in a real workflow:** Phase 3 answered *which* genes and chemicals matter. A screening team's next question is practical: *"we can afford to test 50 strains next season. Which 50?"* Answering it takes a model that predicts, a number that says how much to trust each prediction, and a clear record of where the model goes wrong. This phase builds all of that, and saves the result in a form the app uses (Phase 6, [`docs/07-app.md`](07-app.md)), and the AI layer (Phase 7) and the MCP server (Phase 7b) will use.
 
 **Session plan** (about 3½ hours in total, in three sittings):
 - **Session A (~1.25 h):** concepts (§1 to 3), get the files (§4), compare the models (§5).
@@ -140,7 +140,7 @@ What runs where: everything on your laptop, in about two to four minutes. Every 
 5. **The simplest good model wins:** among models within one standard deviation of the best, choose the simplest (elastic net, then random forest, then gradient boosting). This is Phase 3's one-SD rule again.
 6. **Calibrate before trusting probabilities** (Platt scaling, learned inside the training strains).
 7. **Judge importance on unseen strains**, and call a feature *reliably important* only if its average drop is at least 0.002 in AUC and clearly above zero across the five folds.
-8. **Fair predictions for strains we already know:** the ranking the app will show uses each strain's *out-of-fold* probability, which comes from models that never saw that strain.
+8. **Fair predictions for strains we already know:** the ranking the app shows uses each strain's *out-of-fold* probability, which comes from models that never saw that strain.
 
 ### What we leave out on purpose, and why
 
@@ -311,7 +311,7 @@ A few seconds. **You should see:**
 
 > **Safety note: a model file is a program.** A `.joblib` file is a Python *pickle*: loading it runs code stored inside it. Load only model files you built yourself, like this one (rebuilt any time by this step). Never load one downloaded from an unknown source. The loader, `load_model()` in `src/strainscope/model.py`, also warns when your scikit-learn version differs from the one in the card; the cure is to re-run this step.
 
-Score a strain from Python, the way the app will (paste into `python` started from the project folder):
+Score a strain from Python, the way the app does (paste into `python` started from the project folder; the app's version is the upload on its Data page, [`docs/07-app.md` §8](07-app.md#8-step-4-score-your-own-strains)):
 
 ```python
 import sys; sys.path.insert(0, "src")
@@ -421,7 +421,7 @@ Open `docs/interactive/model_explorer.html` in a browser (double-click it in you
 - **What this phase shows:** the workflow can predict strain efficacy from genes and chemistry with a balanced error near 0.13 and a near-perfect top of the ranking, *on data built to contain that signal*; it does so without leakage, with probabilities that mean what they say, and it can explain itself in terms that match the planted biology.
 - **What it does not show:** that these numbers would hold on real strains. Real biology adds interactions, measurement problems and confounders this simulation does not. The model card says so, in the field `not_for`.
 - **Why the simplest model won:** because the truth here *is* a weighted sum. On real data, interactions (two weapons that only work together) could favour the trees, and that's why the comparison stays in the workflow even though the trees lost this time.
-- **Mistakes near the line come from the question as much as from the model.** A strain scoring 64.8 % and one scoring 65.2 % are, biologically, the same strain. A product should show them as *borderline* instead of as a confident "no" and "yes", and the app (Phase 6) will do that with the calibrated probability.
+- **Mistakes near the line come from the question as much as from the model.** A strain scoring 64.8 % and one scoring 65.2 % are, biologically, the same strain. A product should show them as *borderline* instead of as a confident "no" and "yes", and the app does: a calibrated chance between 30 % and 70 % is labelled *borderline* on its Ranking and Strain pages ([`docs/07-app.md` §7](07-app.md#7-step-3-a-tour-of-the-app)).
 
 ---
 
@@ -459,7 +459,7 @@ pytest -q
 | Clean + build the database | `python src/strainscope/harmonize.py` | the one-command pipeline (Phase 8) |
 | Integrate (Phase 3) | `integrate.py prepare` → `Rscript R/diablo_integration.R` → `integrate.py twin` → `integrate.py publish` | `python src/strainscope/integrate.py all` |
 | **Machine learning (this phase)** | `model.py compare` → `calibrate` → `explain` → `final` → `publish` | **`python src/strainscope/model.py all`** |
-| Score new strains | `score_strains()` from Python (§8) | the app's ranking page (Phase 6) and the MCP tool `rank_strain` (Phase 7b) |
+| Score new strains | `score_strains()` from Python (§8), or `python src/strainscope/service.py score FILE.csv` | the app's **Data** page, *Upload your strains* ([`docs/07-app.md` §8](07-app.md#8-step-4-score-your-own-strains)); the MCP tool `rank_strain` (Phase 7b) |
 | Question the data | `python src/strainscope/sql.py` + the [Cookbook](QUERY_COOKBOOK.md) | the app's SQL console, cookbook built in |
 
 ---
@@ -498,7 +498,7 @@ GROUP BY bin
 ORDER BY bin;
 ```
 
-**All three give the same table.** For example, bin 0: 307 strains, said 0.033, happened 0.003; bin 9: 33 strains, said 0.952, happened 1.000. (These use each strain's *average* out-of-fold probability, 600 rows; the reliability diagram in §10 pools all 6,000 individual predictions, so its numbers differ slightly.) Pandas is the natural home for the modelling itself, and base R does the same grouping in one line. SQL is the quickest way to ask the question of results already in the database, which is what the app will do.
+**All three give the same table.** For example, bin 0: 307 strains, said 0.033, happened 0.003; bin 9: 33 strains, said 0.952, happened 1.000. (These use each strain's *average* out-of-fold probability, 600 rows; the reliability diagram in §10 pools all 6,000 individual predictions, so its numbers differ slightly.) Pandas is the natural home for the modelling itself, and base R does the same grouping in one line. SQL is the quickest way to ask the question of results already in the database, which is what the app's SQL console does.
 
 ---
 

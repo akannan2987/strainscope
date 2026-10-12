@@ -24,7 +24,7 @@ In kitchen terms, this repository is a well-equipped home kitchen that cooks one
 
 | User | Their problem | What StrainScope gives them |
 |---|---|---|
-| **Screening scientist**, who tests strains in the lab and greenhouse | hundreds of candidate strains, room to test only a few dozen properly each season | a ranked shortlist, each strain with the genes and compounds behind its rank and a stated uncertainty |
+| **Screening scientist**, who tests strains in the lab and greenhouse | hundreds of candidate strains, room to test only a few dozen properly each season | a ranked shortlist, each strain with the genes and compounds behind its rank and a stated uncertainty, in an app that needs no code (Phase 6), where they can also upload their own strains |
 | **Data scientist** in a biologicals research team | genomic, chemical and trial data in separate spreadsheets and formats | one cleaned, queryable database; integration and models that are reproducible and graded |
 | **Research lead** | which strain families to invest in next year | an overview across kingdoms, with the evidence behind every recommendation as well as the score |
 | **Regulatory and documentation specialist** | dossiers need to say *why* a strain works (its mode of action) | the knowledge graph's sourced paths: strain → gene → compound → pathway → effect |
@@ -73,12 +73,13 @@ Everything inside the "StrainScope core" box is this repository (solid boxes are
 **Required?** Not to prove the workflow, because the Streamlit app (Phase 6) already does that. It becomes necessary once there are many users with logins, saved views and history.
 **Benefit / cost.** Multi-user work, permissions, a polished interface. / A second codebase and language, authentication, hosting, front-end tests.
 **Verdict: Recommended later.** **Trigger:** a second regular user, or the first request Streamlit can't meet (per-user saved views, fine-grained permissions).
-*Prepared today by:* the app reads only small, documented files in `artifacts/` and the database, and an API can serve those same things.
+*Prepared today by:* the app reads only small, documented files in `artifacts/` and the database, through a service layer (`src/strainscope/service.py`) that holds no screen code, and an API can serve those same things.
 
 ### A2. HTTP API (FastAPI)
 
 **What it is.** The same functions the command line and the app already call, offered over the web so any program can use them. Picture an order hatch added to a restaurant: the kitchen stays exactly as it was, and now there's a standard way to place orders.
 **Verdict: Recommended later**, together with A1. **Trigger:** A1, or a laboratory system that wants to send new strains automatically.
+*Prepared today by:* the service layer of Phase 6. Each of its functions (status, safe SQL, check-score-explain an upload, a strain's graph neighbourhood) would become one endpoint, with the same tests behind it.
 
 ### A3. Connections to laboratory systems and bioinformatics tools
 
@@ -215,6 +216,8 @@ These are **required now**, as constraints on the design rather than as technolo
 | **Access and benefit-sharing** (Nagoya Protocol) | microbial strains collected from another country's environment may carry legal obligations on use and on sharing benefits | out of scope for public reference data; a real programme tracks each strain's origin and permits (a column to add with B1) |
 | **Plant-protection regulation** (e.g. EU Regulation 1107/2009; US EPA biopesticide registration) | a microbial product needs a regulatory dossier, including its mode of action and safety data | StrainScope is a **research decision-support tool** rather than a dossier; what it offers regulatory work is sourced mode-of-action evidence (C3, C5) |
 | **Personal data** (GDPR) | none is processed; user accounts would be the first personal data | designed in: strain identifiers are not personal; revisit with A1 |
+| **Uploaded strain data** | somebody's own strains are their business | designed in (Phase 6): an upload lives in the browser tab's memory and is never written to disk; the shared mode (`STRAINSCOPE_MODE=public`) hides the real-data buttons and allows the database build only while there's no database yet; Streamlit's usage statistics are switched off |
+| **Querying without harm** | a SQL box on a shared site is an open door unless it's guarded | designed in (Phase 6): read-only, file access off and locked, a 10-second limit, a 10,000-row cap; the Phase 7 data assistant goes through the same guards |
 
 ---
 
@@ -243,13 +246,13 @@ For orientation only; there is no product to sell.
 
 | Stage | What the finished product does | Exists today | Arrives with |
 |---|---|---|---|
-| **Ingest** | public references, laboratory systems, uploads | synthetic generator; five real sources behind one framework; evidence locker; provenance log | Phases 1-1c ✅; A3, B1 later |
+| **Ingest** | public references, laboratory systems, uploads | synthetic generator; five real sources behind one framework; evidence locker; provenance log; uploads of your own strains, checked cell by cell | Phases 1-1c and 6 ✅; A3, B1 later |
 | **Clean** | documented rules with a ledger; a shared database | six rules + ledger; DuckDB; read-only SQL console; cookbook | Phase 2 ✅; B2 later |
 | **Integrate** | genes and chemistry read together; graded signatures | DIABLO + Python twin; controls; stability; R↔Python contract | Phase 3 ✅ |
 | **Predict** | calibrated predictions with uncertainty | four models on the same folds; leak-proof pipeline; calibrated elastic net; model card; out-of-fold ranking | Phase 4 ✅ |
 | **Explain** | knowledge graph, explanations, GraphRAG | the knowledge graph (ontology, sourced edges, real KEGG/RefMet/BacDive context, Phase 3 and 4 evidence); hubs, communities, knowledge vs data; an explanation for every strain; `why` / `path` / `show` questions | Phase 5 ✅; Phase 7; C5 later |
-| **Serve** | app, docs assistant, data assistant, MCP server | nothing yet | Phases 6, 6b, 7, 7b; A1/A2 later |
-| **Operate** | one-command pipeline, CI, releases; later scheduling and monitoring | tests (61), a tested safety gate, three-branch workflow, tagged releases (v0.1.0, v0.1.1, v0.2.0) | Phase 8; B5, D4, D7 later |
+| **Serve** | app, docs assistant, data assistant, MCP server | the Streamlit app on a tested service layer: ranking with likely / borderline / unlikely bands, strain pages, the graph, integration, uploads, a guarded SQL console; runs on Windows, macOS and RHEL 8 | Phase 6 ✅; 6b, 7, 7b; A1/A2 later |
+| **Operate** | one-command pipeline, CI, releases; later scheduling and monitoring | tests (104, the app's included), a tested safety gate, three-branch workflow, tagged releases (v0.1.0, v0.1.1, v0.2.0); a health check (`service.py status`, the app's Home page); the database rebuilt from one button | Phase 8; B5, D4, D7 later |
 
 ## Sequencing summary
 

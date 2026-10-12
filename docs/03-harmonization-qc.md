@@ -250,7 +250,7 @@ pytest -q
 | Generate synthetic data | `python src/strainscope/generate_data.py` | the one-command pipeline (Phase 8) |
 | Probe / fetch real data | `python src/strainscope/fetch_real.py [--probe]` | the app's **Upload · Synthetic · Fetch-real** picker |
 | **Clean + build the database** | `python src/strainscope/harmonize.py` | runs automatically inside the pipeline |
-| **Question the data** | the SQL console: `python src/strainscope/sql.py` + the [Cookbook](QUERY_COOKBOOK.md) | the app's SQL console (Phase 6), cookbook built in |
+| **Question the data** | the SQL console: `python src/strainscope/sql.py` + the [Cookbook](QUERY_COOKBOOK.md) | the app's SQL console, cookbook built in ([`docs/07-app.md` §9](07-app.md#9-step-5-the-sql-console)) |
 | Make the figures | `python figures/make_phase2_figures.py` (etc.) | regenerated on demand; interactive in the app |
 
 ## 10. Same task, different language (optional, 10 min)

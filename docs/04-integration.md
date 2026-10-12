@@ -95,7 +95,7 @@ flowchart TD
     class SQL cloud
 ```
 
-Read it from the top. Python reads the clean tables and writes the **hand-off files** in plain CSV, the one format every language reads. R (DIABLO) and Python (the twin) both read those *same* files, so neither can quietly analyse different data. Both write small result tables to `artifacts/integration/` (committed to Git, because the app will read them later). `publish` loads those results back into the database, so SQL can question them next to everything else.
+Read it from the top. Python reads the clean tables and writes the **hand-off files** in plain CSV, the one format every language reads. R (DIABLO) and Python (the twin) both read those *same* files, so neither can quietly analyse different data. Both write small result tables to `artifacts/integration/` (committed to Git, because the app reads them). `publish` loads those results back into the database, so SQL can question them next to everything else.
 
 > **Why plain CSV files between the two languages, instead of a direct link?** CSV is the universal format: R reads it with one built-in command, with nothing extra to install, on any operating system. It's like two colleagues who speak different languages leaving each other notes in a shared folder rather than learning a phone protocol. The shared folder and the file format are the whole contract, and a test (§13) checks that both sides still agree on the file names.
 
@@ -462,11 +462,11 @@ pytest -q
 | Capability | Manual path (now) | Automatic path |
 |---|---|---|
 | Generate synthetic data | `python src/strainscope/generate_data.py` | the one-command pipeline (Phase 8) |
-| Probe / fetch real data | `python src/strainscope/fetch_real.py [--probe] [--source ...]` | the app's **Upload · Synthetic · Fetch-real** picker (Phase 6) |
+| Probe / fetch real data | `python src/strainscope/fetch_real.py [--probe] [--source ...]` | the app's **Data** page, *Real data* tab ([`docs/07-app.md`](07-app.md)) |
 | Clean + build the database | `python src/strainscope/harmonize.py` | the one-command pipeline (Phase 8) |
-| Question the data | `python src/strainscope/sql.py` + the [Cookbook](QUERY_COOKBOOK.md) | the app's SQL console (Phase 6) |
+| Question the data | `python src/strainscope/sql.py` + the [Cookbook](QUERY_COOKBOOK.md) | the app's SQL console ([`docs/07-app.md` §9](07-app.md#9-step-5-the-sql-console)) |
 | **Integrate (all four steps)** | `integrate.py prepare` → `Rscript R/diablo_integration.R` → `integrate.py twin` → `integrate.py publish` | **now:** `python src/strainscope/integrate.py all`, which finds Rscript on any OS (or skips it politely) |
-| **Integration figures** | `python figures/make_phase3_figures.py` | the app's integration page (Phase 6) |
+| **Integration figures** | `python figures/make_phase3_figures.py` | the app's **Integration** page ([`docs/07-app.md` §7](07-app.md#7-step-3-a-tour-of-the-app)) |
 
 The one-command path for this phase already works:
 

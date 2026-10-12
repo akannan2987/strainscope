@@ -412,8 +412,8 @@ Every capability in StrainScope has a **manual** path (so you learn it) and an *
 | Capability | Manual path (now) | Automatic path (later) |
 |---|---|---|
 | Generate the data | `python src/strainscope/generate_data.py` | Phase 8's one-command pipeline (`python src/strainscope/pipeline.py`) runs generate → clean → integrate → model → graph |
-| Make the figures | `python figures/make_phase1_figures.py` | regenerated on demand; the app (Phase 6+) shows interactive versions |
-| Inspect the data | `head`/open the CSVs; read the ledger | the Streamlit app's data explorer (Phase 6) |
+| Make the figures | `python figures/make_phase1_figures.py` | regenerated on demand; the app's pages show the results interactively ([`docs/07-app.md`](07-app.md)) |
+| Inspect the data | `head`/open the CSVs; read the ledger | the app's **Data** page and SQL console ([`docs/07-app.md`](07-app.md)) |
 
 Both paths are kept working at every phase.
 

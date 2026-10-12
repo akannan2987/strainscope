@@ -1,0 +1,22 @@
+# .streamlit/config.toml: the app's settings (committed: it holds no secrets).
+# Streamlit reads this file when the app is started from the project folder:
+#     python -m streamlit run app/streamlit_app.py
+# Every option is explained in docs/07-app.md, section 4.
+# (Secrets never go here. They belong in .streamlit/secrets.toml, which Git ignores.)
+
+[theme]
+base = "light"
+primaryColor = "#2E7D5B"              # buttons, sliders, links: the project's dark green
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F5F9FF"  # the sidebar and input boxes: the pale blue of the logo
+textColor = "#1F2933"
+
+[server]
+maxUploadSize = 5                     # megabytes; an upload is a small CSV table
+showEmailPrompt = false               # skip Streamlit's "enter your email" question on the first run
+
+[browser]
+gatherUsageStats = false              # don't send usage statistics to Streamlit
+
+[client]
+toolbarMode = "minimal"               # keep the menu in the top-right corner short
