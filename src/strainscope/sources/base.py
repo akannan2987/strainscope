@@ -78,17 +78,27 @@ def load_env() -> None:
                by check-public-safe.sh, so it physically cannot be committed.
 
     Shell wins over file (already-set variables are never overwritten), which
-    lets you temporarily override the file without editing it."""
+    lets you temporarily override the file without editing it. Within the
+    file, an empty value (`KEY=`, as in .env.example) counts as not set, a
+    later line wins over an earlier one, and quotes around a value are
+    dropped (`KEY="abc"` is read as abc)."""
     import os
     env_file = ROOT / ".env"
     if not env_file.exists():
         return
-    for line in env_file.read_text(encoding="utf-8").splitlines():
+    found = {}
+    for line in env_file.read_text(encoding="utf-8-sig").splitlines():
         line = line.strip()
         if not line or line.startswith("#") or "=" not in line:
             continue
         key, _, value = line.partition("=")
-        os.environ.setdefault(key.strip(), value.strip())
+        value = value.strip()
+        if len(value) >= 2 and value[0] == value[-1] and value[0] in "\"'":
+            value = value[1:-1]
+        if value:
+            found[key.strip()] = value
+    for key, value in found.items():
+        os.environ.setdefault(key, value)
 
 
 class Source:

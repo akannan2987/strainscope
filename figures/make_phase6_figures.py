@@ -4,7 +4,7 @@ figures/make_phase6_figures.py: the teaching figures for Phase 6 (the app).
   CONCEPTS (drawn, no data needed):
     figures/app_rerun.png        how a Streamlit page runs: every click reruns the script, the cache
                                  keeps what's slow, session state keeps what's yours
-    figures/app_map.png          the seven pages and the files each one reads
+    figures/app_map.png          the app's eight pages and the files each one reads
     figures/sql_guards.png       the four guards around the SQL console, and what each one stops
     figures/upload_journey.png   your CSV file, checked, scored, explained, handed back
 
@@ -111,14 +111,15 @@ def draw_rerun():
 
 
 # =============================================================================
-# 2. The seven pages and what each one reads
+# 2. The pages and what each one reads
 # =============================================================================
 
 def draw_app_map():
-    fig, ax = canvas(11, 6.2, "The app's seven pages, and what each one reads",
+    fig, ax = canvas(11, 6.9, "The app's eight pages, and what each one reads",
                      "Pages only read. The buttons that write (the database build, the real-data fetch) run "
                      "the same scripts you would run by hand.")
-    pages = [("Home", "headline numbers,\nhealth check"), ("Ranking", "every strain, best first;\nthe top-N question"),
+    pages = [("Home", "headline numbers,\nhealth check"), ("Ask StrainScope", "questions about the project\n(Phase 6b)"),
+             ("Ranking", "every strain, best first;\nthe top-N question"),
              ("Strain page", "one strain: score,\nreasons, its graph corner"), ("Knowledge graph", "network, paths,\nlook-up, communities"),
              ("Integration", "Phase 3: signature,\nscoreboard, agreement"), ("Data", "library, your upload,\nreal data"),
              ("SQL console", "read-only SQL,\ncookbook recipes")]
@@ -126,29 +127,30 @@ def draw_app_map():
                ("artifacts/graph/", "nodes, edges, explanations,\nhubs, communities", PURPLE),
                ("artifacts/integration/", "signature, scoreboards,\nfeature list", BLUE),
                ("strainscope.duckdb", "the database\n(read-only)", "#C9A227"),
-               ("docs/QUERY_COOKBOOK.md", "the recipes", GREY)]
-    reads = {"Home": [0, 1, 3], "Ranking": [0, 1], "Strain page": [0, 1], "Knowledge graph": [1],
-             "Integration": [2], "Data": [0, 1, 2, 3], "SQL console": [3, 4]}
+               ("docs/QUERY_COOKBOOK.md", "the recipes", GREY),
+               ("README.md, docs/*.md", "every guide, the glossary,\nthe code's docstrings", TEAL)]
+    reads = {"Home": [0, 1, 3], "Ask StrainScope": [5], "Ranking": [0, 1], "Strain page": [0, 1],
+             "Knowledge graph": [1], "Integration": [2], "Data": [0, 1, 2, 3], "SQL console": [3, 4]}
     py = {}
     for i, (name, note) in enumerate(pages):
-        y = 10.0 - i * 1.42
+        y = 11.3 - i * 1.42
         box(ax, 0.4, y, 6.6, 1.1, GREEN, "", fill=tint(GREEN, 0.86))
         ax.text(0.75, y + 0.72, name, fontsize=10, fontweight="bold", color=INK, va="center")
         ax.text(0.75, y + 0.32, note.replace("\n", " "), fontsize=7.8, color=SOFT, va="center")
         py[name] = y + 0.55
     sy = []
     for j, (name, note, colour) in enumerate(sources):
-        y = 9.6 - j * 1.95
+        y = 10.9 - j * 1.95
         box(ax, 14.6, y, 7.3, 1.4, colour)
         ax.text(14.95, y + 0.95, name, fontsize=9.6, fontweight="bold", color=INK, va="center", family="monospace")
         ax.text(14.95, y + 0.42, note.replace("\n", " "), fontsize=8, color=SOFT, va="center")
         sy.append(y + 0.7)
     # every line passes through the service layer, drawn as a band behind them
-    ax.add_patch(FancyBboxPatch((9.3, 0.6), 3.4, 10.25, boxstyle="round,pad=0.02,rounding_size=0.2",
+    ax.add_patch(FancyBboxPatch((9.3, 0.6), 3.4, 11.55, boxstyle="round,pad=0.02,rounding_size=0.2",
                                 facecolor=tint(DARK_GREEN, 0.9), edgecolor=DARK_GREEN, lw=1.4, zorder=0))
-    ax.text(11.0, 1.15, "src/strainscope/\nservice.py", ha="center", va="center", fontsize=8.4,
+    ax.text(11.0, 1.2, "src/strainscope/\nservice.py\n(and ask.py)", ha="center", va="center", fontsize=8.4,
             family="monospace", color=DARK_GREEN, fontweight="bold")
-    ax.text(11.0, 10.45, "the service layer", ha="center", va="center", fontsize=8.6, color=DARK_GREEN,
+    ax.text(11.0, 11.75, "the service layer", ha="center", va="center", fontsize=8.6, color=DARK_GREEN,
             fontweight="bold")
     for page, idx in reads.items():
         for j in idx:

@@ -195,3 +195,17 @@ def test_load_env_reads_dotenv_without_overwriting(tmp_path, monkeypatch):
     b.load_env()
     assert os.environ["NCBI_API_KEY"] == "from_shell"    # shell wins
     assert os.environ["OTHER"] == "x"                    # file fills the gap
+
+
+def test_load_env_skips_empty_values_and_lets_later_lines_win(tmp_path, monkeypatch):
+    import os
+    import strainscope.sources.base as b
+    monkeypatch.setattr(b, "ROOT", tmp_path)
+    (tmp_path / ".env").write_text("STRAINSCOPE_ASK_BACKEND=\nSTRAINSCOPE_ASK_BACKEND=local\n"
+                                   "STRAINSCOPE_ASK_MODEL=\nSTRAINSCOPE_ASK_KEY=\"abc\"\n")
+    for k in ("STRAINSCOPE_ASK_BACKEND", "STRAINSCOPE_ASK_MODEL", "STRAINSCOPE_ASK_KEY"):
+        monkeypatch.delenv(k, raising=False)
+    b.load_env()
+    assert os.environ["STRAINSCOPE_ASK_BACKEND"] == "local"      # the template's empty line doesn't win
+    assert "STRAINSCOPE_ASK_MODEL" not in os.environ            # empty means not set
+    assert os.environ["STRAINSCOPE_ASK_KEY"] == "abc"           # quotes dropped

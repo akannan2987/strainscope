@@ -5,8 +5,8 @@ src/strainscope/service.py (StrainScope Phase 6): the service layer behind the a
 WHAT THIS MODULE IS
 -------------------
 One set of plain Python functions that every way into StrainScope uses: the
-Streamlit app (app/streamlit_app.py) today, Ask StrainScope and the MCP server
-later. In the restaurant picture of docs/00-architecture.md, the scripts of
+Streamlit app (app/streamlit_app.py), Ask StrainScope (Phase 6b), and the MCP
+server later (Phase 7b). In the restaurant picture of docs/00-architecture.md, the scripts of
 Phases 1 to 5 are the kitchen and the app is the dining room. This module is
 the pass, the counter where finished plates are checked before a waiter takes
 them out. Nothing here draws anything on a screen, so every function can be
@@ -23,6 +23,8 @@ WHAT IT OFFERS
                            your own strains: checked, scored by the saved model of
                            Phase 4 and explained by the knowledge graph of Phase 5
   neighbourhood()          one strain's corner of the graph, laid out for drawing
+  ask_docs()               Ask StrainScope: a question about the project, answered from
+                           its own documents (src/strainscope/ask.py), as plain data
   PIPELINES, run_pipeline()
                            the scripts of Phases 1 to 5, run in order, with live output
 
@@ -814,6 +816,28 @@ def neighbourhood(G, strain: str, explanation: pd.DataFrame | None = None) -> tu
 
 # =============================================================================
 # 6. THE PIPELINE: the scripts of Phases 1 to 5, run in order
+# =============================================================================
+# Ask StrainScope (Phase 6b): questions about the project itself
+# =============================================================================
+
+def ask_docs(question: str, write: bool | None = False) -> dict:
+    """A question about StrainScope, answered from its own documents, as plain
+    data: the verdict, a one-line message, and the matching passages with
+    their links. The engine is src/strainscope/ask.py (the app's Ask StrainScope
+    page and the terminal use it directly); this is the door the MCP server
+    of Phase 7b will use. `write=None` adds a written answer when one is set
+    up (STRAINSCOPE_ASK_BACKEND); the default, False, never contacts a model."""
+    from strainscope import ask as docs
+    a = docs.ask(question, write=write)
+    return {
+        "question": a.question, "verdict": a.verdict, "message": a.message,
+        "sections": [{"heading": h.section.heading, "file": h.section.file, "link": h.section.link,
+                      "url": h.section.url, "match": round(h.score, 3), "passage": h.passage} for h in a.hits],
+        "related": [{"heading": s.heading, "file": s.file, "link": s.link} for s in a.related],
+        "written": a.written, "written_by": a.written_by, "note": a.note,
+    }
+
+
 # =============================================================================
 
 # Each pipeline is a list of (script, arguments). They run with the same

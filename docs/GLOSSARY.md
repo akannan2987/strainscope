@@ -270,7 +270,7 @@ first appears. If a term is missing, that's a documentation bug worth fixing.
 - **Cache** (`st.cache_data`, `st.cache_resource`): a shelf of ready-made results, so slow things (reading a file, loading the graph) happen once instead of on every rerun. Ours are labelled with the file's last-changed time, so a rebuilt file is read again by itself.
 - **Session state** (`st.session_state`): a small notebook Streamlit keeps for each browser tab; your upload and the strain you picked survive reruns there, and disappear when the tab closes.
 - **Callback**: a small function a button or widget runs *before* the page reruns. It's the one moment Streamlit allows changing another widget's value.
-- **Multipage app / navigation**: an app split into pages (ours has seven, in `app/views/`), listed in the sidebar by `st.navigation`.
+- **Multipage app / navigation**: an app split into pages (ours has eight, in `app/views/`), listed in the sidebar by `st.navigation`.
 - **Query parameter**: the part of a web address after `?`, like `?strain=STRAIN_0485`. The Strain page reads and writes it, so a link opens on a chosen strain.
 - **Service layer**: a thin set of functions between the screens and the real work (`src/strainscope/service.py`), so the terminal, the app and later tools ask the same questions in the same way. In a restaurant it's the *pass*, the counter between kitchen and dining room.
 - **localhost** and **port**: *localhost* means "this computer"; a *port* is a numbered door on it. The app listens at `http://localhost:8501`.
@@ -293,6 +293,33 @@ first appears. If a term is missing, that's a documentation bug worth fixing.
 - **Playwright**: a library that drives a real browser from Python; only the optional screenshot script uses it (`figures/take_app_screenshots.py`).
 - **`tmux`**: a terminal program that keeps a command running after you log out of a remote machine.
 
+## Phase 6b: Ask StrainScope (doc 07b)
+
+- **Ask StrainScope**: the project's documentation assistant (`python src/strainscope/ask.py "..."`, and a page in the app). It answers from the project's own documents with the matching passage, word for word, and a link to it, and refuses questions the documents don't cover.
+- **Search index**: what a search engine builds before anyone asks anything, like the index at the back of a book: for every passage, which words it contains and how much each one counts. Ours is built in memory in a second or two and rebuilt when a document changes.
+- **Section** and **passage**: a section is a document's text under one heading (or one glossary entry, or one docstring), which is what a link points at; a passage is about 120 words of it, which is what the search compares. A long section is found by its best passage.
+- **TF-IDF (term frequency, inverse document frequency)**: a way of weighing words. A word counts more the more often it appears in a passage, and less the more passages it appears in. If every recipe mentions salt, "salt" won't find you the risotto; "saffron" will.
+- **Stop words**: little words that appear everywhere ("the", "is", "how") and are dropped before searching. Ask StrainScope also drops *filler* words that say what kind of question it is rather than what it's about ("explain", "does", "StrainScope").
+- **Word forms**: "strains", "scoring" and "ranked" are matched as "strain", "score" and "rank", but only when the shorter form really appears in the documents.
+- **Cosine similarity (match)**: a score from 0 (no words in common) to 1 (the same words in the same proportions) between a question and a passage. It compares what two texts are mostly about, whatever their length, the way two shopping lists can match well even if one is much longer.
+- **The gate**: the four checks every question passes before anything is shown (an instruction? words no document uses? a weak match? a good match with most of the words found?). They decide between *answered*, *closest* and *refused*.
+- **Out-of-scope refusal**: Ask StrainScope's polite "the documents don't cover this", given instead of a guess. It happens before any language model could be involved, so nothing can be invented.
+- **Closest**: the verdict for a question the documents touch on but don't answer directly: the nearest sections are shown, marked as such, with the question's words that none of them use.
+- **Golden question set**: a fixed list of questions with known right answers, off-topic questions that must be refused and undocumented ones that must not get a confident answer (`tests/golden_questions.csv`), run with the tests on every change. A driving test route for the assistant.
+- **Known limitation** (in the golden set): a question the search is known to get wrong, kept in the set and reported on every run instead of being dropped, so it's visible and so an improvement shows up at once.
+- **Language model (LLM)**: a program trained on large amounts of text to write fluent text. In StrainScope it's optional and only ever writes from passages it's given.
+- **Hallucination**: a fluent, confident answer that isn't true, given by a language model that doesn't know but answers anyway. Searching first, sending only the passages found and requiring citations reduces the risk; keeping the passages on screen lets you check.
+- **RAG (retrieval-augmented generation)**: find the relevant passages first, then let a language model answer *only from them*, citing them. It's an open-book exam with the page numbers written down.
+- **Grounded answer / citation**: an answer built only from the passages supplied, which names the passage behind each statement ([1], [2]). An answer that cites nothing is not shown.
+- **Prompt** and **system prompt**: the text sent to a language model; the system prompt is the fixed part that sets the rules ("answer only from these sections, cite them").
+- **Prompt injection**: text that tries to give a language model new orders ("ignore your instructions and..."), like a note slipped into a pile of forms telling the clerk to skip the checks. Ask StrainScope refuses questions that look like one.
+- **Ollama**: free software that runs open language models on your own computer (Windows, macOS, Linux), so nothing leaves it. `ollama pull llama3.2:3b` downloads a small model.
+- **OpenAI-compatible interface**: a common way of asking a language model for an answer over the web (send the messages to an address ending in `/chat/completions`, get the answer back). Ollama and many hosted providers offer it, so one piece of code reaches all of them.
+- **Backend (for written answers)**: where a written answer comes from, set with `STRAINSCOPE_ASK_BACKEND`: `none` (the default: search only), `local` (Ollama on this computer) or `hosted` (a provider, with the key in `.env`).
+- **Temperature**: a language model setting for how adventurous its wording is; 0 asks for its most likely wording every time. Ask StrainScope uses 0.
+- **Stand-in server**: a tiny web server that a test starts on your own computer to play the part of the real service (an understudy), so the written answers can be tested without a model, a key or the internet.
+- **grep**: the classic command that prints every line containing some text (`git grep -n "text"` is Git's version, the same on every system). Exact and complete, but not ranked.
+
 ## The Handbook, releases and the planned phases (docs HANDBOOK, ROADMAP, PRODUCT_ROADMAP)
 
 - **Handbook**: [`docs/HANDBOOK.md`](HANDBOOK.md), the one living document that walks the whole journey from a blank laptop to the finished product and links every specialised guide. Read it first; it's updated in the same commit as every change. [`docs/interactive/journey.html`](interactive/journey.html) is the same journey as a clickable page, built from the Handbook.
@@ -301,12 +328,6 @@ first appears. If a term is missing, that's a documentation bug worth fixing.
 - **Tag (Git)**: a bookmark on one exact commit, named with a version number (`v0.1.0`), so anyone can return to that state. *Annotated* tags (`git tag -a`) also record who, when and why.
 - **Semantic versioning**: version numbers as `MAJOR.MINOR.PATCH`: MINOR for a new usable level, PATCH for fixes, MAJOR 1 for the first complete release.
 - **Changelog**: [`CHANGELOG.md`](../CHANGELOG.md), the human-readable list of what changed in each version.
-- **RAG (retrieval-augmented generation)** *(Phase 6b to 7)*: find the relevant passages first, then let a language model write an answer *only from them*, citing them. It's an open-book exam with the page numbers written down.
-- **Ask StrainScope** *(Phase 6b)*: the project's documentation assistant. It answers from the project's own documents with links, and refuses questions that aren't about StrainScope.
-- **Out-of-scope refusal**: the assistant's polite "that isn't about this project" when even the best-matching passage matches weakly. It happens *before* any language model is called, so nothing can be invented.
-- **Golden question set**: a fixed list of questions with known right answers (and off-topic questions that must be refused), run with the tests on every change.
-- **Language model (LLM)**: a program trained on large amounts of text that writes fluent text. Here it's optional and only ever rephrases supplied facts or passages.
-- **Ollama**: free software that runs open language models on your own computer (Windows, macOS, Linux), so nothing leaves the laptop.
 - **Text-to-SQL / data assistant** *(Phase 7)*: turning a question in plain words into a SQL query, run read-only, with the query shown so it can be checked.
 - **GraphRAG** *(Phase 7)*: RAG where the "passages" are paths walked through the knowledge graph, cited as the route taken.
 - **MCP (Model Context Protocol)** *(Phase 7b)*: an open standard that lets AI assistants call a program's tools in a uniform way (a USB port for AI assistants, more or less).

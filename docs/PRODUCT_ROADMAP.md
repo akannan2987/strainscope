@@ -93,7 +93,8 @@ Everything inside the "StrainScope core" box is this repository (solid boxes are
 **What it is.** A question box over the project's own documentation that answers with passages and links, optionally writes a short grounded answer, and refuses questions that are not about StrainScope. Full design in [`docs/ROADMAP.md`](ROADMAP.md#ask-strainscope-the-documentation-assistant-in-detail).
 **Required?** Yes. The question a reader starting from zero asks most often is "where is X explained?", and the documentation grows with every phase.
 **Constraints.** Every answer cites its sources; out-of-scope questions are refused *before* any language model runs; a golden question set runs with the tests; the language-model backend (local Ollama or a hosted provider) is optional and switched on by environment variable; only documentation text is ever sent.
-**Verdict: Required now.** Level 1 (find and quote) and the optional level 2 (grounded answers) arrive in Phase 6b; level 3 (chat panel, `ask_docs` MCP tool) in Phases 7 and 7b. **Trigger for embedding-based search:** questions phrased differently from the documents start being missed.
+**Verdict: Required now.** Level 1 (find and quote) and the optional level 2 (grounded answers) are built in Phase 6b ([`docs/07b-docs-assistant.md`](07b-docs-assistant.md)); level 3 (in the online app, and the `ask_docs` MCP tool) comes in Phases 7 and 7b. **Trigger for embedding-based search:** questions phrased differently from the documents start being missed (the golden set already records one such question as a known limitation).
+*Prepared today by:* `ask_docs()` in the service layer, which returns an answer as plain data, ready to become the MCP tool and an API endpoint; the golden question set, which will measure any better search against the current one.
 
 ### A5. Desktop or mobile apps, app-store distribution
 
@@ -218,6 +219,7 @@ These are **required now**, as constraints on the design rather than as technolo
 | **Personal data** (GDPR) | none is processed; user accounts would be the first personal data | designed in: strain identifiers are not personal; revisit with A1 |
 | **Uploaded strain data** | somebody's own strains are their business | designed in (Phase 6): an upload lives in the browser tab's memory and is never written to disk; the shared mode (`STRAINSCOPE_MODE=public`) hides the real-data buttons and allows the database build only while there's no database yet; Streamlit's usage statistics are switched off |
 | **Querying without harm** | a SQL box on a shared site is an open door unless it's guarded | designed in (Phase 6): read-only, file access off and locked, a 10-second limit, a 10,000-row cap; the Phase 7 data assistant goes through the same guards |
+| **A language model that can't invent or leak** | an AI answer must be checkable, and must never carry data or keys to a provider | designed in (Phase 6b): written answers are off by default; only a question the search answered confidently reaches a model, with nothing but the question and up to three passages; answers must cite the passages or aren't shown; a local option (Ollama) keeps everything on the computer; a hosted key lives in `.env` or the host's secret store |
 
 ---
 
@@ -251,8 +253,8 @@ For orientation only; there is no product to sell.
 | **Integrate** | genes and chemistry read together; graded signatures | DIABLO + Python twin; controls; stability; R↔Python contract | Phase 3 ✅ |
 | **Predict** | calibrated predictions with uncertainty | four models on the same folds; leak-proof pipeline; calibrated elastic net; model card; out-of-fold ranking | Phase 4 ✅ |
 | **Explain** | knowledge graph, explanations, GraphRAG | the knowledge graph (ontology, sourced edges, real KEGG/RefMet/BacDive context, Phase 3 and 4 evidence); hubs, communities, knowledge vs data; an explanation for every strain; `why` / `path` / `show` questions | Phase 5 ✅; Phase 7; C5 later |
-| **Serve** | app, docs assistant, data assistant, MCP server | the Streamlit app on a tested service layer: ranking with likely / borderline / unlikely bands, strain pages, the graph, integration, uploads, a guarded SQL console; runs on Windows, macOS and RHEL 8 | Phase 6 ✅; 6b, 7, 7b; A1/A2 later |
-| **Operate** | one-command pipeline, CI, releases; later scheduling and monitoring | tests (104, the app's included), a tested safety gate, three-branch workflow, tagged releases (v0.1.0, v0.1.1, v0.2.0); a health check (`service.py status`, the app's Home page); the database rebuilt from one button | Phase 8; B5, D4, D7 later |
+| **Serve** | app, docs assistant, data assistant, MCP server | the Streamlit app on a tested service layer: ranking with likely / borderline / unlikely bands, strain pages, the graph, integration, uploads, a guarded SQL console; Ask StrainScope, answering from the documents with links, refusing what they don't cover, optional written answers; runs on Windows, macOS and RHEL 8 | Phases 6 and 6b ✅; 7, 7b; A1/A2 later |
+| **Operate** | one-command pipeline, CI, releases; later scheduling and monitoring | tests (208, the app's and the golden questions included), a tested safety gate, a test that every link between the documents resolves, three-branch workflow, tagged releases (v0.1.0, v0.1.1, v0.2.0, v0.3.0); a health check (`service.py status`, the app's Home page); the database rebuilt from one button | Phase 8; B5, D4, D7 later |
 
 ## Sequencing summary
 

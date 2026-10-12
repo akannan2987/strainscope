@@ -43,6 +43,9 @@ if summary is not None:
 
 # -- where to go ---------------------------------------------------------------
 st.subheader("Where to start")
+st.page_link(ui.PAGES["ask"], label="Ask StrainScope", icon=":material/question_answer:")
+st.caption("A question about the project, answered from its own guides with links to the exact section. "
+           "Try \"How do I score my own strains?\"")
 left, right = st.columns(2)
 with left:
     st.page_link(ui.PAGES["ranking"], label="Ranking", icon=":material/format_list_numbered:")

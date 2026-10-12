@@ -208,7 +208,7 @@ def pick_strain(strain_id: str) -> None:
 
 
 # Page files, so pages can link to each other by name.
-PAGES = {"home": "views/home.py", "ranking": "views/ranking.py", "strain": "views/strain.py",
+PAGES = {"home": "views/home.py", "ask": "views/ask.py", "ranking": "views/ranking.py", "strain": "views/strain.py",
          "graph": "views/knowledge_graph.py", "integration": "views/integration.py",
          "data": "views/data.py", "sql": "views/sql_console.py"}
 

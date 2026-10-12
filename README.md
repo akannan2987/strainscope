@@ -2,7 +2,7 @@
 
 ![StrainScope: multi-omics · machine learning · beneficial microbes](docs/img/strainscope_logo.svg)
 
-**Live app:** runs on your own computer today ([how](#the-app)); online with the deployment phase (Phase 7) · **Version:** v0.2.0 plus the app (Phase 6). The analysis is complete and the app shows it; v0.3.0 arrives with Phase 6b
+**Live app:** runs on your own computer today ([how](#the-app)); online with the deployment phase (Phase 7) · **Version:** v0.3.0, usable by anyone: the analysis is complete, the app shows it, and Ask StrainScope answers questions about the project from its own documents
 · ![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
 ![R](https://img.shields.io/badge/R-4.x-276DC3?logo=r)
 ![Streamlit](https://img.shields.io/badge/Streamlit-app-FF4B4B?logo=streamlit&logoColor=white)
@@ -36,11 +36,12 @@ public, with every step explained.
 - [The problem this project tackles](#the-problem-this-project-tackles)
 - [How it works](#how-it-works)
 - [The app](#the-app): rank strains, see why, score your own, ask the database (runs on your computer)
+- [Ask StrainScope](#ask-strainscope): questions about the project, answered from its own documents with links
 - [The data at a glance](#the-data-at-a-glance)
 - [Results, phase by phase](#results-phase-by-phase) (fills in as each phase is finished)
 - [Build log](#build-log): every phase, linked to its guide, with its status
 - [The tutorial, in order](#the-tutorial-in-order), the documents that teach every step from a blank laptop
-- [Roadmap](#roadmap): what comes next, in which order and why, including the *Ask StrainScope* documentation assistant
+- [Roadmap](#roadmap): what comes next, in which order and why
 - [About the data (what's real and what's simulated)](#about-the-data-whats-real-and-whats-simulated)
 - [Repository map](#repository-map), with every file annotated
 - [How to run](#how-to-run) (every command that works today)
@@ -139,7 +140,7 @@ flowchart TD
     subgraph CLOUD["The cloud: a free, public app"]
         H["Streamlit app<br/>explore · rank · SQL console · graph"]
         I["AI layer (optional)<br/>plain-language explanations ·<br/>data assistant · GraphRAG"]
-        Q["Ask StrainScope<br/>answers from the project's docs,<br/>with links · refuses off-topic"]
+        Q["Ask StrainScope<br/>answers from the project's docs,<br/>with links · refuses off-topic<br/>(a written answer is optional)"]
     end
     M["MCP server<br/>read-only tools for AI assistants"]
     A -->|"writes 3 raw tables (messy on purpose)"| B
@@ -213,6 +214,27 @@ it takes about 15 seconds). Then:
 It runs the same on Windows, macOS and a RHEL 8 virtual machine (reach a VM
 through an SSH tunnel). The guide is [`docs/07-app.md`](docs/07-app.md).
 
+## Ask StrainScope
+
+![Ask StrainScope: a question, the best passage word for word, and its link](docs/img/app_ask.png)
+
+A question about the project, answered from its own documents: the guides, the
+Handbook, the glossary, the roadmaps and the code's docstrings. Every answer is a
+passage quoted word for word, with a link to the exact heading it comes from, so
+it can be checked. A question the documents don't cover is refused instead of
+guessed. In the app it's the *Ask StrainScope* page; from a terminal:
+
+```bash
+python src/strainscope/ask.py "How do I score my own strains?"
+```
+
+It runs on your computer with what's already installed (a word-based search with
+scikit-learn), and a set of golden questions checks its answers with every test
+run. If you like, a language model can also write a short answer from the
+passages found, either on your own computer (Ollama) or through a hosted
+provider; it's off by default, and all it ever sees is its rules, the question and the
+passages. The guide is [`docs/07b-docs-assistant.md`](docs/07b-docs-assistant.md).
+
 ## The data at a glance
 
 *StrainScope's dataset is **simulated**. It's created by the generator in
@@ -277,8 +299,11 @@ means, matching the build log below. Nothing is shown before it exists.*
   ![A strain's page: the reasons behind its rank, and its corner of the knowledge graph](docs/img/app_strain.png)
 
   An uploaded copy of a library strain gets exactly the explanation of the original (a test checks every strain of a hand-made project), and a slightly different score, because the ranking uses out-of-fold predictions while an upload is scored by the final model. Run it with `python -m streamlit run app/streamlit_app.py`; the guide is [`docs/07-app.md`](docs/07-app.md).
-- **Phase 6b (Ask StrainScope):** *(planned)* a question answered from the docs
-  with links, and an off-topic question politely refused.
+- **Phase 6b (Ask StrainScope):** ✅ a documentation assistant that searches every guide, glossary entry and docstring (859 sections) and answers with the matching passages, word for word, with links. Before anything is shown, a gate of four checks decides between *answered*, *closest* and *refused*, and 62 golden questions keep it in check: every in-scope one is answered from a right section, every off-topic question and instruction is refused, and one known limitation is reported rather than hidden. No single score threshold separates the two groups; the extra checks do:
+
+  ![The golden questions: how well each one matched](figures/golden_scores.png)
+
+  Optional written answers come from a model on your own computer (Ollama) or a hosted one, only for questions the search answered, and only from the passages found, which they must cite. Ask with `python src/strainscope/ask.py "your question"` or on the app's *Ask StrainScope* page; explore the scores in `docs/interactive/ask_explorer.html`. This completes **v0.3.0**.
 - **Phase 7 (deployment and AI layer):** *(planned)* the live URL, plain-language
   explanations, the data assistant and GraphRAG.
 - **Phase 7b (MCP server):** *(planned)* an AI assistant using StrainScope's tools.
@@ -303,8 +328,8 @@ means, matching the build log below. Nothing is shown before it exists.*
 | 4 | [Machine learning, evaluated carefully](docs/05-machine-learning.md) | ✅ |
 | 5 | [Knowledge graph: ontology, sourced edges, communities, explanations](docs/06-knowledge-graph.md) | ✅ **v0.2.0** |
 | 6 | [The app: ranking, strain pages, the graph, uploads, a safe SQL console](docs/07-app.md) | ✅ |
-| 6b | Ask StrainScope, the documentation assistant (`docs/07b-docs-assistant.md`) | ⏳ next (**v0.3.0**) |
-| 7 | Deployment + AI layer (`docs/08-deployment-ai.md`) | ⬜ planned |
+| 6b | [Ask StrainScope: answers from the project's own documents, a gate, golden questions](docs/07b-docs-assistant.md) | ✅ **v0.3.0** |
+| 7 | Deployment + AI layer (`docs/08-deployment-ai.md`) | ⏳ next |
 | 7b | The MCP server (`docs/08b-mcp-server.md`) | ⬜ planned |
 | 8 | Packaging & release 1.0 (`docs/09-packaging.md`) | ⬜ planned (**v1.0.0**) |
 
@@ -331,7 +356,7 @@ Read them in this order:
 | 05 | [Machine learning](docs/05-machine-learning.md) | Four kinds of model; leak-proof pipelines and what a real leak looks like; why accuracy lies; tuning without peeking; calibration; permutation importance; error analysis; model cards |
 | 06 | [Knowledge graph](docs/06-knowledge-graph.md) | Graphs in six words; ontologies (a "family tree for concepts") written before the data; a source on every edge; mechanism vs statistical association; hubs, communities and how to grade them; explaining a ranking by walking the graph; SQL vs NetworkX |
 | 07 | [The app](docs/07-app.md) | Streamlit and why every click reruns the page; caching and session state; a service layer shared by every front door; SQL behind four guards; accepting somebody else's file safely; out-of-fold vs final-model scores; running on Windows, macOS and a RHEL 8 VM |
-| 07b | `docs/07b-docs-assistant.md` | Search over documents, citing sources, refusing off-topic questions, golden question sets; optional local or hosted language model |
+| 07b | [Ask StrainScope](docs/07b-docs-assistant.md) | How a word search ranks passages (TF-IDF, cosine similarity); refusing instead of guessing; golden question sets as tests for answers; retrieval-augmented generation, hallucinations and prompt injection; an optional local (Ollama) or hosted language model, and what leaves your computer |
 | 08 | `docs/08-deployment-ai.md` | Streamlit Community Cloud; secrets; explanations, a data assistant and GraphRAG that degrade gracefully without a key |
 | 08b | `docs/08b-mcp-server.md` | The Model Context Protocol; exposing read-only tools to AI assistants safely |
 | 09 | `docs/09-packaging.md` | The one-command pipeline, continuous integration on three operating systems, LICENSE, CHANGELOG, uninstall, the 1.0 tag |
@@ -344,18 +369,12 @@ The full plan lives in [`docs/ROADMAP.md`](docs/ROADMAP.md). It covers every
 phase, why each one sits where it does in the order, and the deferred items,
 each with the event that would put it on the schedule. In short, after
 integration came machine learning (Phase 4) and the knowledge graph (5), which
-complete the analysis (v0.2.0), and then the app (6), which puts it all behind
-buttons. Next:
+complete the analysis (v0.2.0), then the app (6), which puts it all behind
+buttons, and Ask StrainScope (6b), which answers questions about the project
+from its own documents (v0.3.0). Next:
 
-- **Ask StrainScope** (Phase 6b): a question box over the project's own
-  documentation. It answers with the matching passages and links to the exact
-  sections, suggests starter and follow-up questions, and **refuses questions
-  that aren't about StrainScope** instead of making up an answer. If you want, a
-  language model (local on your own computer with Ollama, or hosted) can write a
-  short answer *only from those passages*. A golden set of in-scope and
-  off-topic questions runs with the tests. It comes right after the app because
-  by then the documentation covers a complete path to a usable product.
 - **Deployment and the AI layer** (Phase 7): free public hosting,
+  Ask StrainScope's written answers switched on in the online copy,
   plain-language explanations, a read-only data assistant (question → SQL →
   answer, with the query shown) and GraphRAG (answers that walk the knowledge
   graph).
@@ -439,7 +458,8 @@ strainscope/
 │   ├── 05-machine-learning.md     ← Phase 4: models, leaks, calibration            ✅
 │   ├── 06-knowledge-graph.md      ← Phase 5: ontology, graph, explanations         ✅
 │   ├── 07-app.md                  ← Phase 6: the app                               ✅
-│   ├── 07b … 09                   ← Phases 6b-8 (incl. 08b)                        ⬜
+│   ├── 07b-docs-assistant.md      ← Phase 6b: Ask StrainScope                      ✅
+│   ├── 08 … 09                    ← Phases 7-8 (incl. 08b)                         ⬜
 │   ├── ROADMAP.md                 ← what is built next, and why                    ✅
 │   ├── PRODUCT_ROADMAP.md         ← beyond the repo: verdicts and triggers         ✅
 │   ├── QUERY_COOKBOOK.md          ← tested SQL recipes (grows every phase)         ✅
@@ -453,6 +473,7 @@ strainscope/
 │       ├── integration_explorer.html ← Phase 3: four linked views
 │       ├── model_explorer.html    ← Phase 4: scoreboard, calibration, every strain
 │       ├── graph_explorer.html    ← Phase 5: the network, communities, explanations
+│       ├── ask_explorer.html      ← Phase 6b: how each question scored
 │       └── journey.html           ← the Handbook's journey, clickable
 │
 ├── figures/                       ← teaching figures, each regenerated by a script
@@ -464,7 +485,8 @@ strainscope/
 │   ├── make_phase4_figures.py     ← Phase 4: pictographs, results, model explorer  ✅
 │   ├── make_phase5_figures.py     ← Phase 5: graph concepts, results, explorer     ✅
 │   ├── make_phase6_figures.py     ← Phase 6: how the app works, uploads, guards    ✅
-│   ├── take_app_screenshots.py    ← Phase 6: app screenshots (optional, Playwright) ✅
+│   ├── make_phase6b_figures.py    ← Phase 6b: the search, the gate, golden scores  ✅
+│   ├── take_app_screenshots.py    ← Phases 6, 6b: screenshots (optional, Playwright) ✅
 │   ├── make_illustrations.py      ← logo, icon, journey map + interactive journey  ✅
 │   └── *.png                      ← the figures themselves                         ✅
 │
@@ -481,7 +503,7 @@ strainscope/
 │   ├── ontology.py                ← Phase 5: the domain model (types, relations)   ✅
 │   ├── graph.py                   ← Phase 5: build, analyse, explain, ask          ✅
 │   ├── service.py                 ← Phase 6: the service layer behind the app      ✅
-│   ├── ask.py                     ← Phase 6b: Ask StrainScope                      ⬜
+│   ├── ask.py                     ← Phase 6b: Ask StrainScope                      ✅
 │   ├── explain.py                 ← Phase 7: explanations + data assistant         ⬜
 │   ├── mcp_server.py              ← Phase 7b: the MCP server                       ⬜
 │   └── pipeline.py                ← Phase 8: the one-command pipeline              ⬜
@@ -497,10 +519,10 @@ strainscope/
 ├── app/                           ← the app (Phase 6; online in Phase 7)
 │   ├── streamlit_app.py           ← its front door: sidebar and page list           ✅
 │   ├── ui.py, charts.py           ← what the pages share; every chart               ✅
-│   └── views/                     ← seven pages: home, ranking, strain, knowledge_graph,
-│                                     integration, data, sql_console                 ✅
+│   └── views/                     ← eight pages: home, ask, ranking, strain,
+│                                     knowledge_graph, integration, data, sql_console ✅
 │
-├── tests/                         ← automated checks (pytest): 104 today           ✅
+├── tests/                         ← automated checks (pytest): 208 today           ✅
 │   ├── test_sources.py            ← ingestion parsers, offline
 │   ├── test_harmonize.py          ← cleaning rules and the database loader
 │   ├── test_integrate.py          ← integration, grading, the R ↔ Python contract
@@ -508,6 +530,8 @@ strainscope/
 │   ├── test_graph.py              ← the ontology, sourced edges, explanations, paths
 │   ├── test_service.py            ← SQL guards, cookbook recipes, uploads, explanations
 │   ├── test_app.py                ← the app clicked through without a browser
+│   ├── test_ask.py                ← Ask StrainScope: splitting, the gate, written answers
+│   ├── golden_questions.csv       ← the golden questions and what must happen to each
 │   └── test_safety_gate.py        ← the pre-push safety gate, in throw-away repos
 │
 ├── data/                          ← NOT in Git; regenerated on demand
@@ -525,7 +549,7 @@ strainscope/
 | `src/strainscope/` | The reusable Python backend: generate, fetch, clean, query, integrate, then model, graph, ask, explain, serve |
 | `R/` | The single specialised R script (DIABLO integration), run on the laptop |
 | `artifacts/` | Small precomputed outputs the app serves; they're the bridge from laptop to cloud |
-| `app/` | The Streamlit app (the frontend): seven pages over the service layer in `src/strainscope/service.py` |
+| `app/` | The Streamlit app (the frontend): eight pages over the service layer in `src/strainscope/service.py` and Ask StrainScope in `src/strainscope/ask.py` |
 | `tests/` | Automated checks that confirm the code does what it claims |
 | `data/` | Raw + processed data and the DuckDB file. **Never in Git**; regenerated on demand |
 
@@ -562,19 +586,21 @@ python src/strainscope/graph.py all       # Phase 5  - build the knowledge graph
 # Look at the results
 python src/strainscope/service.py status  # what the app can read, and how to fix what's missing
 python -m streamlit run app/streamlit_app.py   # the app (Phase 6): opens in your browser, Ctrl+C stops it
+python src/strainscope/ask.py "How do I start the app?"   # Ask StrainScope (Phase 6b), also a page in the app
+python src/strainscope/ask.py --golden    # the golden questions, scored
 python src/strainscope/sql.py             # the read-only SQL console (see docs/QUERY_COOKBOOK.md)
 python figures/make_phase3_figures.py     # redraw the Phase 3 figures + interactive explorer
 python figures/make_phase4_figures.py     # redraw the Phase 4 figures + model explorer
 python figures/make_phase5_figures.py     # redraw the Phase 5 figures + graph explorer
 python figures/make_phase6_figures.py     # redraw the Phase 6 figures
+python figures/make_phase6b_figures.py    # redraw the Phase 6b figures + Ask explorer
 python src/strainscope/graph.py why STRAIN_0485   # why does this strain rank first?
 
 # Check everything
-pytest -q                                 # 104 passed
+pytest -q                                 # 207 passed, 1 skipped
 ```
 
-Coming with later phases: `python src/strainscope/ask.py "question"` (6b) and
-the one-command `python src/strainscope/pipeline.py` (8).
+Coming with Phase 8: the one-command `python src/strainscope/pipeline.py`.
 
 > **Runs the same on Windows, macOS, and Linux (including RHEL 8 VMs).** The code
 > uses platform-neutral file paths, and every tool in the stack is cross-platform.

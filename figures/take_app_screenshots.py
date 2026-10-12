@@ -1,10 +1,11 @@
 """
 figures/take_app_screenshots.py: pictures of the running app (optional).
 ========================================================================
-Takes the screenshots used in README.md, docs/07-app.md and docs/HANDBOOK.md,
-plus a short animated tour:
+Takes the screenshots used in README.md, docs/07-app.md, docs/07b-docs-assistant.md
+and docs/HANDBOOK.md, plus a short animated tour:
 
     docs/img/app_home.png      the front page
+    docs/img/app_ask.png       Ask StrainScope answering a question from the documents
     docs/img/app_ranking.png   the ranking and the "test N strains" question
     docs/img/app_strain.png    one strain: its reasons and its corner of the graph
     docs/img/app_graph.png     the path finder (the decoy accE has only a statistic)
@@ -95,6 +96,14 @@ def main() -> None:
             page.goto(BASE)
             settle(page)
             shot("app_home.png")
+
+            page.goto(f"{BASE}/ask")
+            settle(page)
+            box = page.get_by_role("textbox", name="Your question")
+            box.fill("What is a balanced error rate?")
+            box.press("Enter")
+            settle(page, 4)
+            shot("app_ask.png")
 
             page.goto(f"{BASE}/ranking")
             settle(page)

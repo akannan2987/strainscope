@@ -1,6 +1,6 @@
 """
-tests/test_app.py: the app itself, clicked through without a browser (Phase 6).
-================================================================================
+tests/test_app.py: the app itself, clicked through without a browser (Phases 6 and 6b).
+==========================================================================================
 Streamlit ships a test runner (AppTest) that runs the app's scripts the way a
 browser session would, but in memory: it can open a page, set a widget, press
 a button and read what was drawn. These tests check that:
@@ -8,6 +8,8 @@ a button and read what was drawn. These tests check that:
     the test really lands on it (it checks the page's title);
   * the strain page explains the top strain with the graph's own words;
   * the SQL console answers a question and refuses to change anything;
+  * Ask StrainScope answers from the documents, refuses an off-topic
+    question, and a starter button puts its question in the box;
   * an upload shows up on the Ranking and Strain pages when chosen;
   * the shared ("public") mode hides the buttons that download or rewrite;
   * every chart can be drawn from the committed results.
@@ -33,7 +35,8 @@ from strainscope import service as sv  # noqa: E402
 
 # Each page and the title it shows. A test that asks for a page and quietly
 # gets the Home page instead would prove nothing, so open_app() checks the title.
-TITLES = {"views/home.py": "StrainScope", "views/ranking.py": "Ranking", "views/strain.py": "STRAIN_",
+TITLES = {"views/home.py": "StrainScope", "views/ask.py": "Ask StrainScope", "views/ranking.py": "Ranking",
+          "views/strain.py": "STRAIN_",
           "views/knowledge_graph.py": "Knowledge graph", "views/integration.py": "Integration",
           "views/data.py": "Data", "views/sql_console.py": "SQL console"}
 PAGES = list(TITLES)
@@ -106,6 +109,33 @@ def test_a_recipe_goes_into_the_editor():
     next(b for b in at.button if b.label == "Put this recipe in the editor").click()
     at.run()
     assert at.text_area(key="sql_text").value == first.sql
+
+
+def test_ask_strainscope_answers_from_the_documents(monkeypatch):
+    monkeypatch.setenv("STRAINSCOPE_ASK_BACKEND", "none")       # no written answers in tests
+    at = open_app("views/ask.py")
+    at.text_input(key="ask_question").set_value("What is a balanced error rate?")
+    at.run()
+    assert not at.exception, at.exception[0].value
+    assert 'Best match: "Balanced error rate (BER)"' in at.success[0].value
+    assert "the average of the error on each outcome group" in texts(at)
+
+
+def test_ask_strainscope_refuses_an_off_topic_question(monkeypatch):
+    monkeypatch.setenv("STRAINSCOPE_ASK_BACKEND", "none")
+    at = open_app("views/ask.py")
+    at.text_input(key="ask_question").set_value("What is the capital of France?")
+    at.run()
+    assert "won't guess" in at.info[0].value and not at.success
+
+
+def test_a_starter_question_goes_into_the_box(monkeypatch):
+    monkeypatch.setenv("STRAINSCOPE_ASK_BACKEND", "none")
+    at = open_app("views/ask.py")
+    at.button(key="starter_1").click()
+    at.run()
+    assert at.text_input(key="ask_question").value == "How do I start the app?"
+    assert "start the app" in at.success[0].value
 
 
 def test_an_upload_is_shown_when_chosen():

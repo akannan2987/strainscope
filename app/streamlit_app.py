@@ -1,12 +1,12 @@
 """
-app/streamlit_app.py: the StrainScope app (Phase 6).
-====================================================
+app/streamlit_app.py: the StrainScope app (Phases 6 and 6b).
+=============================================================
 Start it from the project folder, with the virtual environment active:
 
     python -m streamlit run app/streamlit_app.py
 
 A browser tab opens at http://localhost:8501. Stop the app with Ctrl+C in the
-terminal. The guide is docs/07-app.md.
+terminal. The guides are docs/07-app.md and docs/07b-docs-assistant.md (Ask StrainScope).
 
 THIS FILE
 ---------
@@ -19,6 +19,7 @@ WHAT THE APP READS (and never changes)
   artifacts/integration/, artifacts/model/, artifacts/graph/   the committed results of Phases 3 to 5
   data/processed/strainscope.duckdb                              the database (read-only)
   docs/QUERY_COOKBOOK.md                                         the recipes in the SQL console
+  README.md, docs/*.md, the docstrings in src/ and app/          what Ask StrainScope answers from
 The only things that write files are the database build (on the Home and Data
 pages) and the real-data fetch (on the Data page). They run the same scripts
 you'd run by hand (src/strainscope/service.py, PIPELINES).
@@ -38,7 +39,10 @@ st.logo(str(ui.ROOT / "docs" / "img" / "strainscope_wordmark.svg"), size="large"
 # http://localhost:8501/ranking). Keeping the two the same means one name for
 # everything, and older Streamlit test runners need it to find a page (docs/07-app.md section 12).
 pages = {
-    "StrainScope": [st.Page(ui.PAGES["home"], title="Home", icon=":material/home:", default=True)],
+    "StrainScope": [
+        st.Page(ui.PAGES["home"], title="Home", icon=":material/home:", default=True),
+        st.Page(ui.PAGES["ask"], title="Ask StrainScope", icon=":material/question_answer:"),
+    ],
     "Explore": [
         st.Page(ui.PAGES["ranking"], title="Ranking", icon=":material/format_list_numbered:"),
         st.Page(ui.PAGES["strain"], title="Strain page", icon=":material/coronavirus:"),

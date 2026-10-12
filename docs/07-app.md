@@ -30,7 +30,7 @@ That gives the app its first rule: **it reads, and it doesn't recompute the anal
 
 StrainScope's pass is `src/strainscope/service.py`, the **service layer**: a small set of plain Python functions that answer the questions every front door asks. Is the database there? Give me the ranking. Run this SQL safely. Check this uploaded file. Explain this strain. The app (`app/`) only calls the service layer, and the service layer uses the code of Phases 1 to 5. Two things follow from that:
 
-- the same answers can be reached from a terminal (`python src/strainscope/service.py ...`), from the app, and later from Ask StrainScope (Phase 6b) and the MCP server (Phase 7b), without writing them twice;
+- the same answers can be reached from a terminal (`python src/strainscope/service.py ...`), from the app, and later from the MCP server (Phase 7b), without writing them twice (Ask StrainScope, Phase 6b, adds its own `ask_docs` to it);
 - the service layer has no buttons or charts in it, so it can be tested on its own (§13).
 
 ### How Streamlit runs a page
@@ -48,7 +48,7 @@ A **widget** is anything you can click or type into: a slider, a dropdown (Strea
 
 ### Seven pages, and what each one reads
 
-![The app's seven pages and the files each one reads](../figures/app_map.png)
+![The app's pages and the files each one reads](../figures/app_map.png)
 
 | Page | What you do there | What it reads |
 |---|---|---|
@@ -59,6 +59,8 @@ A **widget** is anything you can click or type into: a slider, a dropdown (Strea
 | **Integration** | Phase 3's report card, DIABLO's signature, every method on one scoreboard | `artifacts/integration/` |
 | **Data** | the simulated library; **upload your own strains**; real data from public databases | the database, the saved model, the graph |
 | **SQL console** | ask the database anything, with the [Query Cookbook](QUERY_COOKBOOK.md)'s recipes one click away | the database, `docs/QUERY_COOKBOOK.md` |
+
+Phase 6b added an eighth page, **Ask StrainScope**, under Home: questions about the project, answered from its own documents with links ([`docs/07b-docs-assistant.md`](07b-docs-assistant.md)). The picture above already shows it.
 
 ---
 
@@ -115,7 +117,7 @@ What runs where: everything on your own computer. The app is a small web server 
 ## 3. The decisions in English, before any code
 
 1. **The app reads; it doesn't recompute.** Pages read `artifacts/` and the database. The heavy steps stay on the command line, where their output is easy to follow.
-2. **One service layer for every front door.** Each question the app asks goes through `src/strainscope/service.py`, which the terminal, Ask StrainScope and the MCP server will share. The app files hold only layout and wording.
+2. **One service layer for every front door.** Each question the app asks goes through `src/strainscope/service.py`, which the terminal shares and the MCP server will. The app files hold only layout and wording.
 3. **Every click is cheap.** Files and the graph are cached, labelled with the file's last-changed time, so a rebuilt file is picked up by itself and nothing stale is shown.
 4. **SQL behind four guards.** The console opens the database read-only, with file access switched off and that setting locked, stops any query after 10 seconds and returns at most 10,000 rows. The terminal console (`src/strainscope/sql.py`) now opens the database the same way, so it gets the first two guards too; in a terminal you stop a long query yourself with Ctrl+C, and every row is printed.
 
@@ -135,7 +137,7 @@ What runs where: everything on your own computer. The app is a small web server 
 - **No logins or user accounts.** One person on a laptop doesn't need them. A multi-user web front end is item A1 of the [product roadmap](PRODUCT_ROADMAP.md#a1-web-front-end-react-with-typescript), with the event that would schedule it.
 - **No React or FastAPI.** Streamlit is enough for one person exploring. The split into a back-end API and a separate front end is recorded in the [roadmap](ROADMAP.md#deferred-items-and-their-triggers) as a deferred item with its trigger.
 - **No re-training from the app.** The analysis steps take minutes and print a lot that's worth reading; they stay on the command line until Phase 8's one-command pipeline.
-- **No language model yet.** The plain-language explanations, the data assistant and GraphRAG arrive in Phase 7; the documentation assistant in Phase 6b gets its own tab.
+- **No language model in this phase.** The plain-language explanations, the data assistant and GraphRAG arrive in Phase 7; the documentation assistant of Phase 6b has its own page ([`docs/07b-docs-assistant.md`](07b-docs-assistant.md)), with optional written answers.
 - **No editing of data in the app.** The data flows one way ([architecture §5b](00-architecture.md#5b-the-one-design-rule-that-makes-it-reproducible)); an app that edited results would break that rule.
 
 ---
@@ -699,4 +701,4 @@ git switch develop
 - In `src/strainscope/service.py`, set `SQL_MAX_ROWS = 100`, stop the app with Ctrl+C and start it again (Streamlit reloads files in `app/` by itself, but not the service layer), then run `SELECT * FROM kg_edges` in the console. What does the app say? (Put it back.)
 - Add a recipe of your own to section 10 of `docs/QUERY_COOKBOOK.md`: a bold, quoted question on its own line (copy the shape of the ones above it), then a fenced `sql` code block. Restart nothing: rerun the SQL page and find it in the menu.
 
-**Next:** `docs/07b-docs-assistant.md` (arrives with the phase; [Handbook Stage 11](HANDBOOK.md#stage-11-phase-6b-ask-strainscope-the-documentation-assistant)) covers **Phase 6b**, Ask StrainScope: a question box over this repository's own documentation that answers with the matching passages and links, and politely refuses questions that aren't about StrainScope. It gets its own tab in this app and completes **v0.3.0**.
+**Next:** [`docs/07b-docs-assistant.md`](07b-docs-assistant.md) ([Handbook Stage 11](HANDBOOK.md#stage-11-phase-6b-ask-strainscope-the-documentation-assistant)) covers **Phase 6b**, Ask StrainScope: a question box over this repository's own documentation that answers with the matching passages and links, and politely refuses questions that aren't about StrainScope. It's the eighth page of this app, and it completes **v0.3.0**.

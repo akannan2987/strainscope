@@ -21,7 +21,7 @@
 - **Home 1, the shell (per session):** `export NCBI_API_KEY=abc123` before running. It's gone when the terminal closes.
 - **Home 2, the `.env` file (per project):** one `KEY=VALUE` line in a file named `.env` at the project root. Our `load_env()` reads it at startup. Most importantly, `.env` is in `.gitignore` **and** watched by `check-public-safe.sh`, so two independent layers make the mistake physically hard.
 
-If both homes define the key, **the shell wins** (already-set values are never overwritten), so you can temporarily override the file without editing it.
+If both homes define the key, **the shell wins** (already-set values are never overwritten), so you can temporarily override the file without editing it. Within `.env` itself, an empty value (`KEY=`, as the template has it) counts as not set, a later line wins over an earlier one with the same name, and quotes around a value are dropped (since Phase 6b, [`docs/07b-docs-assistant.md`](07b-docs-assistant.md) §8).
 
 ![One key, two safe homes](../figures/secret_homes.png)
 
