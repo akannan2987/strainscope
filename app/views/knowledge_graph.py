@@ -41,7 +41,7 @@ with net:
         n = layout.loc[layout["label"] == focus, "node_id"].iloc[0]
         neighbours = set(G.successors(n)) | set(G.predecessors(n))
         highlight = {n} | (neighbours & set(layout["node_id"]))
-    st.plotly_chart(charts.network_figure(layout, edges, chosen, highlight), width="stretch")
+    ui.chart(charts.network_figure(layout, edges, chosen, highlight))
     st.caption("Strains, genera and the three housekeeping genes are left out so the concepts stay readable. "
                "Drag to move, scroll to zoom, double-click to reset. Red dotted lines are statistics-only links "
                "from Phases 3 and 4.")
@@ -64,7 +64,7 @@ with find:
     if hops == []:
         st.info(f"No path between {start} and {end} in the knowledge layer.")
     elif hops:
-        st.plotly_chart(charts.path_figure(hops), width="stretch")
+        ui.chart(charts.path_figure(hops))
         for i, h in enumerate(hops, start=1):
             stats = h["relation"] == "associated_with"
             note = " :orange-badge[statistics only, no known mechanism]" if stats else ""
@@ -79,7 +79,7 @@ with look:
                         key="look_up")
     info = kg.show(G, what)
     a = info["attributes"]
-    st.markdown(f"### {a['label']}\n*{a['node_type']}*" + (f": {a['description']}" if a.get("description") else ""))
+    st.markdown(f"## {a['label']}\n*{a['node_type']}*" + (f": {a['description']}" if a.get("description") else ""))
     facts = {k: v for k, v in a.items() if k not in ("label", "node_type", "description")}
     if facts:
         st.dataframe([{"attribute": k, "value": str(v)} for k, v in facts.items()], hide_index=True, width="content")

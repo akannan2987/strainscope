@@ -71,7 +71,7 @@ else:
             ui.pick_strain(answer.strain)
     if answer.hops:
         st.markdown("**The route**")
-        st.plotly_chart(charts.path_figure(answer.hops), width="stretch")
+        ui.chart(charts.path_figure(answer.hops))
     if answer.facts:
         st.markdown("**The facts**" + (" (the walks behind the explanation)" if answer.story else ""))
         for n, f in enumerate(answer.facts, start=1):

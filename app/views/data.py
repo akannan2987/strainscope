@@ -16,7 +16,7 @@ synthetic, uploaded, real = st.tabs(["Synthetic library", "Upload your strains",
 
 # =============================================================================
 with synthetic:
-    st.subheader("The simulated library: 600 strains, four kingdoms")
+    st.header("The simulated library: 600 strains, four kingdoms")
     st.markdown(
         "Made by `src/strainscope/generate_data.py` with a fixed seed (42), so it's the same on every computer. "
         "Each strain has 31 gene calls, 20 compound levels and a trial score. Mess was added on purpose "
@@ -38,13 +38,21 @@ with synthetic:
     if st.button("Build the database", type="primary", disabled=not allowed, key="build_db",
                  help=None if allowed else "Switched off on the shared version of the app."):
         ui.run_pipeline("database")
-    st.caption("Re-running the analysis itself (integration, models, graph) takes a few minutes and stays on "
-               "the command line: `python src/strainscope/integrate.py all`, `model.py all`, `graph.py all` "
-               f"({ui.doc('HANDBOOK.md', 'Handbook')}, Stages 7 to 9).")
+
+    full = sv.PIPELINES["everything"]
+    st.markdown(f"**{full['title']}.** It {full['what']}. It takes {full['takes']}. It rewrites the result "
+                "files in `artifacts/`, so Git will list them as changed, and afterwards the app compares every "
+                "rebuilt number with the committed one. The same from a terminal: "
+                "`python src/strainscope/pipeline.py`, then `python src/strainscope/pipeline.py compare` "
+                f"({ui.doc('09-packaging.md', 'docs/09-packaging.md')}).")
+    if st.button(full["title"], key="build_everything", disabled=ui.PUBLIC,
+                 help="Switched off on the shared version of the app." if ui.PUBLIC else None):
+        if ui.run_pipeline("everything"):
+            ui.show_comparison()
 
 # =============================================================================
 with uploaded:
-    st.subheader("Score and explain your own strains")
+    st.header("Score and explain your own strains")
     st.markdown(
         "Give the app a table of your strains in the same layout as the library: one row per strain, a "
         "`strain_id`, a `kingdom` (Bacteria, Fungi, Yeast or Oomycete), gene calls (1 = carries it, 0 = doesn't, "
@@ -132,7 +140,7 @@ with uploaded:
 
 # =============================================================================
 with real:
-    st.subheader("Real data from five public databases")
+    st.header("Real data from five public databases")
     st.markdown(
         "Real strains (BacDive), real chemistry (PubChem), pathway links (KEGG, academic use only), genome "
         "records for all four kingdoms (NCBI Datasets) and chemical classes (Metabolomics Workbench). They "

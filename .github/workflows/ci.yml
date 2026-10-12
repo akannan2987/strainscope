@@ -1,0 +1,183 @@
+# .github/workflows/ci.yml: StrainScope's automatic tests (Phase 8).
+#
+# Continuous integration (CI) means every change is tested on fresh computers
+# as soon as it reaches GitHub. Each push to master (and each pull request)
+# starts these jobs on GitHub's machines, side by side:
+#
+#   tests          Linux, Windows and macOS, each with Python 3.12 and 3.14:
+#                  install, build the database, run every test, rebuild every
+#                  result from scratch and compare it with the committed one
+#   rhel8          the same on Red Hat Enterprise Linux 8 (Red Hat's free UBI 8
+#                  image, which is RHEL 8's own system in a container)
+#   online-copy    the online copy's exact package versions (app/requirements.txt)
+#   accessibility  a keyboard and screen-reader check of every page of the app,
+#                  with the online copy's packages (tools/check_accessibility.py)
+#   checks         the safety gate and a check for code mistakes (pyflakes)
+#   container      builds the Dockerfile, starts the app in it, asks it for its health
+#
+# A green tick next to a commit on GitHub means every job passed. The three
+# branches always point at the same commit (docs/01-setup.md Part H), so
+# testing master tests all three. docs/09-packaging.md explains the ideas
+# (sections 1 and 12); the comments here explain the settings.
+
+name: tests
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:          # a "Run workflow" button on the Actions tab
+
+permissions:
+  contents: read              # the jobs only read the code
+
+concurrency:                  # a newer push replaces a run that's still going
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHONUTF8: "1"             # Windows: print ✓ and ✗ into the log too
+
+jobs:
+  tests:
+    name: ${{ matrix.system }}, Python ${{ matrix.python }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45       # stop a job that hangs, instead of GitHub's six hours
+    strategy:
+      fail-fast: false        # one red job doesn't stop the others
+      matrix:
+        system: [Linux, Windows, macOS]
+        python: ["3.12", "3.14"]
+        include:
+          - system: Linux
+            runner: ubuntu-latest
+          - system: Windows
+            runner: windows-latest
+          - system: macOS
+            runner: macos-latest
+    steps:
+      - name: Get the code
+        uses: actions/checkout@v6
+      - name: Install Python ${{ matrix.python }}
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip          # keep downloaded packages between runs
+          cache-dependency-path: requirements.txt
+      - name: Install the packages (requirements.txt)
+        run: python -m pip install -r requirements.txt
+      - name: Build the database (the quick plan)
+        run: python src/strainscope/pipeline.py database --quiet
+      # -rs: list the skipped tests at the end, each with its reason
+      - name: Run the tests
+        run: python -m pytest -q -rs
+      - name: Rebuild everything from scratch
+        run: python src/strainscope/pipeline.py everything --quiet
+      - name: Compare the rebuilt results with the committed ones
+        run: python src/strainscope/pipeline.py compare
+
+  rhel8:
+    name: RHEL 8 (UBI 8), Python 3.12
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    container:
+      image: registry.access.redhat.com/ubi8/python-312
+      options: --user 0       # as the box's administrator, so dnf may install Git
+    steps:
+      - name: Install Git (the tests build small Git repositories)
+        run: command -v git || dnf install -y git
+      - name: Get the code
+        uses: actions/checkout@v6
+      - name: Install the packages (requirements.txt)
+        run: python -m pip install -r requirements.txt
+      - name: Build the database (the quick plan)
+        run: python src/strainscope/pipeline.py database --quiet
+      - name: Run the tests
+        run: python -m pytest -q -rs
+      - name: Rebuild everything from scratch
+        run: python src/strainscope/pipeline.py everything --quiet
+      - name: Compare the rebuilt results with the committed ones
+        run: python src/strainscope/pipeline.py compare
+
+  online-copy:
+    name: online copy (app/requirements.txt), Python 3.14
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Get the code
+        uses: actions/checkout@v6
+      - name: Install Python 3.14
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+          cache: pip
+          cache-dependency-path: app/requirements.txt
+      - name: Install the online copy's exact packages, and pytest
+        run: python -m pip install -r app/requirements.txt pytest
+      - name: Build the database (the quick plan)
+        run: python src/strainscope/pipeline.py database --quiet
+      - name: Run the tests (the two that need the mcp package skip)
+        run: python -m pytest -q -rs
+
+  accessibility:
+    name: keyboard and screen-reader check
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Get the code
+        uses: actions/checkout@v6
+      - name: Install Python 3.14
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+          cache: pip
+          cache-dependency-path: app/requirements.txt
+      - name: Install the online copy's exact packages, and a browser
+        run: |
+          python -m pip install -r app/requirements.txt playwright axe-playwright-python
+          python -m playwright install --with-deps chromium
+      - name: Build the database (the quick plan)
+        run: python src/strainscope/pipeline.py database --quiet
+      - name: Check every page with the keyboard and as a screen reader reads it
+        run: python tools/check_accessibility.py
+
+  checks:
+    name: safety gate and pyflakes
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Get the code
+        uses: actions/checkout@v6
+      - name: Install Python 3.14
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+      - name: Look for code mistakes (pyflakes)
+        run: |
+          python -m pip install pyflakes
+          python -m pyflakes src app tests figures tools
+      - name: The safety gate
+        run: bash check-public-safe.sh
+
+  container:
+    name: container (Dockerfile)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Get the code
+        uses: actions/checkout@v6
+      - name: Build the image
+        run: docker build -t strainscope .
+      - name: Start the app in a container and wait until it answers
+        run: |
+          docker run -d --name strainscope -p 8501:8501 strainscope
+          for i in $(seq 1 60); do
+            if curl -fsS http://localhost:8501/_stcore/health; then echo; break; fi
+            sleep 2
+          done
+          curl -fsS http://localhost:8501/_stcore/health
+      - name: The health check, inside the container
+        run: docker exec strainscope python src/strainscope/service.py status
+      - name: The container's log
+        if: always()          # also when a step above failed
+        run: docker logs strainscope

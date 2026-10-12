@@ -60,6 +60,9 @@ THE COMMAND LINE
                                                       its tools and call two of them
     python src/strainscope/mcp_server.py config       the settings to paste into an assistant app,
                                                       with this computer's paths filled in
+    python src/strainscope/mcp_server.py config --write    add the strainscope entry to Claude
+                                                      Desktop's settings file (Phase 8; a backup first)
+    python src/strainscope/mcp_server.py config --remove   take it out again (docs/UNINSTALL.md)
 
 "tools", "call" and "config" work without the mcp package; running the
 server and "check" need it (it's in requirements.txt).
@@ -511,9 +514,92 @@ def config() -> None:
     print("  (inside an existing \"mcpServers\" block, add only the \"strainscope\" part):\n")
     for line in json.dumps(block, indent=2).splitlines():
         print(f"  {line}")
+    print("\n  For Claude Desktop, this command can add it for you (it keeps a backup of the file):\n")
+    print("  python src/strainscope/mcp_server.py config --write")
     quote = (lambda s: f'"{s}"') if " " in python + script else (lambda s: s)
     print("\n  Claude Code: run this once in a terminal:\n")
     print(f"  claude mcp add --transport stdio --scope user {SERVER_NAME} -- {quote(python)} {quote(script)}")
+
+
+def desktop_settings_file() -> Path:
+    """Where Claude Desktop keeps its settings file for this user (docs/08b-mcp-server.md
+    section 9). On Linux this is a guess (~/.config/Claude); --file overrides it."""
+    home = Path.home()
+    if sys.platform == "darwin":
+        return home / "Library" / "Application Support" / "Claude" / "claude_desktop_config.json"
+    if sys.platform == "win32":
+        return Path(os.environ.get("APPDATA", home / "AppData" / "Roaming")) / "Claude" / "claude_desktop_config.json"
+    return Path(os.environ.get("XDG_CONFIG_HOME", home / ".config")) / "Claude" / "claude_desktop_config.json"
+
+
+def store_copies() -> list[Path]:
+    """Windows: the second settings file some versions of Claude Desktop read
+    (the copy installed as an MSIX package, section 9 of the guide)."""
+    base = os.environ.get("LOCALAPPDATA")
+    if sys.platform != "win32" or not base:
+        return []
+    return sorted(Path(base, "Packages").glob("Claude_*/LocalCache/Roaming/Claude/claude_desktop_config.json"))
+
+
+def edit_desktop_settings(action: str, path: Path | None = None) -> int:
+    """config --write / --remove: add or remove the strainscope entry in Claude
+    Desktop's settings file, keeping every other setting as it is. A dated
+    backup is saved next to the file first, and a file that isn't valid JSON is
+    left untouched. Returns 0 when the file is as asked, 1 when nothing could
+    be done."""
+    path = Path(path) if path else desktop_settings_file()
+    entry = {"command": str(Path(sys.executable)), "args": [str(Path(__file__).resolve())]}
+    verb = {"write": "add", "remove": "remove"}[action]
+    print(f"  ── Claude Desktop's settings file: {verb} the strainscope entry ──")
+    print(f"  {path}")
+    if not path.parent.is_dir():
+        print(f"\n  The folder {path.parent} doesn't exist, so Claude Desktop seems not to be installed for this")
+        print("  user (or keeps its settings elsewhere). Install it and open it once, then run this again,")
+        print("  or give the file's place with --file. Nothing was changed.")
+        return 1
+    text = path.read_text(encoding="utf-8") if path.exists() else ""
+    try:
+        settings = json.loads(text) if text.strip() else {}
+    except json.JSONDecodeError as err:
+        print(f"\n  The file isn't valid JSON (line {err.lineno}, column {err.colno}: {err.msg}).")
+        print("  Nothing was changed. Fix that line (often a missing comma or quote) and run this again.")
+        return 1
+    servers = settings.get("mcpServers", {}) if isinstance(settings, dict) else None
+    if not isinstance(servers, dict):
+        print("\n  The file doesn't have the expected shape (an object with an \"mcpServers\" object inside).")
+        print("  Nothing was changed. Add the entry by hand, as section 9 of docs/08b-mcp-server.md shows.")
+        return 1
+    if action == "write" and servers.get(SERVER_NAME) == entry:
+        print("\n  The strainscope entry is already there, with these paths. Nothing to change.")
+        return 0
+    if action == "remove" and SERVER_NAME not in servers:
+        print("\n  There's no strainscope entry in the file. Nothing to remove.")
+        return 0
+    if path.exists():
+        backup = path.with_name(f"{path.stem}.backup-{dt.datetime.now():%Y%m%d-%H%M%S}{path.suffix}")
+        backup.write_text(text, encoding="utf-8")
+        print(f"\n  backup → {backup.name} (next to it)")
+    if action == "write":
+        settings.setdefault("mcpServers", servers)[SERVER_NAME] = entry
+    else:
+        del servers[SERVER_NAME]
+        if not servers:
+            settings.pop("mcpServers")
+    kept = sorted(k for k in settings if k != "mcpServers")
+    temporary = path.with_name(path.name + ".tmp")
+    temporary.write_text(json.dumps(settings, indent=2) + "\n", encoding="utf-8")
+    os.replace(temporary, path)                 # all at once: never a half-written settings file
+    did = "added" if action == "write" else "removed"
+    print(f"  ✓ strainscope entry {did}" + (f"; other settings kept: {', '.join(kept)}" if kept else ""))
+    others = [p for p in store_copies() if p != path]
+    if others:
+        print("\n  This computer also has the Store version's settings file, which some versions read:")
+        for p in others:
+            print(f"    {p}")
+        print(f"  If strainscope doesn't {'appear' if action == 'write' else 'go away'}, run this again "
+              "with --file and that path.")
+    print("\n  Quit Claude Desktop completely and start it again: it reads the file only when it starts.")
+    return 0
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -528,7 +614,14 @@ def main(argv: list[str] | None = None) -> int:
     c.add_argument("tool")
     c.add_argument("inputs", nargs="*", help="name=value pairs")
     sub.add_parser("check", help="start the server as an app would and test it over stdio")
-    sub.add_parser("config", help="print the settings for an assistant app, with this computer's paths")
+    g = sub.add_parser("config", help="print the settings for an assistant app, with this computer's paths")
+    act = g.add_mutually_exclusive_group()
+    act.add_argument("--write", action="store_true",
+                     help="add the strainscope entry to Claude Desktop's settings file (with a backup)")
+    act.add_argument("--remove", action="store_true",
+                     help="remove the strainscope entry from Claude Desktop's settings file (with a backup)")
+    g.add_argument("--file", type=Path, default=None,
+                   help="the settings file to change, if it isn't in Claude Desktop's usual place")
     args = parser.parse_args(argv)
     if args.command == "tools":
         print_tools()
@@ -538,6 +631,10 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "check":
         return check()
     if args.command == "config":
+        if args.write or args.remove:
+            return edit_desktop_settings("write" if args.write else "remove", args.file)
+        if args.file:
+            parser.error("--file goes with --write or --remove")
         config()
         return 0
     serve()

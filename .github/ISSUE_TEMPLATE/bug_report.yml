@@ -1,0 +1,48 @@
+# .github/ISSUE_TEMPLATE/bug_report.yml: the form behind "New issue",
+# "Something doesn't work" (Phase 8). GitHub turns this file into a form.
+name: Something doesn't work
+description: A command, a page of the app, the MCP server or a guide that fails or says something wrong.
+title: "Problem: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting it. The more exactly you describe what happened, the quicker it can be fixed.
+        Issues are public, so please check that nothing you paste holds a key, a password or a personal path.
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where did it happen?
+      options:
+        - The online copy (strainscope.streamlit.app)
+        - The app on my own computer
+        - A command in a terminal
+        - The MCP server, through an assistant app
+        - The container (Docker or Podman)
+        - A guide or the Handbook
+        - Somewhere else
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What did you do, and what happened?
+      description: The command you ran (or the page and the button), and the message you saw. Copy messages as text if you can.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect instead?
+  - type: input
+    id: system
+    attributes:
+      label: Your system and Python version
+      placeholder: "for example: Windows 11, Python 3.14 / macOS 15 / RHEL 8.10, Python 3.12"
+  - type: input
+    id: version
+    attributes:
+      label: StrainScope version
+      description: "The app's About this copy page shows it; in a terminal, git describe --tags prints it."
+      placeholder: "v1.0.0"

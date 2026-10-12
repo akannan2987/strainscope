@@ -135,7 +135,7 @@ Everything inside the "StrainScope core" box is this repository (solid boxes are
 
 **What it is.** A scheduler that runs pipeline steps in order, retries failures and keeps a history. Think of an alarm clock with a checklist attached.
 **Verdict: Recommended later.** **Trigger:** scheduled refreshes, such as new strains every week or nightly re-fetches from public sources.
-*Prepared today by:* every step is already a separate command with clear inputs and outputs; Phase 8 adds a one-command pipeline that an orchestrator could call step by step.
+*Prepared today by:* every step is a separate command with clear inputs and outputs, and since Phase 8 the one-command pipeline (`src/strainscope/pipeline.py`) runs them in order, stops at a failure and can start again from any step (`--from`), which is what an orchestrator does on a schedule.
 
 ### B6. Data and model versioning (DVC, MLflow)
 
@@ -193,8 +193,8 @@ Everything inside the "StrainScope core" box is this repository (solid boxes are
 | Item | What it is | Verdict | Trigger |
 |---|---|---|---|
 | **D1. Hosting the app** | Streamlit Community Cloud (free): the online copy in shared mode, exact package versions, secrets in the host's box, the database built on the first start, a health page | **Required now; built in Phase 7** | n/a |
-| **D2. Continuous integration** | tests run automatically on Windows, macOS and Linux at every push | **Required now (Phase 8)** | n/a |
-| **D3. Containers** (Docker, Podman) | the whole toolbox (Python, R, packages) in one portable box | **Optional (Phase 8)** | a user who cannot install R, or a hosting platform that requires a container |
+| **D2. Continuous integration** | tests run automatically on fresh machines at every push: Windows, macOS and Linux with Python 3.12 and 3.14, RHEL 8 (Red Hat's UBI 8 image), the online copy's exact versions, a keyboard and screen-reader check, the safety gate, the container; every result rebuilt and compared | **Required now; built in Phase 8** (`.github/workflows/ci.yml`) | n/a |
+| **D3. Containers** (Docker, Podman) | the app in one portable box: the online copy's Python and exact packages, the database built inside | **Optional; built in Phase 8** (`Dockerfile`, tested at every push) | R in the box too, for a user who can't install it; a ready image in a registry, for a hosting platform that requires one |
 | **D4. Continuous deployment** | every tested change goes live automatically | Recommended later | a hosted service with users who expect updates |
 | **D5. High-performance computing** | clusters for genome assembly, annotation and antiSMASH runs | Recommended later | B1 with raw sequencing data |
 | **D6. Kubernetes** | orchestration of many containers | Not needed | a multi-tenant hosted service at scale |
@@ -211,6 +211,8 @@ These are **required now**, as constraints on the design rather than as technolo
 |---|---|---|
 | **Secrets** | API keys live only in the environment (`.env` or the host's secret store), and never in Git or in logs | designed in: `.gitignore` + the pre-push safety gate ([`docs/01-setup.md`](01-setup.md) Part H), [`02c`](02c-more-real-sources.md); the online copy's Secrets box and its committed template since Phase 7 ([`docs/08-deployment-ai.md`](08-deployment-ai.md) §1) |
 | **Source licences** | KEGG is for academic use only, so a commercial product needs a KEGG licence or an open alternative; every real row carries its attribution | designed in: an `attribution` column travels with the data ([`02b`](02b-real-data-ingestion.md)) |
+| **The project's own licence and reuse** | anyone may reuse the code and documents; the few facts from public databases keep their sources' terms; a security problem is reported privately first | built in Phase 8: `LICENSE` (MIT), `CITATION.cff`, `CONTRIBUTING.md`, `SECURITY.md` with GitHub's private reporting, Dependabot alerts ([`docs/09-packaging.md`](09-packaging.md) §8, §13) |
+| **Accessibility** | anyone, also using a keyboard or a screen reader, can use the app (WCAG 2.1 level AA) | built in Phase 8: a check at every push (axe-core rules, a walk with the Tab key, the accessibility tree) and the fixes it led to ([`docs/09-packaging.md`](09-packaging.md) §10); a hosted product would add a review with real screen-reader users |
 | **Disclosing simulated data** | synthetic data and its limits are stated wherever a number appears | designed in: README, every guide, every result printout |
 | **Confidential strain data** | a company's strain collection and trial results are trade secrets | hosted deployments need access control and encryption (B2, D7); the AI layer sends a model only text that is public in the repository (documentation passages, table and column names, facts about concepts from the graph), never a row of data, a strain's results or an upload |
 | **Access and benefit-sharing** (Nagoya Protocol) | microbial strains collected from another country's environment may carry legal obligations on use and on sharing benefits | out of scope for public reference data; a real programme tracks each strain's origin and permits (a column to add with B1) |
@@ -253,11 +255,11 @@ For orientation only; there is no product to sell.
 | **Predict** | calibrated predictions with uncertainty | four models on the same folds; leak-proof pipeline; calibrated elastic net; model card; out-of-fold ranking | Phase 4 ✅ |
 | **Explain** | knowledge graph, explanations, GraphRAG | the knowledge graph (ontology, sourced edges, real KEGG/RefMet/BacDive context, Phase 3 and 4 evidence); hubs, communities, knowledge vs data; an explanation for every strain; `why` / `path` / `show` questions; plain-language explanations by rules; GraphRAG (Ask the graph) | Phases 5 and 7 ✅; C5 later |
 | **Serve** | app, docs assistant, data assistant, MCP server | the Streamlit app on a tested service layer: ranking with likely / borderline / unlikely bands, strain pages, the graph, integration, uploads, a guarded SQL console; Ask StrainScope, Ask the data and Ask the graph, each answering on its own and refusing what it can't answer, with an optional model; runs on Windows, macOS and RHEL 8, and online on Streamlit Community Cloud; the MCP server, nine read-only tools for AI assistant apps on the user's own computer | Phases 6, 6b, 7 and 7b ✅; A1/A2 later |
-| **Operate** | one-command pipeline, CI, releases; later scheduling and monitoring | tests (409, the app's, three golden question sets and a real MCP session included), a tested safety gate, a test that every link between the documents resolves, three-branch workflow, tagged releases (v0.1.0, v0.1.1, v0.2.0, v0.3.0); a health check (`service.py status`, the app's Home page, *About this copy*); the database rebuilt from one button, and by itself on a shared copy's first start; the online copy redeployed on every push, with pinned versions | Phase 8; B5, D4, D7 later |
+| **Operate** | one-command pipeline, CI, releases; later scheduling and monitoring | the one-command pipeline and its comparison with the committed results (also a button in the app); tests (444, the app's, three golden question sets and a real MCP session included), run on eleven jobs at every push (CI); a tested safety gate, also as an optional pre-push hook; a keyboard and screen-reader check; a test that every link between the documents resolves; three-branch workflow; tagged releases (v0.1.0, v0.1.1, v0.2.0, v0.3.0, v1.0.0) and GitHub releases; Dependabot alerts and update suggestions; a container; a health check (`service.py status`, the app's Home page, *About this copy*); the online copy redeployed on every push, with pinned versions; an uninstall guide | Phases 6 to 8 ✅; B5, D4, D7 later |
 
 ## Sequencing summary
 
-1. **This repository (Phases 0 to 8, plus 6b and 7b):** everything marked *Required now*.
+1. **This repository (Phases 0 to 8, plus 6b and 7b):** everything marked *Required now*, all built (v1.0.0).
 2. **First real data:** B1 matched data → A3 importers → C5 ontology identifiers → B6 versioning.
 3. **First hosted team:** B2 PostgreSQL → A2 HTTP API → A1 web front end → D7 monitoring → D4 continuous deployment.
 4. **Scale:** B5 orchestrator → D5 high-performance computing → B7 object storage → C7 agent.

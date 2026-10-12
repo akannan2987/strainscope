@@ -186,7 +186,7 @@ Read a written answer as a summary of what's under it. If the two disagree, the 
 
 ## 7. Switching it off
 
-- **At home:** in `.env`, set every `STRAINSCOPE_ASK_BACKEND` line to `none` (or delete them all), then restart the app. If one is set in the terminal, clear it too: `unset STRAINSCOPE_ASK_BACKEND` (PowerShell: `Remove-Item Env:STRAINSCOPE_ASK_BACKEND`). To stop Ollama itself: quit it from the menu-bar icon (macOS) or the system tray (Windows), or `sudo systemctl stop ollama` (Linux).
+- **At home:** in `.env`, set every `STRAINSCOPE_ASK_BACKEND` line to `none` (or delete them all), then restart the app. If one is set in the terminal, clear it too: `unset STRAINSCOPE_ASK_BACKEND` (PowerShell: `Remove-Item Env:STRAINSCOPE_ASK_BACKEND`). To stop Ollama itself: quit it from the menu-bar icon (macOS) or the system tray (Windows), or `sudo systemctl stop ollama` (Linux). To remove the model, or Ollama itself, from the computer: [`docs/UNINSTALL.md`](UNINSTALL.md#the-language-model-ollama).
 - **Online:** delete the four `STRAINSCOPE_ASK_*` lines from the Secrets box, press **Save**, and reboot the app.
 - **The key:** if you no longer need it, delete it on the same AI Studio page where you created it.
 
@@ -249,10 +249,10 @@ So Ask StrainScope now gives the model the best passage and, of the next two, on
 
 | Question | Matches of the three passages shown | Given to the model |
 |---|---|---|
-| "What is a balanced error rate?" | 0.47, 0.26, 0.20 | [1] only |
-| "Why is the data simulated?" | 0.17, 0.16, 0.16 | all three |
+| "What is a balanced error rate?" | 0.47, 0.27, 0.20 | [1] only |
+| "Why is the data simulated?" | 0.17, 0.16, 0.15 | all three |
 
-Of the 43 starter and golden questions the search answers, 21 now send one passage and 22 send two or three. (Three quarters of the best *match* is a different rule from the gate's 75 % of the question's *words*, described in [Phase 6b §1](07b-docs-assistant.md#the-gate-answered-closest-or-refused); they just happen to use the same share.)
+Of the 49 starter and golden questions the search answers, 27 now send one passage and 22 send two or three. (Three quarters of the best *match* is a different rule from the gate's 75 % of the question's *words*, described in [Phase 6b §1](07b-docs-assistant.md#the-gate-answered-closest-or-refused); they just happen to use the same share.)
 
 ### Check your own model
 

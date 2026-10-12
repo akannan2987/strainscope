@@ -136,7 +136,7 @@ What runs where: everything on your own computer. The app is a small web server 
 
 - **No logins or user accounts.** One person on a laptop doesn't need them. A multi-user web front end is item A1 of the [product roadmap](PRODUCT_ROADMAP.md#a1-web-front-end-react-with-typescript), with the event that would schedule it.
 - **No React or FastAPI.** Streamlit is enough for one person exploring. The split into a back-end API and a separate front end is recorded in the [roadmap](ROADMAP.md#deferred-items-and-their-triggers) as a deferred item with its trigger.
-- **No re-training from the app.** The analysis steps take minutes and print a lot that's worth reading; they stay on the command line until Phase 8's one-command pipeline.
+- **No re-training from the app.** The analysis steps take minutes and print a lot that's worth reading, so in this phase they stay on the command line. Phase 8 added a *Rebuild everything from scratch* button on the Data page, which runs the one-command pipeline with its live output ([`docs/09-packaging.md` §7](09-packaging.md#7-step-3-the-same-from-the-app)).
 - **No language model in this phase.** The plain-language explanations, Ask the data and Ask the graph (GraphRAG) came in Phase 7 ([`docs/08-deployment-ai.md`](08-deployment-ai.md)); the documentation assistant of Phase 6b has its own page ([`docs/07b-docs-assistant.md`](07b-docs-assistant.md)), with optional written answers.
 - **No editing of data in the app.** The data flows one way ([architecture §5b](00-architecture.md#5b-the-one-design-rule-that-makes-it-reproducible)); an app that edited results would break that rule.
 

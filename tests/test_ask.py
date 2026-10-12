@@ -113,10 +113,11 @@ def _anchors(path: Path) -> set:
 
 def test_every_link_between_the_documents_resolves():
     """The same check as before every push, as a test: every relative link in
-    README.md, CHANGELOG.md and docs/*.md points at a file that exists, and
-    every #anchor at a heading in it."""
+    README.md, CHANGELOG.md, CONTRIBUTING.md, SECURITY.md and docs/*.md points
+    at a file that exists, and every #anchor at a heading in it."""
     bad = []
-    for page in [ROOT / "README.md", ROOT / "CHANGELOG.md", *sorted((ROOT / "docs").glob("*.md"))]:
+    for page in [ROOT / "README.md", ROOT / "CHANGELOG.md", ROOT / "CONTRIBUTING.md", ROOT / "SECURITY.md",
+                 *sorted((ROOT / "docs").glob("*.md"))]:
         text = re.sub(r"```.*?```", "", page.read_text(encoding="utf-8"), flags=re.S)
         for m in re.finditer(r"!?\[[^\]]*\]\(([^)\s]+)\)", text):
             target = m.group(1)

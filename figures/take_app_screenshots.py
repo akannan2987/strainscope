@@ -2,7 +2,8 @@
 figures/take_app_screenshots.py: pictures of the running app (optional).
 ========================================================================
 Takes the screenshots used in README.md, docs/07-app.md, docs/07b-docs-assistant.md,
-docs/08-deployment-ai.md and docs/HANDBOOK.md, plus a short animated tour:
+docs/08-deployment-ai.md, docs/09-packaging.md and docs/HANDBOOK.md, plus a short
+animated tour:
 
     docs/img/app_home.png         the front page
     docs/img/app_ask.png          Ask StrainScope answering a question from the documents
@@ -15,6 +16,7 @@ docs/08-deployment-ai.md and docs/HANDBOOK.md, plus a short animated tour:
     docs/img/app_graph.png        the path finder (the decoy accE has only a statistic)
     docs/img/app_sql.png          a cookbook recipe run in the SQL console
     docs/img/app_upload.png       twelve uploaded strains, checked and scored
+    docs/img/app_rebuild.png      the Data page's rebuild from scratch, with its plan (Phase 8)
     docs/img/app_tour.gif         the same pages as a slideshow
 
 You only need this when the app's look changes; the pictures are committed.
@@ -175,6 +177,12 @@ def main() -> None:
             page.get_by_text("4. The result.").scroll_into_view_if_needed()
             settle(page, 1.5)
             shot("app_upload.png")
+
+            page.goto(f"{BASE}/data")
+            settle(page)
+            page.get_by_role("button", name="Rebuild everything from scratch").scroll_into_view_if_needed()
+            settle(page, 1.5)
+            shot("app_rebuild.png", frame=False)
             browser.close()
     finally:
         proc.terminate()

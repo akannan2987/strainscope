@@ -25,7 +25,7 @@ st.markdown(f"StrainScope **{version}** (released {info['date']}: *{info['title'
 ui.simulated_note()
 
 # -- health ------------------------------------------------------------------
-st.subheader("What the app can read")
+st.header("What the app can read")
 mark = {True: ":green[✓]", False: ":red[✗]", None: ":gray[·]"}
 checks = ui.status()
 for c in checks:
@@ -37,7 +37,7 @@ if all(c.ok is not False for c in checks):
 st.caption("The same check from a terminal: `python src/strainscope/service.py status`")
 
 # -- the AI features -------------------------------------------------------------
-st.subheader("The AI features")
+st.header("The AI features")
 cfg = llm.settings()
 on = "on" if cfg.on else "off"
 st.markdown(

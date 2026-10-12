@@ -385,14 +385,71 @@ first appears. If a term is missing, that's a documentation bug worth fixing.
 - **Node.js** and **npx**: a program that runs JavaScript outside a browser, and its command for running a published tool without installing it first (`npx @modelcontextprotocol/inspector ...`). StrainScope needs neither, except for the optional Inspector.
 - **Absolute path**: a file's full address from the top of the computer (`/Users/<you>/projects/strainscope/.venv/bin/python`, or `C:\Users\<you>\...` on Windows), as opposed to a path relative to the folder you're in. Assistant apps need absolute paths, because they start the server from their own folder.
 
-## The Handbook, releases and the planned phases (docs HANDBOOK, ROADMAP, PRODUCT_ROADMAP)
+## Phase 8: packaging and release 1.0 (doc 09)
+
+### Rebuilding and checking
+- **Pipeline**: steps that always run in the same order, each one reading what the one before it wrote. `python src/strainscope/pipeline.py` runs the scripts of Phases 1 to 5 that way, in one command.
+- **Plan (of the pipeline)**: one named list of steps: `everything` (recompute every result), `database` (load the committed results, about 15 seconds), `real` (fetch real data, then rebuild) and `probe`. The app's buttons run the same lists.
+- **Reproducible**: the same inputs and the same code give the same results on any computer. A stranger following the recipe in another kitchen gets the same cake.
+- **`compare`**: `python src/strainscope/pipeline.py compare`, which checks every number in the result files (`artifacts/`) against the version in Git's last commit, and lists what it leaves out and why.
+- **Tolerance**: how far apart two numbers may be and still count as the same. `compare` uses 0.001, because a different processor or package version can move the fourth decimal.
+- **Tie (in a ranking)**: two strains with the same chance. Since Phase 8 they're ordered by strain id, so the ranking is the same on every computer.
+- **Exit code**: the number a program hands back when it ends; 0 means it went well. The pipeline returns 0, 1 (a step failed, or a result differs) or 130 (stopped with Ctrl+C), so other programs, such as CI, can tell what happened.
+
+### Tests on every push
+- **Continuous integration (CI)**: a service (here GitHub Actions) that runs the tests on fresh machines every time a change reaches GitHub, so a problem that only shows up on one system is found the day it appears.
+- **GitHub Actions** and the **Actions tab**: GitHub's CI service, and the page of the repository that shows every run, its jobs and their logs.
+- **Workflow**: a file in `.github/workflows/` that lists the jobs to run and when. StrainScope's is `.github/workflows/ci.yml`, named *tests*.
+- **Job**: one machine doing one list of steps in a workflow; jobs run side by side.
+- **Runner**: the machine GitHub lends for a job (Linux, Windows or macOS), wiped afterwards.
+- **Matrix**: one job run several times with different settings, here every combination of three systems and two Python versions.
+- **Green tick / red cross**: GitHub's marks next to a commit: every job passed, or at least one failed (its log says where).
+- **UBI (Universal Base Image)**: Red Hat's free container images of its own system. The *rhel8* job runs inside `ubi8/python-312`, which is RHEL 8 with Python 3.12, because GitHub has no RHEL machines.
+- **pyflakes**: a small checker that reads Python files and reports mistakes such as unused imports or misspelt names, without running them.
+
+### Containers
+- **Container**: a sealed box holding a program and everything it needs (a small Linux system, Python, the packages), which runs the same on Windows, macOS and Linux; the shipping container did the same for cargo.
+- **Image**: the sealed box itself, built once from the recipe and then started as often as you like.
+- **Dockerfile**: the recipe for an image: start from this, install that, copy these files, run this command. StrainScope's is `Dockerfile` in the project folder; `.dockerignore` lists what stays out.
+- **Docker** and **Podman**: two programs that build and run containers from the same Dockerfile. Docker Desktop runs on Windows and macOS; RHEL 8 comes with Podman.
+- **Port mapping** (`-p 8501:8501`): connecting a port inside the box to a port on your computer, so `localhost:8501` reaches the app inside.
+- **Registry**: an online store of images (Docker Hub, Red Hat's registry) from which `docker build` downloads its starting image.
+
+### Reuse and contributions
+- **Licence**: the text that says what others may do with a work. StrainScope's is the **MIT licence** (`LICENSE`): anyone may use, copy, change and share it, also commercially, if the licence text travels with it; there's no warranty.
+- **Citation File Format** (`CITATION.cff`): a small file saying how to cite a project; GitHub turns it into a **Cite this repository** button.
+- **Contribution guide** (`CONTRIBUTING.md`): how a change travels from an idea to a release, and what it must pass.
+- **Security policy** (`SECURITY.md`): how to report a security problem privately, before it becomes public.
+- **Private vulnerability reporting**: GitHub's way for someone to report a security problem that only the maintainer sees (*Security*, *Advisories*, *Report a vulnerability*).
+- **Issue form**: a short form GitHub shows when someone opens a new issue, from a file in `.github/ISSUE_TEMPLATE/`.
+- **Fork**: your own copy of someone else's repository on GitHub, where you can change things and then propose them back with a pull request.
+- **Dependabot**: GitHub's helper that watches the packages a project uses: **alerts** for versions with a known security problem, and **version updates**, pull requests with newer versions (`.github/dependabot.yml`).
+
+### Accessibility
+- **Accessibility**: whether people with different abilities can use something: without a mouse, without seeing the screen, with low vision, and so on.
+- **WCAG** (Web Content Accessibility Guidelines): the international guidelines for accessible web pages; level **AA** is the usual target, and it asks, for example, for a contrast of at least 4.5 to 1 for small text.
+- **Contrast ratio**: how much lighter the background is than the text, from 1 to 1 (the same colour) to 21 to 1 (black on white).
+- **Screen reader**: a program that reads the screen aloud and lets you move through a page with keys: VoiceOver on a Mac, NVDA or Narrator on Windows, Orca on Linux.
+- **Focus**: the one control that receives what you type; the Tab key moves it to the next one. A **focus indicator** (usually an outline) shows where it is.
+- **Keyboard trap**: a place on a page the focus can enter but not leave with the keyboard.
+- **Accessibility tree**: the browser's list of what's on a page (headings, paragraphs, buttons, fields) with their names, which is what a screen reader reads.
+- **Alt text**: the description of a picture that a screen reader reads instead of it.
+- **axe-core**: an open-source engine of accessibility rules that most checkers use; `tools/check_accessibility.py` runs it on every page of the app.
+- **Playwright**: a library that drives a real browser from a program; the screenshots and the accessibility check use it.
+- **Landmark**: a region of a page a screen reader can jump to (the main part, the navigation, ...).
+
+### Releases
+- **Git hook**: a small script Git runs by itself at a certain moment. `.githooks/pre-push` runs the safety gate before every push, once switched on with `git config core.hooksPath .githooks`.
+- **Release (GitHub)**: a page built on a tag, with the version's notes and a download of the code as it was.
+- **Patch release**: a version that only fixes something (the third number: v1.0.1).
+- **Uninstall guide**: [`docs/UNINSTALL.md`](UNINSTALL.md), every place StrainScope can leave something behind, and how to remove it in a safe order.
+
+## The Handbook, releases and the roadmaps (docs HANDBOOK, ROADMAP, PRODUCT_ROADMAP)
 
 - **Handbook**: [`docs/HANDBOOK.md`](HANDBOOK.md), the one living document that walks the whole journey from a blank laptop to the finished product and links every specialised guide. Read it first; it's updated in the same commit as every change. [`docs/interactive/journey.html`](interactive/journey.html) is the same journey as a clickable page, built from the Handbook.
 - **Roadmap**: the ordered plan of what gets built next and why ([`docs/ROADMAP.md`](ROADMAP.md)); the **product roadmap** looks beyond this repository ([`docs/PRODUCT_ROADMAP.md`](PRODUCT_ROADMAP.md)).
 - **Verdict / trigger**: in the product roadmap, every technology gets a verdict (*required now · recommended later · optional · not needed*) and a trigger, which is the observable event that would change it. The idea is to justify each tool instead of piling them up.
 - **Tag (Git)**: a bookmark on one exact commit, named with a version number (`v0.1.0`), so anyone can return to that state. *Annotated* tags (`git tag -a`) also record who, when and why.
-- **Semantic versioning**: version numbers as `MAJOR.MINOR.PATCH`: MINOR for a new usable level, PATCH for fixes, MAJOR 1 for the first complete release.
+- **Semantic versioning**: version numbers as `MAJOR.MINOR.PATCH`: MINOR for a new usable level, PATCH for fixes, MAJOR 1 for the first complete release (v1.0.0, Phase 8); after 1.0, a new MAJOR number means something you rely on stopped working the old way.
 - **Changelog**: [`CHANGELOG.md`](../CHANGELOG.md), the human-readable list of what changed in each version.
-- **Continuous integration (CI)** *(Phase 8)*: a service (here GitHub Actions) that runs the tests automatically on fresh Windows, macOS and Linux machines at every push.
-- **Container** *(Phase 8, optional)*: a sealed, portable box holding a program plus everything it needs to run (Python, R, packages), so it runs the same anywhere.
 

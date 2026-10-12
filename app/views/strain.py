@@ -84,7 +84,7 @@ with st.container(border=True):
                "is used.")
 
 # -- why it ranks here -----------------------------------------------------------
-st.subheader("Why it ranks here")
+st.header("Why it ranks here")
 if not len(expl):
     st.markdown("No mechanism path, no flags: the strain carries none of the weapons the graph knows about.")
 for r in expl.itertuples(index=False):
@@ -108,15 +108,15 @@ with st.expander("How to read these lines"):
         "section 7).")
 
 # -- its corner of the graph --------------------------------------------------------
-st.subheader("Its corner of the knowledge graph")
+st.header("Its corner of the knowledge graph")
 st.caption("Read left to right: what it carries, what it makes, how that works, what it leads to. Hollow "
            "circles are weapons it lacks. Hover a dot or the middle of a line for details and sources.")
 nodes, edges = sv.neighbourhood(G, strain, expl)
-st.plotly_chart(charts.neighbourhood_figure(nodes, edges), width="stretch")
+ui.chart(charts.neighbourhood_figure(nodes, edges))
 
 # -- where it sits ------------------------------------------------------------------------
-st.subheader("Where it sits among the others")
-st.plotly_chart(charts.probability_strip(pred, strain), width="stretch")
+st.header("Where it sits among the others")
+ui.chart(charts.probability_strip(pred, strain))
 with st.expander("Everything it carries and produces"):
     carried = sorted(G.nodes[v]["label"] for _, v, e in G.out_edges(f"strain:{strain}", data=True)
                      if e["relation"] == "carries")

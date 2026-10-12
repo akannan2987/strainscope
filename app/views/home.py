@@ -42,7 +42,7 @@ if summary is not None:
                    help="Every edge records where it came from.")
 
 # -- where to go ---------------------------------------------------------------
-st.subheader("Where to start")
+st.header("Where to start")
 a1, a2, a3 = st.columns(3)
 with a1:
     st.page_link(ui.PAGES["ask"], label="Ask StrainScope", icon=":material/question_answer:")

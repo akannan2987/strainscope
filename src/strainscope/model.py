@@ -872,7 +872,11 @@ def final(db_path: Path = DB_PATH, artifacts_dir: Path = ARTIFACTS, verbose: boo
     pred = outcome.reset_index()[["strain_id", "kingdom", "suppression_score", "is_effective"]]
     pred["probability"] = cal["p_calibrated"].to_numpy()
     pred["predicted_effective"] = (pred["probability"] >= base_rate).astype(int)
-    pred = pred.sort_values("probability", ascending=False).reset_index(drop=True)
+    # Best first. Strains with the same (rounded) chance are put in strain-id
+    # order, so the ranking is the same on every computer (Phase 8 found the
+    # order of ties changing between a Mac and Linux).
+    pred = pred.sort_values(["probability", "strain_id"], ascending=[False, True],
+                            kind="mergesort").reset_index(drop=True)
     pred.insert(0, "rank", np.arange(1, len(pred) + 1))
     pred.to_csv(artifacts_dir / "predictions.csv", index=False)
 

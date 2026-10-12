@@ -99,3 +99,54 @@ def test_link_anchor_is_not_mistaken_for_a_key(repo):
         encoding="utf-8")
     result = _gate(repo)
     assert result.returncode == 0, result.stdout
+
+
+# =============================================================================
+# The optional pre-push hook (.githooks/pre-push, Phase 8): the same gate,
+# run by Git itself just before a push.
+# =============================================================================
+
+HOOK = ROOT / ".githooks" / "pre-push"
+
+
+@pytest.fixture
+def hooked(repo: Path, tmp_path_factory) -> Path:
+    """The throw-away repository with the hook switched on and a remote to push to."""
+    (repo / ".githooks").mkdir()
+    shutil.copy(HOOK, repo / ".githooks" / "pre-push")
+    (repo / ".githooks" / "pre-push").chmod(0o755)
+    _git(repo, "config", "core.hooksPath", ".githooks")
+    remote = tmp_path_factory.mktemp("remote")
+    _git(remote, "init", "-q", "--bare")
+    _git(repo, "remote", "add", "origin", str(remote))
+    return repo
+
+
+def _push(repo: Path) -> subprocess.CompletedProcess:
+    return subprocess.run(["git", "push", "-q", "origin", "HEAD:master"], cwd=repo,
+                          capture_output=True, text=True)
+
+
+def test_the_hook_lets_a_clean_push_through(hooked):
+    result = _push(hooked)
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "SAFE TO PUSH" in result.stdout + result.stderr
+
+
+def test_the_hook_stops_a_push_when_the_gate_finds_a_key(hooked):
+    (hooked / "notes.txt").write_text(f"OPENAI_API_KEY={FAKE_KEY}\n", encoding="utf-8")
+    result = _push(hooked)
+    assert result.returncode != 0
+    assert "NOT SAFE TO PUSH" in result.stdout + result.stderr
+
+
+def test_the_hook_is_marked_runnable():
+    """Git runs a hook only if it's marked runnable. Before the first commit
+    that's the file's own mark; once committed, it's the mode Git recorded."""
+    import os
+    staged = subprocess.run(["git", "ls-files", "-s", ".githooks/pre-push"], cwd=ROOT,
+                            capture_output=True, text=True).stdout.split()
+    if staged:
+        assert staged[0] == "100755", "run: chmod +x .githooks/pre-push, then git add it again"
+    else:
+        assert os.access(HOOK, os.X_OK), "run: chmod +x .githooks/pre-push"

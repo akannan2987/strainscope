@@ -1,0 +1,34 @@
+# .github/ISSUE_TEMPLATE/idea.yml: the form behind "New issue", "An idea or a
+# wish" (Phase 8).
+name: An idea or a wish
+description: Something StrainScope could do, explain or show better.
+title: "Idea: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The roadmap (docs/ROADMAP.md) lists what's planned and what's deferred, each with the event that would schedule it. If your idea is there, say so: a real need is often the trigger.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which part is it about?
+      options:
+        - A guide, the Handbook or the glossary
+        - The app
+        - The data or the analysis
+        - The assistants or the MCP server
+        - Installing, the container or the tests
+        - Something else
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like?
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: What would it help you do?

@@ -38,8 +38,10 @@ COLUMN_TITLES = ["strain", "genes", "compounds", "how it works", "outcome"]
 
 
 def _base(fig: go.Figure, height: int, **layout) -> go.Figure:
+    # t=64 leaves room above the plot for the chart's toolbar, which the app
+    # always shows (app/ui.py, chart()), so it never covers a label.
     fig.update_layout(template="plotly_white", height=height,
-                      margin=dict(l=10, r=10, t=40, b=10),
+                      margin=dict(l=10, r=10, t=64, b=10),
                       font=dict(color=INK), **layout)
     return fig
 
@@ -183,7 +185,7 @@ def integration_scoreboard_figure(board: pd.DataFrame, diablo_ber: float | None)
                            hovertemplate="%{y}: %{x:.3f}<extra></extra>"))
     fig.add_vline(x=0.5, line=dict(color=RED, dash="dash"), annotation_text="a coin: 0.50",
                   annotation_position="top")
-    return _base(fig, 60 + 34 * len(names), xaxis=dict(title="balanced error rate (lower is better)",
+    return _base(fig, 60 + 34 * len(names), xaxis=dict(title="balanced error rate",
                                                        range=[0, 0.62]), yaxis_title=None)
 
 

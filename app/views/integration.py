@@ -19,7 +19,7 @@ st.markdown(
     f"Explained step by step in {ui.doc('04-integration.md', 'docs/04-integration.md')}.")
 ui.simulated_note()
 
-st.subheader("The report card")
+st.header("The report card")
 st.dataframe(card.rename(columns={"n_selected": "picked", "n_signal_selected": "true drivers",
                                   "n_decoys_selected": "decoys", "decoys_selected": "which decoys"}),
              hide_index=True, width="stretch",
@@ -33,18 +33,22 @@ summary = ui.artifact("integration/diablo_summary.csv")
 board = ui.artifact("integration/python_scoreboard.csv")
 left, right = st.columns([1, 1])
 with left:
-    st.subheader("DIABLO's signature")
+    st.header("DIABLO's signature")
     if sig is not None:
-        st.plotly_chart(charts.signature_figure(sig, ann), width="stretch")
+        ui.chart(charts.signature_figure(sig, ann))
+        ui.numbers_behind(sig.sort_values(["component", "stability"], ascending=[True, False]))
         st.caption("Blue: genes. Gold: compounds. Red: a decoy that slipped in (none of them is robust).")
 with right:
-    st.subheader("Every method, same folds")
+    st.header("Every method, same folds")
     if board is not None:
         diablo = None
         if summary is not None:
             values = dict(zip(summary["key"], summary["value"]))
             diablo = float(values["cv_ber_final"]) if "cv_ber_final" in values else None
-        st.plotly_chart(charts.integration_scoreboard_figure(board, diablo), width="stretch")
+        ui.chart(charts.integration_scoreboard_figure(board, diablo))
+        ui.numbers_behind(board.rename(columns={"ber_mean": "balanced error", "ber_sd": "spread (sd)",
+                                                "auc_mean": "AUC", "auc_sd": "AUC spread (sd)",
+                                                "n_folds_scored": "folds"}))
         st.caption("Lower is better. The two grey controls (the kingdom label on its own, and shuffled "
                    "labels) must sit near a coin's 0.50 to show the scoring is fair, and they do. DIABLO's "
                    "bar is the number R reported in Phase 3.")
@@ -56,7 +60,10 @@ with right:
 
 cross = ui.artifact("integration/cross_block_correlation.csv")
 if cross is not None:
-    st.subheader("Do genes and compounds rise together?")
-    st.plotly_chart(charts.correlation_heatmap(cross), width="stretch")
+    st.header("Do genes and compounds rise together?")
+    ui.chart(charts.correlation_heatmap(cross))
+    ui.numbers_behind(cross.sort_values("spearman_rho", ascending=False).rename(
+        columns={"spearman_rho": "correlation (Spearman)", "is_producer_pair": "the gene makes the compound"}),
+        "this chart (strongest first)")
     st.caption("Spearman correlation between carrying each gene and the level of each compound. The bright "
                "red cells are genes and the compounds they make (phlD and DAPG, ituA and iturin, ...).")

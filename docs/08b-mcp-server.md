@@ -194,7 +194,7 @@ python src/strainscope/mcp_server.py tools
 **You should see:**
 
 ```
-  ── StrainScope MCP server 0.3.0+unreleased: 9 tools, all read-only ──
+  ── StrainScope MCP server 1.0.0: 9 tools, all read-only ──
 
   ask_docs(question: str)
       Search StrainScope's own documentation (guides, Handbook, glossary, code docstrings) and
@@ -238,7 +238,7 @@ python src/strainscope/mcp_server.py tools
       were effective in the simulated trial.
 ```
 
-**What it means:** these descriptions are what an assistant app's model reads when it decides which tool to use, which is why they're written as full sentences. The inputs in brackets become the tool's input schema: a `str` is text, an `int` a whole number, and `= 50` a default the assistant may leave out. The version comes from `CHANGELOG.md` (`+unreleased` means changes since v0.3.0 are listed under *[Unreleased]*).
+**What it means:** these descriptions are what an assistant app's model reads when it decides which tool to use, which is why they're written as full sentences. The inputs in brackets become the tool's input schema: a `str` is text, an `int` a whole number, and `= 50` a default the assistant may leave out. The version comes from `CHANGELOG.md`: the newest release, followed by `+unreleased` whenever changes made since then are listed under *[Unreleased]* (between v0.3.0 and Phase 8 it read `0.3.0+unreleased`).
 
 ---
 
@@ -372,7 +372,7 @@ python src/strainscope/mcp_server.py check
 
 ```
   ── StrainScope: talking to the MCP server the way an assistant app does ──
-  ✓ connected to strainscope 0.3.0+unreleased (protocol 2025-11-25)
+  ✓ connected to strainscope 1.0.0 (protocol 2025-11-25)
   ✓ 9 tools, all marked read-only: ask_docs, ask_data, ask_graph, describe_database, query_database, get_signature, rank_strain, explain_strain, shortlist
   ✓ rank_strain STRAIN_0485: rank 1 of 600, band likely
   ✓ query_database refused DELETE FROM phenotype:
@@ -414,6 +414,10 @@ python src/strainscope/mcp_server.py config
     }
   }
 
+  For Claude Desktop, this command can add it for you (it keeps a backup of the file):
+
+  python src/strainscope/mcp_server.py config --write
+
   Claude Code: run this once in a terminal:
 
   claude mcp add --transport stdio --scope user strainscope -- /Users/<you>/projects/strainscope/.venv/bin/python /Users/<you>/projects/strainscope/src/strainscope/mcp_server.py
@@ -425,18 +429,42 @@ Full paths matter: an app starts the server from its own folder, not from your p
 
 The MCP project's own walk-through, with screenshots, is [Connect to local MCP servers](https://modelcontextprotocol.io/docs/develop/connect-local-servers); the steps below follow it. (A Linux version of Claude Desktop is in beta for Ubuntu 22.04 or later and Debian 12 or later only; on RHEL 8, use Claude Code, part B.)
 
+**The quick way** (added in [Phase 8](09-packaging.md)): let `config` change the settings file for you, then go on with step 4 below.
+
+```bash
+python src/strainscope/mcp_server.py config --write
+```
+
+**You should see** the file's place on your computer, then (with your own date and time in the backup's name):
+
+```
+  ── Claude Desktop's settings file: add the strainscope entry ──
+  /Users/<you>/Library/Application Support/Claude/claude_desktop_config.json
+
+  backup → claude_desktop_config.backup-20261012-203331.json (next to it)
+  ✓ strainscope entry added; other settings kept: preferences
+
+  Quit Claude Desktop completely and start it again: it reads the file only when it starts.
+```
+
+**What it means:** the `strainscope` entry is in the file, with this computer's paths, and every setting that was already there is untouched (here a `preferences` section). The old file is kept as a dated backup in the same folder, so a mistake can always be undone. If the file isn't valid JSON, it changes nothing and names the line of the mistake. `config --remove` takes the entry out again the same way ([`docs/UNINSTALL.md`](UNINSTALL.md)). On Linux it looks in `~/.config/Claude/`; if your app keeps the file somewhere else, add `--file` and the file's path.
+
+**The manual way**, if you'd rather see the file yourself:
+
 1. On macOS, open the **Claude** menu in the menu bar at the top of the screen and choose **Settings...**. On Windows, click the menu button (three lines) at the top left of the Claude window, then **File**, then **Settings**. These are the app's settings, not the account settings you find inside a chat.
-2. In the left column choose **Developer**, then **Edit Config**. This opens (and creates, if needed) the file `claude_desktop_config.json`. On macOS it lives in `~/Library/Application Support/Claude/`; on Windows in `%APPDATA%\Claude\`.
+2. In the left column choose **Developer**, then **Edit Config**. This creates the file `claude_desktop_config.json` if it doesn't exist yet. On macOS it lives in `~/Library/Application Support/Claude/`; on Windows in `%APPDATA%\Claude\`. **On macOS, Edit Config doesn't open the file:** Finder opens with the file selected. Right-click it (or Control-click), choose **Open With**, then **TextEdit**. On Windows, if File Explorer opens with the file selected, right-click it, choose **Open with**, then **Notepad**.
 3. Paste the block `config` printed, in one of three ways, depending on what the file holds:
    - **Empty, or only `{}`:** replace everything with the whole block.
    - **Other settings (often a `"preferences"` section) but no `"mcpServers"`:** keep them. Copy the block without its first and last braces (from `"mcpServers"` to the brace that closes it), paste it right after the file's first `{`, and put a comma after it, before the settings that follow.
    - **An `"mcpServers"` section already:** add only the `"strainscope": { ... }` part inside it, with a comma between it and the server before it.
-4. Save the file, then **quit Claude Desktop completely** (macOS: **Claude**, then **Quit Claude**; Windows: right-click its icon by the clock, then **Quit**) and start it again. Closing the window isn't enough: the app reads the file only when it starts.
+
+   Save the file (in TextEdit: **File**, then **Save**; keep the name and the `.json` ending).
+4. **Quit Claude Desktop completely** (macOS: **Claude**, then **Quit Claude**; Windows: right-click its icon by the clock, then **Quit**) and start it again. Closing the window isn't enough: the app reads the file only when it starts.
 5. In a new chat, click the **+** button ("Add files, connectors, and more") at the bottom left of the message box, point to **Connectors** and choose **Manage connectors**. **strainscope** should be listed, with its nine tools.
 
-**If instead** strainscope is missing or marked as failed: check the file for a missing comma or quote (on macOS, `python -m json.tool ~/Library/Application\ Support/Claude/claude_desktop_config.json` prints the file if it's valid JSON, or the line of the first mistake; Windows PowerShell: `python -m json.tool "$env:APPDATA\Claude\claude_desktop_config.json"`), check that both paths exist, and read the server's notes in Claude Desktop's log folder: `~/Library/Logs/Claude/` on macOS or `%APPDATA%\Claude\logs\` on Windows, in the file `mcp-server-strainscope.log` (its end: `tail -n 20 ~/Library/Logs/Claude/mcp-server-strainscope.log` on macOS, `Get-Content "$env:APPDATA\Claude\logs\mcp-server-strainscope.log" -Tail 20` in Windows PowerShell). Among the app's own lines there, you should find the server's note, *StrainScope MCP server 0.3.0+unreleased: 9 read-only tools on stdio ...*; an error message after it usually names the problem.
+**If instead** strainscope is missing or marked as failed: check the file for a missing comma or quote (on macOS, `python -m json.tool ~/Library/Application\ Support/Claude/claude_desktop_config.json` prints the file if it's valid JSON, or the line of the first mistake; Windows PowerShell: `python -m json.tool "$env:APPDATA\Claude\claude_desktop_config.json"`), check that both paths exist, and read the server's notes in Claude Desktop's log folder: `~/Library/Logs/Claude/` on macOS or `%APPDATA%\Claude\logs\` on Windows, in the file `mcp-server-strainscope.log` (its end: `tail -n 20 ~/Library/Logs/Claude/mcp-server-strainscope.log` on macOS, `Get-Content "$env:APPDATA\Claude\logs\mcp-server-strainscope.log" -Tail 20` in Windows PowerShell). Among the app's own lines there, you should find the server's note, *StrainScope MCP server 1.0.0: 9 read-only tools on stdio ...*; an error message after it usually names the problem.
 
-**On Windows, if strainscope still doesn't appear** although the file checks out: some versions of Claude Desktop read a second copy of the settings file, `%LOCALAPPDATA%\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Roaming\Claude\claude_desktop_config.json` (the letters after `Claude_` may differ on your computer). If that file exists, add the `strainscope` part to it as in step 3 (it usually holds the app's own settings already), then quit and restart the app. Its logs are then in the `logs` folder next to it.
+**On Windows, if strainscope still doesn't appear** although the file checks out: some versions of Claude Desktop read a second copy of the settings file, `%LOCALAPPDATA%\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Roaming\Claude\claude_desktop_config.json` (the letters after `Claude_` may differ on your computer). If that file exists, add the `strainscope` part to it as in step 3 (it usually holds the app's own settings already), or run `config --write --file` with that path; `config --write` names this second file when it finds one. Then quit and restart the app. Its logs are then in the `logs` folder next to it.
 
 ### B. Claude Code (a terminal app; macOS, Windows, Linux)
 
@@ -627,7 +655,7 @@ Writing SQL yourself, you know what was asked, but you have to know the tables. 
 ## 19. What could go wrong (mini-FAQ)
 
 - **`python src/strainscope/mcp_server.py` on its own seems to hang:** it's waiting for an app to talk to it over stdio, which is its job. Press Ctrl+C. To try it from the terminal, use `tools`, `call` or `check`.
-- **Claude Desktop doesn't list strainscope:** quit it completely and start it again (§9 A, step 4); check the file for a missing comma, and both paths for typing mistakes. The app's log for the server, `mcp-server-strainscope.log`, usually names the problem.
+- **Claude Desktop doesn't list strainscope:** quit it completely and start it again (§9 A, step 4); check the file for a missing comma, and both paths for typing mistakes, or let `python src/strainscope/mcp_server.py config --write` write the entry (§9 A, the quick way). The app's log for the server, `mcp-server-strainscope.log`, usually names the problem.
 - **Claude Desktop's `mcp-server-strainscope.log` says `ModuleNotFoundError: No module named 'pandas'` (or another package):** the `command` points at a Python outside your toolbox. Use the exact path `config` prints, which ends in `.venv/bin/python` or `.venv/bin/python3` (Windows: `.venv\Scripts\python.exe`).
 - **A tool replies that there's no database** (in the chat, or as `refused` in `data/processed/mcp_calls.log`): build it (the five commands in [`docs/07-app.md` §5](07-app.md#5-step-1-check-what-the-app-will-read), or the app's button). The server reads the same database as the app.
 - **`claude mcp list` shows `✘ Failed to connect`:** run the two paths from the list together in a terminal (`<python path> <server path> check` with your paths); the check names what's wrong.
@@ -675,4 +703,4 @@ git switch develop
 - See a cut-off result: `python src/strainscope/mcp_server.py call query_database "sql=SELECT strain_id FROM phenotype WHERE kingdom = 'Bacteria'" max_rows=20` returns 20 of the 267 bacteria with `"truncated": true`. Then ask your app for "every bacterial strain in StrainScope" and watch how it copes with the same limit (50 rows unless it asks for more, 200 at most).
 - Ask your app something StrainScope can't answer ("What's the weather in Basel?") and check the log: no tool was called. Then ask "Is iturin safe for bees?" and see `ask_graph` come back with *closest* or *refused*, and what the app makes of that.
 
-**What's next: Phase 8, packaging and release 1.0** (Handbook [Stage 14](HANDBOOK.md#stage-14-phase-8-packaging-and-release-10)): the one-command pipeline, tests on Windows, macOS and Linux at every push, the licence and citation file, an uninstall guide, an optional container, and the **v1.0.0** tag. The MCP server will be part of what those tests check on every system.
+**What's next: Phase 8, packaging and release 1.0** ([`docs/09-packaging.md`](09-packaging.md), Handbook [Stage 14](HANDBOOK.md#stage-14-phase-8-packaging-and-release-10)): the one-command pipeline, tests on Windows, macOS, Linux and RHEL 8 at every push, the licence and citation file, an uninstall guide (which also takes the server out of Claude Desktop again), an optional container, and the **v1.0.0** tag. The MCP server's tests, the real MCP session over stdio included, run on every system at every push.

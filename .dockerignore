@@ -1,0 +1,33 @@
+# .dockerignore: what stays out of the container image (Phase 8).
+# Like .gitignore, but for `docker build` and `podman build`: the toolbox is
+# rebuilt inside the image, the data is rebuilt from the seed, and secrets and
+# Git's history have no business in a box you might share.
+
+# Python and R toolboxes, caches
+.venv/
+**/__pycache__/
+*.pyc
+.pytest_cache/
+renv/library/
+renv/staging/
+
+# Data, the database and logs: rebuilt inside the image
+data/raw/*
+data/processed/*
+*.duckdb
+*.log
+
+# Secrets and personal settings: never in an image
+.env
+.env.*
+!.env.example
+.Renviron
+.streamlit/secrets.toml
+
+# Git's history and editor clutter
+.git/
+.githooks/
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

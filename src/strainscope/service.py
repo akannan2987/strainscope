@@ -33,8 +33,10 @@ WHAT IT OFFERS
   check_model()            does the switched-on language model cite its sources? Four
                            questions through the real assistants, each answer shown or not
   release_info()           which version this copy is (from CHANGELOG.md)
-  PIPELINES, run_pipeline()
+  PIPELINES, pipeline_events(), run_pipeline()
                            the scripts of Phases 1 to 5, run in order, with live output
+                           (the app's build buttons, and src/strainscope/pipeline.py, the
+                           one-command pipeline of Phase 8)
 
 THE COMMAND LINE (the manual path; the app is the automatic one)
 -----------------------------------------------------------------
@@ -976,7 +978,17 @@ def explain_in_words(strain_id: str, artifacts_dir: Path = ARTIFACTS) -> dict:
 
 # Each pipeline is a list of (script, arguments). They run with the same
 # Python that runs the app, one after another; a step that fails stops the rest.
+# The app's buttons run them, and so does the one-command pipeline of Phase 8
+# (python src/strainscope/pipeline.py), so both always run the same steps.
 PIPELINES = {
+    "everything": {
+        "title": "Rebuild everything from scratch",
+        "takes": "5 to 10 minutes; about 4 without R",
+        "what": ("regenerates the synthetic library, cleans it into a fresh database, and recomputes every "
+                 "result: the integration (DIABLO too, when R is installed), the models and the knowledge graph"),
+        "steps": [("generate_data.py",), ("harmonize.py",), ("integrate.py", "all"),
+                  ("model.py", "all"), ("graph.py", "all")],
+    },
     "database": {
         "title": "Build the database from the scripts",
         "takes": "about 15 seconds",
@@ -1008,32 +1020,74 @@ def step_command(step: tuple[str, ...]) -> list[str]:
     return [sys.executable, "-u", str(ROOT / "src" / "strainscope" / step[0]), *step[1:]]
 
 
-def run_pipeline(name: str, root: Path = ROOT):
-    """Run one of PIPELINES step by step and yield (step_number, step_label,
-    output_line) as the scripts print. The last item yielded is
-    (None, 'done' or 'failed', summary). Only one pipeline runs at a time."""
+def step_label(step: tuple[str, ...]) -> str:
+    """A step as you'd type it: python src/strainscope/model.py all."""
+    return "python src/strainscope/" + " ".join(step)
+
+
+def pipeline_events(name: str, root: Path = ROOT, start: int = 1):
+    """Run one of PIPELINES from step `start` on, and yield what happens, as
+    dictionaries with an "event" key:
+
+      start   a step begins          (step, label)
+      line    a line it printed      (step, label, text)
+      end     it finished well       (step, label, seconds)
+      done / failed                  the last event, with a sentence (text)
+                                     and, for failed, the step that stopped
+
+    Each step runs in its own Python process, with the Python running this
+    code. A step that fails stops the rest. Only one pipeline runs at a time,
+    in this program, so two buttons can't write the database together."""
     steps = PIPELINES[name]["steps"]
+    if not 1 <= start <= len(steps):
+        raise ValueError(f"The '{name}' pipeline has steps 1 to {len(steps)}; there's no step {start}.")
     if not _PIPELINE_LOCK.acquire(blocking=False):
-        yield None, "failed", "Another build is running. Wait for it to finish, then try again."
+        yield {"event": "failed", "step": None,
+               "text": "Another build is running. Wait for it to finish, then try again."}
         return
+    proc = None
     try:
         env = {**os.environ, "PYTHONUTF8": "1", "PYTHONIOENCODING": "utf-8"}  # Windows prints UTF-8 too
         for number, step in enumerate(steps, start=1):
-            label = "python src/strainscope/" + " ".join(step)
-            yield number, label, f"$ {label}"
+            if number < start:
+                continue
+            label = step_label(step)
+            yield {"event": "start", "step": number, "label": label}
             started = time.time()
             proc = subprocess.Popen(step_command(step), cwd=root, env=env, stdout=subprocess.PIPE,
                                     stderr=subprocess.STDOUT, text=True, encoding="utf-8", errors="replace")
             for line in proc.stdout:
-                yield number, label, line.rstrip("\n")
+                yield {"event": "line", "step": number, "label": label, "text": line.rstrip("\n")}
             code = proc.wait()
+            proc = None
             if code != 0:
-                yield None, "failed", f"Step {number} ({label}) stopped with exit code {code}. Its output is above."
+                yield {"event": "failed", "step": number,
+                       "text": f"Step {number} ({label}) stopped with exit code {code}. Its output is above."}
                 return
-            yield number, label, f"  (step {number} of {len(steps)} done in {time.time() - started:.0f} s)"
-        yield None, "done", f"All {len(steps)} steps finished."
+            yield {"event": "end", "step": number, "label": label, "seconds": time.time() - started}
+        what = f"All {len(steps)} steps" if start == 1 else f"Steps {start} to {len(steps)}"
+        yield {"event": "done", "step": None, "text": f"{what} finished."}
     finally:
+        if proc is not None and proc.poll() is None:     # stopped halfway (Ctrl+C): stop the step too
+            proc.terminate()
+            proc.wait()
         _PIPELINE_LOCK.release()
+
+
+def run_pipeline(name: str, root: Path = ROOT, start: int = 1):
+    """The same run, as the app shows it: (step_number, step_label,
+    output_line) as the scripts print. The last item yielded is
+    (None, 'done' or 'failed', summary)."""
+    total = len(PIPELINES[name]["steps"])
+    for e in pipeline_events(name, root, start):
+        if e["event"] == "start":
+            yield e["step"], e["label"], f"$ {e['label']}"
+        elif e["event"] == "line":
+            yield e["step"], e["label"], e["text"]
+        elif e["event"] == "end":
+            yield e["step"], e["label"], f"  (step {e['step']} of {total} done in {e['seconds']:.0f} s)"
+        else:
+            yield None, e["event"], e["text"]
 
 
 # =============================================================================

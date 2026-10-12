@@ -33,7 +33,7 @@ Ask StrainScope is a librarian first. Every answer is a passage quoted **word fo
 
    ![A word found everywhere tells you little](../figures/word_weights.png)
 
-   In StrainScope's documents, "data" appears in 546 of the 1,484 passages and gets a weight of 2.0; "winsorise" appears in 3 and gets 6.9. Common little words ("the", "is", "how") are dropped altogether; they're called **stop words**. Words are also reduced to the form the documents use, so "strains" finds "strain", "scoring" finds "score" and "ranked" finds "rank". A section's heading counts three times, because a heading says what its section is about.
+   In StrainScope's documents, "data" appears in 567 of the 1,655 passages and gets a weight of 2.1; "winsorise" appears in 3 and gets 7.0. Common little words ("the", "is", "how") are dropped altogether; they're called **stop words**. Words are also reduced to the form the documents use, so "strains" finds "strain", "scoring" finds "score" and "ranked" finds "rank". A section's heading counts three times, because a heading says what its section is about.
 3. **Compare.** The question gets word weights the same way, and each passage gets a **match** score from 0 (no words in common) to 1 (the same words in the same proportions). The measure is **cosine similarity**. Two shopping lists match well when they're mostly about the same things, however long each list is. The best passage of each section stands for that section, and the three best sections are shown.
 4. **Decide**, before anything is shown (next part).
 
@@ -236,14 +236,14 @@ python src/strainscope/ask.py "What is a balanced error rate?"
       docs/GLOSSARY.md#phase-3-multi-omics-integration-doc-04
       - **Balanced error rate (BER)**: the average of the error on each outcome group. Unlike plain accuracy it can't be gamed by always guessing the common group: that lazy strategy scores 0.50, exactly like a coin.
 
-  [2] The scoreboard   (match 0.26)
+  [2] The scoreboard   (match 0.27)
       docs/05-machine-learning.md#the-scoreboard
       (picture: The model scoreboard)
 
       Bars are the balanced error rate at the 50 % line, with ± from the ten repeats; diamonds are the same model flagging above the base rate. The elastic net wins either way.
 
   [3] model_scoreboard_figure (function in app/charts.py)   (match 0.20)
-      app/charts.py#L99
+      app/charts.py#L101
       Balanced error rate of every model (lower is better), with a coin's 0.5.
 
   You might also ask about:
@@ -285,8 +285,8 @@ python src/strainscope/ask.py --stats
 **You should see** the typo corrected on the first line (`✓ Reading "calibraton" as "calibration". Best match: "Calibration" in docs/GLOSSARY.md.`), and then:
 
 ```
-  1068 sections from 56 files: 464 document sections, 338 glossary entries, 266 code docstrings.
-  4,057 different words. Written answers: off (search only; nothing leaves this computer).
+  1194 sections from 61 files: 528 document sections, 381 glossary entries, 285 code docstrings.
+  4,187 different words. Written answers: off (search only; nothing leaves this computer).
 ```
 
 **If instead:**
@@ -325,16 +325,16 @@ python src/strainscope/ask.py --golden
 
 ```
   ── Ask StrainScope: the golden questions ──────────────────────
-  ✓ 43/43 answered from the right section
-           (36 of them with an expected section first)
+  ✓ 49/49 answered from the right section
+           (41 of them with an expected section first)
   ✓  4/4  not documented: no confident answer
   ✓ 16/16 off-topic or instructions: refused
   · known limitation: "Does the app have a dark mode?" (now passes: it can become a 'closest' question)
 
-  63 of 63 passed.
+  69 of 69 passed.
 ```
 
-**What it means.** Every in-scope question was answered with a right section among the three shown (36 of the 43 with a right one first); every question about something undocumented was refused or marked *closest*; every off-topic question and instruction was refused. The known limitation is reported but doesn't count; §12 explains it, and why it passes for now.
+**What it means.** Every in-scope question was answered with a right section among the three shown (41 of the 49 with a right one first); every question about something undocumented was refused or marked *closest*; every off-topic question and instruction was refused. The known limitation is reported but doesn't count; §12 explains it, and why it passes for now.
 
 **Add a question of your own.** Open `tests/golden_questions.csv` and add a line at the end, for example:
 

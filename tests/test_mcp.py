@@ -1,6 +1,6 @@
 """
-tests/test_mcp.py: the MCP server (Phase 7b).
-=============================================
+tests/test_mcp.py: the MCP server (Phase 7b, and config --write of Phase 8).
+============================================================================
 What they protect, in plain words:
   * every tool answers from the same functions as the terminal and the app,
     with the numbers the guides quote (STRAIN_0485 first of 600, 46.2
@@ -15,7 +15,9 @@ What they protect, in plain words:
   * every call is logged (tool, arguments, outcome, time) and no result is;
   * nothing a tool prints can reach stdout, which carries the protocol;
   * the server speaks real MCP: in-process, and as a separate program over
-    stdio, the way an assistant app starts it.
+    stdio, the way an assistant app starts it;
+  * config --write and --remove change only the strainscope entry in Claude
+    Desktop's settings file, keep a backup, and leave a broken file alone.
 
 None of them needs the network or an assistant app.
 
@@ -232,6 +234,57 @@ def test_tools_and_config_need_no_assistant(capsys):
     entry = block["mcpServers"]["strainscope"]
     assert Path(entry["command"]).is_absolute() and entry["args"] == [str(ROOT / "src" / "strainscope" / "mcp_server.py")]
     assert "claude mcp add --transport stdio --scope user strainscope -- " in out
+    assert "config --write" in out
+
+
+# =============================================================================
+# config --write / --remove: Claude Desktop's settings file (Phase 8)
+# =============================================================================
+
+def test_config_write_adds_the_entry_and_keeps_everything_else(tmp_path, capsys):
+    settings = tmp_path / "claude_desktop_config.json"
+    settings.write_text(json.dumps({"preferences": {"theme": "dark"}, "mcpServers": {"other": {"command": "x"}}}),
+                        encoding="utf-8")
+    assert M.main(["config", "--write", "--file", str(settings)]) == 0
+    data = json.loads(settings.read_text(encoding="utf-8"))
+    assert data["preferences"] == {"theme": "dark"} and data["mcpServers"]["other"] == {"command": "x"}
+    assert data["mcpServers"]["strainscope"]["args"] == [str(ROOT / "src" / "strainscope" / "mcp_server.py")]
+    backups = list(tmp_path.glob("claude_desktop_config.backup-*.json"))
+    assert len(backups) == 1 and "strainscope" not in backups[0].read_text(encoding="utf-8")
+    assert "Quit Claude Desktop completely" in capsys.readouterr().out
+    assert M.main(["config", "--write", "--file", str(settings)]) == 0          # a second time changes nothing
+    assert "already there" in capsys.readouterr().out and len(list(tmp_path.glob("*.backup-*"))) == 1
+
+
+def test_config_remove_takes_only_the_entry_out(tmp_path, capsys):
+    settings = tmp_path / "claude_desktop_config.json"
+    settings.write_text(json.dumps({"preferences": {}, "mcpServers": {"strainscope": {"command": "x"}}}),
+                        encoding="utf-8")
+    assert M.main(["config", "--remove", "--file", str(settings)]) == 0
+    assert json.loads(settings.read_text(encoding="utf-8")) == {"preferences": {}}
+    assert M.main(["config", "--remove", "--file", str(settings)]) == 0
+    assert "Nothing to remove" in capsys.readouterr().out
+
+
+def test_config_write_leaves_a_broken_or_missing_file_alone(tmp_path, capsys):
+    broken = tmp_path / "claude_desktop_config.json"
+    broken.write_text('{"preferences": {},}', encoding="utf-8")
+    assert M.main(["config", "--write", "--file", str(broken)]) == 1
+    assert broken.read_text(encoding="utf-8") == '{"preferences": {},}' and "line 1, column" in capsys.readouterr().out
+    assert M.main(["config", "--write", "--file", str(tmp_path / "no_such_folder" / "x.json")]) == 1
+    assert "Nothing was changed" in capsys.readouterr().out
+    fresh = tmp_path / "new.json"                                    # the folder exists, the file not yet
+    assert M.main(["config", "--write", "--file", str(fresh)]) == 0
+    assert list(json.loads(fresh.read_text(encoding="utf-8"))["mcpServers"]) == ["strainscope"]
+
+
+def test_claude_desktop_settings_live_where_the_guide_says(monkeypatch, tmp_path):
+    monkeypatch.setattr(Path, "home", lambda: tmp_path)
+    monkeypatch.setattr(M.sys, "platform", "darwin")
+    assert M.desktop_settings_file() == tmp_path / "Library/Application Support/Claude/claude_desktop_config.json"
+    monkeypatch.setattr(M.sys, "platform", "win32")
+    monkeypatch.setenv("APPDATA", str(tmp_path / "Roaming"))
+    assert M.desktop_settings_file() == tmp_path / "Roaming" / "Claude" / "claude_desktop_config.json"
 
 
 # =============================================================================

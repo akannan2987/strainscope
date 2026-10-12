@@ -1,0 +1,37 @@
+# CITATION.cff: how to cite StrainScope (Phase 8).
+# GitHub reads this file and shows a "Cite this repository" button on the
+# project's page, with the reference ready to copy (APA or BibTeX).
+# The version and date move with every release (docs/09-packaging.md).
+
+cff-version: 1.2.0
+message: "If you use StrainScope or build on it, please cite it as below."
+type: software
+title: "StrainScope: multi-omics screening of beneficial microbes, explained"
+abstract: >-
+  StrainScope reads the genes and the chemistry of beneficial microbes
+  (bacteria, fungi, yeasts and oomycetes that protect crops) together, to
+  predict which strains are worth developing and to explain why. It covers
+  multi-omics integration (DIABLO in R with a Python twin), leak-proof machine
+  learning with calibrated probabilities, a knowledge graph that explains
+  every ranking, a Streamlit app with assistants that answer from the
+  project's own documents, data and graph, and an MCP server for AI assistant
+  apps. The strain data is simulated by a seeded generator, which every
+  document says; real records from five public databases can be fetched
+  alongside it.
+authors:
+  - family-names: Kannan
+    given-names: Abhilash
+version: 1.0.0
+date-released: "2026-10-12"
+license: MIT
+repository-code: "https://github.com/akannan2987/strainscope"
+url: "https://github.com/akannan2987/strainscope"
+keywords:
+  - multi-omics
+  - beneficial microbes
+  - biocontrol
+  - machine learning
+  - knowledge graph
+  - DIABLO
+  - Streamlit
+  - Model Context Protocol

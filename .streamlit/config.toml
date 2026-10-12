@@ -10,6 +10,14 @@ primaryColor = "#2E7D5B"              # buttons, sliders, links: the project's d
 backgroundColor = "#FFFFFF"
 secondaryBackgroundColor = "#F5F9FF"  # the sidebar and input boxes: the pale blue of the logo
 textColor = "#1F2933"
+# Phase 8, the accessibility check: darker shades of Streamlit's own colours,
+# so small text keeps a contrast of at least 4.5 to 1 (the WCAG AA rule).
+greenTextColor = "#11692C"            # the text of green notes (st.success)
+grayTextColor = "#4B5563"             # the grey second line under a headline number
+codeTextColor = "#1B5E3A"             # `code` in running text
+# Pages use second-level headings under the title (a screen reader lists them in
+# order); these sizes keep them looking as before (Streamlit's h2 is 2.25rem).
+headingFontSizes = ["2.75rem", "1.75rem", "1.5rem", "1.25rem", "1rem", "0.875rem"]
 
 [server]
 maxUploadSize = 5                     # megabytes; an upload is a small CSV table

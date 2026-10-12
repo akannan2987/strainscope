@@ -8,7 +8,8 @@ app/ui.py: what every page of the app shares.
   * which strains are being shown (the library, or your upload),
   * small building blocks: the simulated-data note, help boxes, links to
     the guides, the explanation lines, the "suggest a fix" link under an
-    answer, and the live log of a pipeline run.
+    answer, the live log of a pipeline run, and the comparison of rebuilt
+    results with the committed ones after a rebuild from scratch (Phase 8).
 
 How Streamlit runs a page, in one paragraph: every click, every slider move
 and every new selection runs the page's script again from the top. That
@@ -374,3 +375,79 @@ def run_pipeline(name: str) -> bool:
         st.cache_resource.clear()        # the graph and the model are re-read on the next run
         st.success("Done. Every page now reads the new files.")
     return ok
+
+
+# Two kinds of small text Streamlit's theme settings can't reach fell below the
+# contrast of 4.5 to 1 that small text needs (found by the accessibility check
+# of Phase 8, docs/09-packaging.md):
+#   * captions, drawn see-through (60 %), with the links and `code` in them;
+#   * the colours of highlighted code (SQL keywords in Streamlit's blue: 3.7).
+# So they get colours of their own here, once, for every page. Every colour
+# below keeps 5 to 1 or more on the app's backgrounds. (The app has a light
+# theme only: its menu offers no theme switch.)
+READABLE_CSS = """<style>
+[data-testid="stCaptionContainer"] { opacity: 1; }
+[data-testid="stCaptionContainer"], [data-testid="stCaptionContainer"] p { color: #5A6470; }
+[data-testid="stCaptionContainer"] a { color: #1F5F99; }
+[data-testid="stCaptionContainer"] code { color: #1B5E3A; }
+[data-testid="stCode"] .token.keyword, [data-testid="stCode"] .token.function,
+[data-testid="stCode"] .token.builtin { color: #1A5FA6; }
+[data-testid="stCode"] .token.string { color: #11692C; }
+[data-testid="stCode"] .token.comment, [data-testid="stCode"] .token.punctuation { color: #5A6470; }
+[data-testid="stCode"] .token.operator { color: #A3480B; }
+[data-testid="stCode"] .token.number, [data-testid="stCode"] .token.boolean { color: #17675C; }
+</style>"""
+
+
+def readable_colours() -> None:
+    """The colours above, on every page. A style-only block takes no space on the page."""
+    st.html(READABLE_CSS)
+
+
+def picture(path: str, description: str, width: int = 760) -> None:
+    """A picture with alt text: the words a screen reader reads instead of it.
+    (st.image writes no alt text, so the picture goes into the page as HTML.)"""
+    import base64
+    import html
+    kind = {".jpg": "jpeg", ".jpeg": "jpeg", ".gif": "gif"}.get(Path(path).suffix.lower(), "png")
+    data = base64.b64encode(Path(path).read_bytes()).decode("ascii")
+    st.html(f'<img src="data:image/{kind};base64,{data}" alt="{html.escape(description, quote=True)}" '
+            f'style="max-width:{width}px;width:100%;height:auto">')
+
+
+def chart(figure) -> None:
+    """A chart, its toolbar (download, zoom, full screen) always shown. Hidden
+    until the mouse comes near, the toolbar's buttons still took the keyboard's
+    focus, so someone using the Tab key landed on buttons they couldn't see
+    (the accessibility check of Phase 8)."""
+    st.plotly_chart(figure, width="stretch", config={"displayModeBar": True, "displaylogo": False})
+
+
+def numbers_behind(table: pd.DataFrame, what: str = "this chart") -> None:
+    """A chart is a picture that a screen reader can't read, so every chart
+    whose numbers aren't elsewhere on the page gets them as a table underneath,
+    folded away (the accessibility check of Phase 8)."""
+    with st.expander(f"The numbers behind {what}"):
+        st.dataframe(table, hide_index=True, width="stretch")
+
+
+def show_comparison() -> None:
+    """After a rebuild from scratch: do the new results match the committed
+    ones? The same check as python src/strainscope/pipeline.py compare."""
+    from strainscope import pipeline
+    if not pipeline.git_ready(ROOT):
+        st.info("The comparison with the committed results needs Git and the project's history "
+                "(a folder downloaded as a zip file has none).")
+        return
+    result = pipeline.compare(ROOT, DB_PATH)
+    if result["differ"]:
+        st.warning(f"{len(result['differ'])} result file(s) differ from the committed ones: "
+                   + ", ".join(f"`artifacts/{p}`" for p in result["differ"]) + ".")
+    else:
+        st.success(f"All {len(result['matched'])} compared result files match the committed ones "
+                   f"(numbers within {pipeline.TOLERANCE}).")
+    with st.expander("What was compared"):
+        for rel, problems in result["differ"].items():
+            st.markdown(f"**artifacts/{rel}**: " + "; ".join(problems[:3]))
+        for rel, why in result["skipped"].items():
+            st.caption(f"Not compared: artifacts/{rel} ({why}).")

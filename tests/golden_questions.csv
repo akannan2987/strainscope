@@ -63,3 +63,9 @@ Does the app have a dark mode?,limit,
 How do I run StrainScope in a Jupyter notebook?,closest,
 Can the model use my GPU?,closest,
 How do I install StrainScope with conda?,closest,
+How do I rebuild everything with one command?,answer,docs/09-packaging.md::Step 1 | docs/HANDBOOK.md::Stage 14
+How do I uninstall StrainScope?,answer,docs/UNINSTALL.md:: | docs/HANDBOOK.md::Updating and uninstalling | docs/GLOSSARY.md::Uninstall guide
+How do I cite StrainScope?,answer,docs/GLOSSARY.md::Citation File Format | README.md::Licence, citation | docs/09-packaging.md::Step 4
+How do I run the app in a container?,answer,docs/09-packaging.md::Step 7 | docs/GLOSSARY.md::Container
+What does continuous integration check?,answer,docs/GLOSSARY.md::Continuous integration | docs/09-packaging.md::continuous integration
+How do I report a security problem?,answer,SECURITY.md:: | docs/GLOSSARY.md::Security policy | docs/GLOSSARY.md::Private vulnerability reporting

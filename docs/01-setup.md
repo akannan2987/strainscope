@@ -506,6 +506,8 @@ It prints **`✓ SAFE TO PUSH`** (and exits cleanly) or **`✗ NOT SAFE TO PUSH`
 
 > **Tip:** make the script *yours*. Near the bottom it lists your GitHub handle so it can tell "intended attribution" apart from a real leak. If you fork or rename, update that one line to your own details.
 
+> **Let Git run it for you (optional, since Phase 8).** A Git *hook* is a small script Git runs by itself at a certain moment. The project's `.githooks/pre-push` runs this gate just before every `git push`, and stops the push when the gate says NOT SAFE. Switch it on once with `git config core.hooksPath .githooks` (and on macOS or Linux mark it runnable: `chmod +x .githooks/pre-push`); [`docs/09-packaging.md` §9](09-packaging.md#9-step-5-optional-let-git-run-the-safety-gate-before-every-push) shows what you'll see. Since Phase 8, GitHub also runs the gate at every push to master, as one of the automatic tests.
+
 **If it goes wrong:** if the gate flags something you believe is safe, read the flagged line first, because most "false alarms" turn out to be real (a placeholder key that looks too much like a real one, or an example path that shouldn't ship). If the content really is intended, the right fix is to make it unmistakably non-secret (use an obvious placeholder like `sk-REPLACE_ME`) instead of weakening the check. If it flags a file you have **not added yet**, that's the gate working: the file would be added by `git add -A`, so it's checked now, before it can be published.
 
 **Notes from the build (kept on purpose):**

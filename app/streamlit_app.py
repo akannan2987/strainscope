@@ -1,6 +1,6 @@
 """
-app/streamlit_app.py: the StrainScope app (Phases 6, 6b and 7).
-================================================================
+app/streamlit_app.py: the StrainScope app (Phases 6 to 8).
+==========================================================
 Start it from the project folder, with the virtual environment active:
 
     python -m streamlit run app/streamlit_app.py
@@ -27,9 +27,10 @@ WHAT THE APP READS (and never changes)
   docs/QUERY_COOKBOOK.md                                         the recipes in the SQL console
   README.md, docs/*.md, the docstrings in src/ and app/          what Ask StrainScope answers from
 The only things that write files are the database build (on the Home and Data
-pages, and by itself on the first start of a shared copy) and the real-data
-fetch (on the Data page). They run the same scripts you'd run by hand
-(src/strainscope/service.py, PIPELINES).
+pages, and by itself on the first start of a shared copy), the rebuild from
+scratch and the real-data fetch (on the Data page). They run the same scripts
+you'd run by hand (src/strainscope/service.py, PIPELINES; and
+src/strainscope/pipeline.py, the one-command pipeline of Phase 8).
 """
 import streamlit as st
 
@@ -41,6 +42,7 @@ st.set_page_config(page_title="StrainScope", page_icon=str(ui.ROOT / "docs" / "i
                                                        f"Source and guides: {ui.REPO}"})
 st.logo(str(ui.ROOT / "docs" / "img" / "strainscope_wordmark.svg"), size="large",
         icon_image=str(ui.ROOT / "docs" / "img" / "strainscope_icon.svg"), link=ui.REPO)
+ui.readable_colours()            # small text dark enough to read (the accessibility check, Phase 8)
 
 # Each page's web address comes from its file name (app/views/ranking.py is
 # http://localhost:8501/ranking). Keeping the two the same means one name for

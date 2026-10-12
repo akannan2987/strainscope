@@ -81,6 +81,7 @@ flowchart TD
     M["12 · MCP server (Phase 7b, on your computer)<br/>9 read-only tools an AI assistant app can call"]
     APPAI["an AI assistant app<br/>(Claude Desktop, Claude Code, ...)"]
     DOCS[/"docs/: the guides,<br/>Handbook, glossary, cookbook"/]
+    P["13 · One command + automatic tests (Phase 8)<br/>pipeline.py runs boxes 1 to 7 in order ·<br/>GitHub tests every push on 4 systems ·<br/>the app in a container"]
 
     A -->|writes 3 raw tables| B
     R -->|tidy real tables| C
@@ -101,6 +102,7 @@ flowchart TD
     M -.->|read-only| C
     M -.->|reads| G
     APPAI <-->|"MCP over stdio"| M
+    P -.->|"runs in order"| A
 
     classDef laptop fill:#E8F0FE,stroke:#5B8DEF,color:#0B2545;
     classDef store fill:#FFF3CD,stroke:#C9A227,color:#4A3B00;
@@ -113,6 +115,7 @@ flowchart TD
     class G artifact
     class H cloud
     class I,Q,M ai
+    class P laptop
     class DOCS artifact
     class LLM,APPAI roadmap
     style LAPTOP fill:#F5F9FF,stroke:#B9D2FF,color:#0B2545
@@ -126,7 +129,9 @@ learning and the graph; those write small artifact files; the artifacts are
 deployed into the public app; and the AI layer switches on only when an API
 key is present. Ask StrainScope reads the project's own documentation and answers
 inside the app; the MCP server, last, offers the same functions to an AI
-assistant app on your own computer. The box-by-box tour below says the same thing in words.)*
+assistant app on your own computer. One command runs the laptop's boxes in
+order, and GitHub tests all of it at every push. The box-by-box tour below says
+the same thing in words.)*
 
 ### Box 1: Data Generator (Python) · *backend*
 **What it does:** creates our dataset from scratch, in code. It invents a realistic library of microbial strains and, for each one, three tables of measurements plus a performance score.
@@ -195,11 +200,16 @@ If an ontology is a "family tree for concepts" (the rules of what connects to wh
 **Why it exists:** many people ask an AI assistant first, and with this door it can answer from StrainScope's own results instead of guessing. It's built last because it reuses functions the app and the assistants already provide; all it adds is a new door into machinery that's already there, its checks and a log.
 **✅ Built in Phase 7b:** [`docs/08b-mcp-server.md`](08b-mcp-server.md) (`src/strainscope/mcp_server.py`, with the commands `tools`, `call`, `check` and `config`).
 
+### Box 13: One command, automatic tests, a container · *around everything (Phase 8)*
+**What it does:** `src/strainscope/pipeline.py` runs Boxes 1 to 7 in the right order with one command and checks that the rebuilt numbers match the committed ones (`compare`). At every push to master, GitHub tests the whole project on fresh machines: Windows, macOS and Linux with two Python versions, RHEL 8 inside Red Hat's own image, the online copy's exact package versions, the keyboard and screen-reader check, the safety gate, and the app's container (`Dockerfile`), which runs Box 8 anywhere Docker or Podman runs.
+**Why it exists:** so that people other than its author can rely on the project. This box lets anyone rebuild every result with one command and check the numbers, has every change tested on four systems at every push, and adds what other people need to reuse the project: a licence, a citation file, a contribution guide and a security policy.
+**✅ Built in Phase 8:** [`docs/09-packaging.md`](09-packaging.md) (`src/strainscope/pipeline.py`, `.github/workflows/ci.yml`, `Dockerfile`, `tools/check_accessibility.py`).
+
 ---
 
 ## 5. How data flows, start to finish (the one-paragraph story)
 
-You run the **generator** (Box 1), which writes three raw tables. You run **harmonise + QC** (Box 2), which turns them into clean, aligned tables. Those load into **DuckDB** (Box 3). From the database, the **integration** step (Box 4) finds the cross-layer signature and saves it as an artifact; the **ML models** (Box 5) train and save predictions and a trained model as artifacts (Box 6); the **knowledge graph** (Box 7) is built from the same clean data. You commit everything to GitHub. Streamlit Community Cloud notices the new commit and (re)builds your **app** (Box 8), which reads the small artifacts and serves them quickly to anyone on the internet. Around it, **Ask StrainScope** (Box 11) answers questions about the project from its own docs, **plain words** (Box 9) explain each result, **Ask the data** and **Ask the graph** (Box 10) answer questions about the data and the graph, an optional language model rewrites what they found, and the **MCP server** (Box 12) offers the same functions to an AI assistant app on your computer.
+You run the **generator** (Box 1), which writes three raw tables. You run **harmonise + QC** (Box 2), which turns them into clean, aligned tables. Those load into **DuckDB** (Box 3). From the database, the **integration** step (Box 4) finds the cross-layer signature and saves it as an artifact; the **ML models** (Box 5) train and save predictions and a trained model as artifacts (Box 6); the **knowledge graph** (Box 7) is built from the same clean data. You commit everything to GitHub. Streamlit Community Cloud notices the new commit and (re)builds your **app** (Box 8), which reads the small artifacts and serves them quickly to anyone on the internet. Around it, **Ask StrainScope** (Box 11) answers questions about the project from its own docs, **plain words** (Box 9) explain each result, **Ask the data** and **Ask the graph** (Box 10) answer questions about the data and the graph, an optional language model rewrites what they found, and the **MCP server** (Box 12) offers the same functions to an AI assistant app on your computer. Since Phase 8, one command (Box 13) runs Boxes 1 to 7 in order, and GitHub tests everything at every push.
 
 And that's the whole system: a dozen boxes in one straight line with a couple of branches, and nothing hidden anywhere.
 
@@ -224,7 +234,7 @@ There's a second half to the rule, and it's the part that makes the *free public
 Every capability in StrainScope can be run in two ways, and the docs always show both:
 
 1. **Manually, as scripts you run line by line**, so you can see, test and understand each step. This is how you *learn*.
-2. **Automatically, through the app (and a single "run everything" command)**, so a stranger can reproduce the whole thing without understanding the internals. This is how you *ship*.
+2. **Automatically, through the app and a single "run everything" command** (`python src/strainscope/pipeline.py`, since Phase 8), so a stranger can reproduce the whole thing without understanding the internals. This is how you *ship*.
 
 Both get the same care. If a feature only worked one way, the docs would be wrong about it, so we keep both paths working.
 
@@ -232,7 +242,7 @@ Both get the same care. If a feature only worked one way, the docs would be wron
 
 ## 7. Why this shape, and not something fancier?
 
-You might wonder why there's no Docker, no Airflow, no cloud warehouse and no separate database server. I followed one principle here: **match the tool to the job, and no more.** Every extra tool is another thing to install, break and explain. StrainScope's job is to show multi-omics integration, carefully evaluated machine learning, a knowledge graph and a usable deployed product, and it does all of that with a handful of free, well-chosen tools a beginner can install in an afternoon. The [product roadmap](PRODUCT_ROADMAP.md) lists the "level-up" tools (Docker, a graph database, a cloud warehouse, a React frontend, PostgreSQL, an orchestrator) with a verdict and a trigger for each, so the bigger plans are written down without weighing the build down.
+You might wonder why there's no Airflow, no cloud warehouse and no separate database server, and why Docker only arrived at the very end, as an option. I followed one principle here: **match the tool to the job, and no more.** Every extra tool is another thing to install, break and explain. StrainScope's job is to show multi-omics integration, carefully evaluated machine learning, a knowledge graph and a usable deployed product, and it does all of that with a handful of free, well-chosen tools a beginner can install in an afternoon. The [product roadmap](PRODUCT_ROADMAP.md) lists the "level-up" tools (Docker, a graph database, a cloud warehouse, a React frontend, PostgreSQL, an orchestrator) with a verdict and a trigger for each, so the bigger plans are written down without weighing the build down.
 
 I'd rather have a small setup that runs and is explained end to end than a bigger one that never quite works.
 
@@ -244,7 +254,7 @@ StrainScope is built to behave identically on Windows, macOS and Linux (includin
 - **File paths are written the neutral way.** Windows separates folders with backslashes (`data\raw`) and everyone else with forward slashes (`data/raw`). Our Python code never hard-codes either. It builds paths with Python's `pathlib`, which quietly does the right thing on whatever machine it runs on (rather like writing an address in a format every country's postal service understands, so the letter arrives wherever you post it).
 - **Heavy setup happens once; daily work is identical.** Installing the tools differs slightly per OS (a different "app store" command on each), but that's a one-time step. Once set up, generating data, running the app, committing, and redeploying are the *same* commands on every platform.
 
-In practice, this means you can develop on a Windows or Mac laptop and deploy to a Linux VM without rewriting anything, and a collaborator on a different OS can clone the repo and get an identical result. The setup guide (`docs/01-setup.md`) gives the per-OS install commands side by side so nobody is left guessing.
+In practice, this means you can develop on a Windows or Mac laptop and deploy to a Linux VM without rewriting anything, and a collaborator on a different OS can clone the repo and get an identical result. The setup guide (`docs/01-setup.md`) gives the per-OS install commands side by side so nobody is left guessing. Since Phase 8 the promise is checked: at every push, GitHub runs every test and a full rebuild on Windows, macOS, Linux and RHEL 8, and compares the rebuilt numbers with the committed ones ([`docs/09-packaging.md`](09-packaging.md)).
 
 ---
 
@@ -267,9 +277,9 @@ Every box in the diagram is built and explained by one numbered document in `doc
 | 6b | [`docs/07b-docs-assistant.md`](07b-docs-assistant.md) | Box 11: Ask StrainScope, the documentation assistant (`src/strainscope/ask.py`) | ✅ |
 | 7 | [`docs/08-deployment-ai.md`](08-deployment-ai.md) | Box 8 online + Boxes 9-10: the online copy (shared mode, pinned versions, secrets on the host), plain words, Ask the data, Ask the graph | ✅ |
 | 7b | [`docs/08b-mcp-server.md`](08b-mcp-server.md) | Box 12: the MCP server, nine read-only tools for AI assistant apps (`src/strainscope/mcp_server.py`) | ✅ |
-| 8 | `docs/09-packaging.md` | the whole picture: one-command pipeline, cross-platform CI, LICENSE, CHANGELOG, the 1.0 tag | ⏳ next |
+| 8 | [`docs/09-packaging.md`](09-packaging.md), [`docs/UNINSTALL.md`](UNINSTALL.md) | Box 13: the one-command pipeline and `compare`, automatic tests on four systems at every push, the container, the keyboard and screen-reader check, licence, citation, contribution guide, the 1.0 release | ✅ **v1.0.0** |
 
-Guides without links arrive with their phase. The order, the reasons for it and the deferred items (with the event that would schedule each) are in [`docs/ROADMAP.md`](ROADMAP.md); what an industrial version would add is in [`docs/PRODUCT_ROADMAP.md`](PRODUCT_ROADMAP.md).
+Every guide is linked. The order, the reasons for it and the deferred items (with the event that would schedule each) are in [`docs/ROADMAP.md`](ROADMAP.md); what an industrial version would add is in [`docs/PRODUCT_ROADMAP.md`](PRODUCT_ROADMAP.md).
 
 ---
 

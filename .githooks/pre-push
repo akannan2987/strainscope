@@ -1,0 +1,21 @@
+#!/bin/sh
+# .githooks/pre-push: run the safety gate before every push (Phase 8, optional).
+#
+# A Git "hook" is a small script Git runs by itself at a certain moment. This
+# one runs just before `git push` sends anything. If the safety gate
+# (check-public-safe.sh) finds a key, a database file or a personal path, the
+# push stops and nothing leaves your computer.
+#
+# Switch it on once for your copy of the project (from the project folder):
+#
+#     git config core.hooksPath .githooks
+#
+# and off again with:
+#
+#     git config --unset core.hooksPath
+#
+# On macOS and Linux this file must be marked runnable: chmod +x .githooks/pre-push
+# docs/09-packaging.md explains hooks; docs/01-setup.md Part H explains the gate.
+
+echo "pre-push hook: running the safety gate (check-public-safe.sh) first..."
+exec bash ./check-public-safe.sh

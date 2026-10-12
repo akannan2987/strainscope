@@ -21,11 +21,12 @@ The guide is docs/07b-docs-assistant.md.
 
 HOW IT WORKS, IN FOUR STEPS
 ---------------------------
-1. Split. Every document (README.md, docs/*.md) is cut into sections at its
-   headings, and each glossary entry becomes a section of its own. The top
-   docstring of every Python file in src/ and app/, and of every function and
-   class in them (except private ones, whose names start with _), becomes a
-   section too. Headings inside code blocks don't count.
+1. Split. Every document (README.md, CONTRIBUTING.md, SECURITY.md, docs/*.md)
+   is cut into sections at its headings, and each glossary entry becomes a
+   section of its own. The top docstring of every Python file in src/ and
+   app/, and of every function and class in them (except private ones, whose
+   names start with _), becomes a section too. Headings inside code blocks
+   don't count.
 2. Weigh. scikit-learn's TfidfVectorizer turns each passage into a list of
    word weights. A word that is frequent in this section but rare elsewhere
    ("calibration") weighs a lot; a word found everywhere ("data") weighs
@@ -100,7 +101,7 @@ GOLDEN = ROOT / "tests" / "golden_questions.csv"
 
 # What gets read. The changelog is left out on purpose: it repeats the guides
 # in summary form, and its entries would crowd out the sections that explain.
-DOC_GLOBS = ("README.md", "docs/*.md")
+DOC_GLOBS = ("README.md", "CONTRIBUTING.md", "SECURITY.md", "docs/*.md")
 CODE_GLOBS = ("src/strainscope/*.py", "src/strainscope/sources/*.py", "app/*.py", "app/views/*.py")
 
 HEADING_WEIGHT = 3      # a section's heading counts this many times
@@ -812,20 +813,21 @@ def display_text(text: str, pictures: bool = False) -> str:
     return text if pictures else re.sub(r"!\[([^\]]*)\]\([^)]*\)", r"(picture: \1)", text)
 
 
-def pieces(text: str, file: str, root: Path = ROOT) -> list[tuple[str, str]]:
-    """A passage as ('text', markdown) and ('picture', local path) pieces, so
-    the app can show the pictures a passage refers to. A picture whose file
+def pieces(text: str, file: str, root: Path = ROOT) -> list[tuple[str, str, str]]:
+    """A passage as ('text', markdown, '') and ('picture', local path, its
+    description) pieces, so the app can show the pictures a passage refers to,
+    each with the words a screen reader reads out instead. A picture whose file
     isn't there (or isn't a plain image file) stays as its caption."""
     import posixpath
     out, last = [], 0
     for m in re.finditer(r"!\[([^\]]*)\]\(([^)\s]+)\)", text):
         path = root / posixpath.normpath(posixpath.join(posixpath.dirname(file), m.group(2)))
-        out.append(("text", text[last:m.start()]))
+        out.append(("text", text[last:m.start()], ""))
         shown = path.is_file() and path.suffix.lower() in (".png", ".jpg", ".jpeg", ".gif")
-        out.append(("picture", str(path)) if shown else ("text", f"(picture: {m.group(1)})"))
+        out.append(("picture", str(path), m.group(1)) if shown else ("text", f"(picture: {m.group(1)})", ""))
         last = m.end()
-    out.append(("text", text[last:]))
-    return [(kind, value) for kind, value in out if kind == "picture" or value.strip()]
+    out.append(("text", text[last:], ""))
+    return [piece for piece in out if piece[0] == "picture" or piece[1].strip()]
 
 
 def absolute_links(text: str, file: str) -> str:

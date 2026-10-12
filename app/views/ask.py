@@ -15,10 +15,11 @@ ICON = {docs.ANSWERED: ":material/check_circle:", docs.CLOSEST: ":material/help:
 
 
 def show(text: str, file: str) -> None:
-    """A passage with its links working and its pictures shown."""
-    for kind, value in docs.pieces(docs.display_text(text, pictures=True), file):
+    """A passage with its links working and its pictures shown, each with its
+    description as alt text (what a screen reader reads out; st.image has none)."""
+    for kind, value, description in docs.pieces(docs.display_text(text, pictures=True), file):
         if kind == "picture":
-            st.image(value, width=760)
+            ui.picture(value, description)
         else:
             st.markdown(docs.absolute_links(value, file))
 

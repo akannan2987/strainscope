@@ -1,0 +1,36 @@
+# .github/dependabot.yml: automatic update suggestions (Phase 8).
+#
+# Dependabot is GitHub's helper that watches the packages a project uses.
+# Once a month it looks for newer versions of
+#   * the online copy's packages, pinned in app/requirements.txt, and
+#   * the GitHub Actions that .github/workflows/ci.yml uses,
+# and opens a pull request into develop with the update. The tests then run
+# on it on every system, so you can see before merging whether it breaks
+# anything. Alerts about known security problems are a separate switch in the
+# repository's settings (docs/09-packaging.md, section 13).
+
+version: 2
+updates:
+  - package-ecosystem: "pip"
+    directory: "/app"
+    schedule:
+      interval: "monthly"
+    target-branch: "develop"
+    groups:
+      online-copy:              # one pull request for all of them, not one each
+        patterns: ["*"]
+    ignore:
+      # The saved model was built with this exact version
+      # (artifacts/model/model_card.json). It changes only together with a
+      # rebuild of the model, never on its own.
+      - dependency-name: "scikit-learn"
+    commit-message:
+      prefix: "chore"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    target-branch: "develop"
+    commit-message:
+      prefix: "chore"

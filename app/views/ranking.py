@@ -30,7 +30,7 @@ else:
     ui.simulated_note()
 
     # -- the screening question ------------------------------------------------
-    st.subheader("If you can test N strains, how many would work?")
+    st.header("If you can test N strains, how many would work?")
     n = st.slider("Strains you can test next season", 5, len(pred), 50, step=5, key="top_n")
     top = pred.nsmallest(n, "rank")
     found, chance = int(top["is_effective"].sum()), n * pred["is_effective"].mean()
@@ -44,10 +44,10 @@ else:
         st.markdown(narrate.shortlist(pred, n).text)
         st.caption("Written by rules from the ranking. The model's chances are calibrated (Phase 4), so adding "
                    "them up gives the number it expects to work.")
-    st.plotly_chart(charts.top_n_figure(pred, n), width="stretch")
+    ui.chart(charts.top_n_figure(pred, n))
 
 # -- the table ----------------------------------------------------------------
-st.subheader("The list")
+st.header("The list")
 f1, f2, f3 = st.columns([2, 2, 1])
 kingdoms = sorted(pred["kingdom"].dropna().unique())
 chosen = f1.multiselect("Kingdoms", kingdoms, default=kingdoms)
@@ -89,7 +89,7 @@ st.download_button("Download this list (CSV)", view[columns].to_csv(index=False)
                    "strainscope_ranking.csv", "text/csv")
 
 # -- how good is the model? -------------------------------------------------------
-st.subheader("How good is the model?")
+st.header("How good is the model?")
 st.markdown(f"Four views of the model from Phase 4 ({ui.doc('05-machine-learning.md', 'docs/05-machine-learning.md')}). "
             "The numbers were measured on strains each model hadn't seen.")
 board, curve, imp, card = (ui.artifact("model/scoreboard.csv"), ui.artifact("model/calibration_curve.csv"),
@@ -97,19 +97,29 @@ board, curve, imp, card = (ui.artifact("model/scoreboard.csv"), ui.artifact("mod
 t1, t2, t3, t4 = st.tabs(["Scoreboard", "Calibration", "What it relies on", "Model card"])
 with t1:
     if board is not None:
-        st.plotly_chart(charts.model_scoreboard_figure(board), width="stretch")
+        ui.chart(charts.model_scoreboard_figure(board))
+        ui.numbers_behind(board[["model", "ber_mean", "ber_sd", "auc_mean", "accuracy_mean", "is_winner"]]
+                          .sort_values("ber_mean").rename(columns={
+                              "ber_mean": "balanced error", "ber_sd": "spread (sd)", "auc_mean": "AUC",
+                              "accuracy_mean": "accuracy", "is_winner": "winner"}))
         st.caption("Balanced error rate: the average of the error on effective strains and the error on the "
                    "rest, so a lazy model that always says 'no' scores 0.50 even though it's right 76 % of the "
                    "time. The shuffled-label control should sit near a coin, and does.")
 with t2:
     if curve is not None:
-        st.plotly_chart(charts.calibration_figure(curve), width="stretch")
+        ui.chart(charts.calibration_figure(curve))
+        ui.numbers_behind(curve[["version", "bin_low", "bin_high", "n", "mean_predicted", "observed_rate"]].rename(
+            columns={"n": "strains", "mean_predicted": "average chance said", "observed_rate": "share effective"}))
         st.caption("When the calibrated model says 70 %, about 70 % of those strains turn out effective. "
                    "That's what makes the chances on this page meaningful as chances.")
 with t3:
     if imp is not None and card is not None:
         winner = imp[imp["model_key"] == card["model_key"]]
-        st.plotly_chart(charts.importance_figure(winner), width="stretch")
+        ui.chart(charts.importance_figure(winner))
+        ui.numbers_behind(winner.sort_values("rank")[["rank", "feature", "importance_mean", "importance_sd",
+                                                      "reliably_important", "role", "block"]].rename(
+            columns={"importance_mean": "importance", "importance_sd": "spread (sd)",
+                     "reliably_important": "reliably important"}))
         st.caption("Green: a planted driver. Red: a decoy (it shouldn't matter). ✓: reliably important across "
                    "folds. `accE` is the one decoy the model leans on; the knowledge graph flags it as "
                    "'statistics only' on every strain page.")

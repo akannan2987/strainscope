@@ -1,0 +1,11 @@
+# .github/ISSUE_TEMPLATE/config.yml: what "New issue" offers besides the two forms.
+# Blank issues stay on: the app's "Suggest a fix" link opens one with the
+# question already filled in (docs/08-deployment-ai.md, decision 12).
+blank_issues_enabled: true
+contact_links:
+  - name: Read the Handbook
+    url: https://github.com/akannan2987/strainscope/blob/master/docs/HANDBOOK.md
+    about: Every step from a blank laptop to the finished product, with the reason for each.
+  - name: Ask StrainScope in the online app
+    url: https://strainscope.streamlit.app
+    about: Its Ask StrainScope page answers questions about the project from the project's own documents, with links.
