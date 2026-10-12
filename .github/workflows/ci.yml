@@ -59,7 +59,7 @@ jobs:
       - name: Get the code
         uses: actions/checkout@v6
       - name: Install Python ${{ matrix.python }}
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python }}
           cache: pip          # keep downloaded packages between runs
@@ -107,7 +107,7 @@ jobs:
       - name: Get the code
         uses: actions/checkout@v6
       - name: Install Python 3.14
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: "3.14"
           cache: pip
@@ -127,7 +127,7 @@ jobs:
       - name: Get the code
         uses: actions/checkout@v6
       - name: Install Python 3.14
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: "3.14"
           cache: pip
@@ -149,7 +149,7 @@ jobs:
       - name: Get the code
         uses: actions/checkout@v6
       - name: Install Python 3.14
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: "3.14"
       - name: Look for code mistakes (pyflakes)
