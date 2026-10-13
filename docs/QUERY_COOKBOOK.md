@@ -36,6 +36,18 @@ Since Phase 7b, an AI assistant app can do the same through the MCP server's
 `SELECT` and returns at most 200 rows
 ([`docs/08b-mcp-server.md` §18](08b-mcp-server.md#18-same-task-two-ways-the-sql-console-and-asking-your-assistant-optional-10-min)).
 
+**On a dataset of your own (Phase 9).** Each dataset has its own database with
+the same tables, so the recipes run there too: choose the dataset in the app's
+sidebar, or name it for the terminal console (macOS and Linux:
+`STRAINSCOPE_DATASET=trial python src/strainscope/sql.py`; Windows PowerShell:
+`$env:STRAINSCOPE_DATASET = "trial"` before the usual command, and
+`Remove-Item Env:STRAINSCOPE_DATASET` afterwards). Three things differ. A
+recipe that names a gene or compound column (`ituA`, `iturin`) needs that
+column in your tables; the numbers quoted under each recipe are the library's;
+and the planted-truth columns of §8 and §9 (`role`, the grades) say
+`not graded` (known housekeeping genes keep that label), because your data has no answer key
+([`docs/10-workflow-and-your-data.md`](10-workflow-and-your-data.md#no-answer-key-for-your-own-data)).
+
 ---
 
 ## 1. First contact

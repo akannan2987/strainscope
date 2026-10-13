@@ -5,7 +5,7 @@
 **Prerequisites:** none. If you only want to stop using StrainScope for a while, you don't need this page: close the app (Ctrl+C in its terminal) and leave the folder where it is.
 **Learning goal:** know every place StrainScope can leave something behind, on your computer and online, and remove each one in an order that never loses anything you meant to keep.
 
-Almost everything lives **inside the project folder**: the code, the Python toolbox (`.venv/`), the data and the database (`data/`), your keys (`.env`). Deleting that one folder removes it all. A few things live elsewhere: the R packages themselves (renv keeps them in a cache shared by all your R projects, and `renv/library/` in the folder only points at them), and, only if you set them up yourself, an AI assistant app's connection to the MCP server, a language model, a container image, browsers for the optional checks, and the copies you published online.
+Almost everything lives **inside the project folder**: the code, the Python toolbox (`.venv/`), the data and the database (`data/`, with your datasets), your keys (`.env`). Deleting that one folder removes it all. A few things live elsewhere: the R packages themselves (renv keeps them in a cache shared by all your R projects, and `renv/library/` in the folder only points at them), and, only if you set them up yourself, an AI assistant app's connection to the MCP server, a language model, a container image, browsers for the optional checks, and the copies you published online.
 
 ![Everything StrainScope puts on a computer and online, and how each piece is removed](../figures/footprint.png)
 
@@ -19,6 +19,7 @@ All commands run in a terminal opened in the project folder, with the toolbox sw
 
 - **Work you haven't pushed.** `git status` lists changed files; `git log --branches --not --remotes --oneline` lists commits that exist only on this computer. Push them first (the commit ritual in the [Handbook, Stage 2](HANDBOOK.md#stage-2-version-control-and-the-safety-gate)), or they go with the folder.
 - **Real data you fetched.** The synthetic library comes back identical from its seed, but the public databases change over time, so a later fetch may not return today's records ([`docs/02b-real-data-ingestion.md`](02b-real-data-ingestion.md)). If an analysis depended on them, copy `data/raw/real/` somewhere first.
+- **Your datasets** (Phase 9). Each one is a folder in `data/processed/datasets/`, never on GitHub, and a dataset of your own can't be rebuilt from a seed. To keep one, copy its folder somewhere else first, or download its tables on the Workflow page (*Download every table*). `python src/strainscope/datasets.py list` shows them all ([`docs/10-workflow-and-your-data.md` §14](10-workflow-and-your-data.md#14-removing-a-dataset)).
 - **Your keys.** `.env` holds them, and it's never on GitHub. If you'll need a key again, note it somewhere safe; if not, delete it at the provider (part 3).
 
 Nothing else is lost: the code, the documents and the committed results are on GitHub, and an uploaded strain file was never stored by the app in the first place.
@@ -113,7 +114,7 @@ cd ..
 rm -rf strainscope                # Windows PowerShell: Remove-Item -Recurse -Force strainscope
 ```
 
-That removes the code and documents, `.venv/` (the Python toolbox), `renv/library/` (the links to the R packages in renv's cache), `data/` (the database, the real data, the MCP call log, the accessibility report), `.env` and `.streamlit/secrets.toml` (your keys, if you made them) and the hook setting.
+That removes the code and documents, `.venv/` (the Python toolbox), `renv/library/` (the links to the R packages in renv's cache), `data/` (the database, the real data, your datasets, the MCP call log, the accessibility report), `.env` and `.streamlit/secrets.toml` (your keys, if you made them) and the hook setting.
 
 ---
 
@@ -121,7 +122,7 @@ That removes the code and documents, `.venv/` (the Python toolbox), `renv/librar
 
 Each of these is public until you remove it, and each has its own button.
 
-1. **The online copy.** At [share.streamlit.io](https://share.streamlit.io), click the three-dot menu next to the app, then **Delete**, type the confirmation it asks for and click **Delete** again. The app's address stops working; the GitHub repository isn't touched.
+1. **The online copy.** At [share.streamlit.io](https://share.streamlit.io), click the three-dot menu next to the app, then **Delete**, type the confirmation it asks for and click **Delete** again. The app's address stops working, and with it go any visitors' datasets still on the host (they're deleted an hour after their last use anyway); the GitHub repository isn't touched.
 2. **The interactive figures (GitHub Pages).** On the repository's page: **Settings**, then **Pages**; next to *Your site is live at*, click the three-dot menu and choose **Unpublish site**.
 3. **The repository itself.** Only if the public copy should go too: **Settings**, then at the bottom of the *General* page, in the *Danger Zone*, **Delete this repository**. GitHub asks you to confirm and to type the repository's full name (`<your user name>/strainscope`). This also removes its releases, its Pages site and its issues; forks other people made stay theirs. With the folder (part 2) and the repository both gone, no copy is left, though GitHub can restore a deleted repository for 90 days (your profile's **Settings**, **Repositories**, **Deleted repositories**).
 4. **Keys at the providers.** An NCBI key ([`docs/02c-more-real-sources.md`](02c-more-real-sources.md)) or a hosted language model's key ([`docs/LANGUAGE_MODEL.md`](LANGUAGE_MODEL.md)) still works after the folder is gone. Delete each one on the page where you created it.

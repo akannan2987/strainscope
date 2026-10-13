@@ -2,7 +2,7 @@
 
 # The StrainScope Handbook: from day 0 to the finished product
 
-**Handbook version:** 1.12 · **Last updated:** 2026-10-12 · **Repository state it describes:** version **v1.0.0**, the first complete release. Every phase, 0 to 8, is built and tested: data, real sources, cleaning, database, multi-omics integration, machine learning, the knowledge graph, the app, Ask StrainScope, the online copy with the AI layer (plain-language explanations, Ask the data, Ask the graph), the MCP server for AI assistant apps, and packaging (one command that rebuilds every result, automatic tests on Windows, macOS, Linux and RHEL 8 at every push, a container, a licence and a citation file), along with the v0.1.1 fix release and the Stage 12.1 fix. The app is online at [strainscope.streamlit.app](https://strainscope.streamlit.app). 447 automated tests.
+**Handbook version:** 1.13 · **Last updated:** 2026-10-13 · **Repository state it describes:** version **v1.1.0**. Every phase, 0 to 9, is built and tested: data, real sources, cleaning, database, multi-omics integration, machine learning, the knowledge graph, the app, Ask StrainScope, the online copy with the AI layer (plain-language explanations, Ask the data, Ask the graph), the MCP server for AI assistant apps, packaging (one command that rebuilds every result, automatic tests on Windows, macOS, Linux and RHEL 8 at every push, a container, a licence and a citation file), and the whole workflow on data of your own, from the app's Workflow page or a terminal (Phase 9), along with the v0.1.1 fix release and the Stage 12.1 fix. The app is online at [strainscope.streamlit.app](https://strainscope.streamlit.app). 495 automated tests.
 
 **This is the one document to read first, and the one to come back to.** It walks the whole journey in order (understanding the project, preparing a blank computer, building every phase, releasing, and what lies beyond), explaining *why* at every step and linking to the specialised guide that holds the detail. You should never have to hunt through the repository to find out what to do next; if you ever do, that's a defect in this Handbook.
 
@@ -29,7 +29,7 @@ python -m pip install -r requirements.txt
 python -m streamlit run app/streamlit_app.py
 ```
 
-The app opens in your browser. If it says there's no database yet, press *Build the database now* on its Home page (about 15 seconds), or run `python src/strainscope/pipeline.py database` before starting it. Stage 10 explains every page, Stage 11 the *Ask StrainScope* page, where you can ask any question about the project and get the passage that answers it, and Stage 12 *Ask the data*, *Ask the graph* and the plain-language explanations. Next time, only the last command is needed (after `cd strainscope` and the `activate` line). If you use an AI assistant app such as Claude Desktop, Stage 13 connects it to StrainScope, so you can ask it about the results in words. With Docker or Podman you can also run the app in a container, with nothing else installed but the project folder ([`docs/09-packaging.md` §11](09-packaging.md#11-step-7-optional-run-the-app-in-a-container)), and [`docs/UNINSTALL.md`](UNINSTALL.md) removes everything again.
+The app opens in your browser. If it says there's no database yet, press *Build the database now* on its Home page (about 15 seconds), or run `python src/strainscope/pipeline.py database` before starting it. Stage 10 explains every page, Stage 11 the *Ask StrainScope* page, where you can ask any question about the project and get the passage that answers it, and Stage 12 *Ask the data*, *Ask the graph* and the plain-language explanations. Next time, only the last command is needed (after `cd strainscope` and the `activate` line). To run every phase on strains of your own (or on a fresh simulated library), use the app's **Workflow** page: Stage 15 walks through it. If you use an AI assistant app such as Claude Desktop, Stage 13 connects it to StrainScope, so you can ask it about the results in words. With Docker or Podman you can also run the app in a container, with nothing else installed but the project folder ([`docs/09-packaging.md` §11](09-packaging.md#11-step-7-optional-run-the-app-in-a-container)), and [`docs/UNINSTALL.md`](UNINSTALL.md) removes everything again.
 
 ![The StrainScope app: rank strains, see why, ask the data](img/app_tour.gif)
 
@@ -55,17 +55,17 @@ flowchart TB
         direction LR
         S7["7 · Integrate"] --> S8["8 · Predict"] --> S9["9 · Knowledge graph"]
     end
-    subgraph PRODUCT["Product: Phases 6 to 8, and beyond"]
+    subgraph PRODUCT["Product: Phases 6 to 9, and beyond"]
         direction LR
-        S10["10 · App"] --> S11["11 · Ask StrainScope"] --> S12["12 · Deploy + AI"] --> S13["13 · MCP server"] --> S14["14 · Release 1.0"] --> S15["15 · The product"]
+        S10["10 · App"] --> S11["11 · Ask StrainScope"] --> S12["12 · Deploy + AI"] --> S13["13 · MCP server"] --> S14["14 · Release 1.0"] --> S15["15 · Your own data"] --> S16["16 · The product"]
     end
     FOUND --> DATA --> ANALYSIS --> PRODUCT
 
     classDef done fill:#E6F4EA,stroke:#4CAF7D,color:#0B3D2E;
     classDef next fill:#FFF3CD,stroke:#C9A227,color:#4A3B00;
     classDef later fill:#F5F5F5,stroke:#B0B0B0,color:#555555,stroke-dasharray:4 3;
-    class S0,S1,S2,S3,S4,S5,S6,S7,S8,S9,S10,S11,S12,S13,S14 done
-    class S15 next
+    class S0,S1,S2,S3,S4,S5,S6,S7,S8,S9,S10,S11,S12,S13,S14,S15 done
+    class S16 next
     style FOUND fill:#F5F9FF,stroke:#B9D2FF,color:#0B2545
     style DATA fill:#F5F9FF,stroke:#B9D2FF,color:#0B2545
     style ANALYSIS fill:#F5F9FF,stroke:#B9D2FF,color:#0B2545
@@ -93,7 +93,8 @@ flowchart TB
 | 12.1 | Fix | Small models cite their sources, the model check, clearer suggestions | [`docs/LANGUAGE_MODEL.md` §9](LANGUAGE_MODEL.md#9-how-a-written-answer-is-asked-for-and-checked), [`CHANGELOG.md`](../CHANGELOG.md) | ~30 min | ✅ |
 | 13 | MCP | Phase 7b: the MCP server | [`docs/08b-mcp-server.md`](08b-mcp-server.md) | ~2 h (2 sittings) | ✅ |
 | 14 | Release | Phase 8: packaging and release 1.0 | [`docs/09-packaging.md`](09-packaging.md), [`docs/UNINSTALL.md`](UNINSTALL.md) | ~3 h (3 sittings) | ✅ **v1.0.0** |
-| 15 | Product | Beyond the repository: the product | [`docs/PRODUCT_ROADMAP.md`](PRODUCT_ROADMAP.md) | reading | ✅ plan exists; next to read |
+| 15 | Your data | Phase 9: the whole workflow in the app, on your own data | [`docs/10-workflow-and-your-data.md`](10-workflow-and-your-data.md) | ~2½ h (3 sittings) | ✅ **v1.1.0** |
+| 16 | Product | Beyond the repository: the product | [`docs/PRODUCT_ROADMAP.md`](PRODUCT_ROADMAP.md) | reading | ✅ plan exists; next to read |
 
 Times are hands-on estimates for a beginner following the guides; they don't count time the computer spends running. At roughly 4 to 5 hours a week, the whole journey is a season's work.
 
@@ -353,7 +354,7 @@ Check the result with `git tag -n1`: both `v0.1.0` and `v0.1.1` are listed, each
 
 **Why.** By this stage the documentation is large; a newcomer's most frequent question is "where is that explained?". Ask StrainScope answers it with the passage itself and its link, and refuses rather than guesses when the documents don't cover something. You'll learn how a word search ranks passages (TF-IDF weighs rare words more; cosine similarity compares a question with a passage), why a search needs a gate before it shows anything, how a golden question set turns "does it still work?" into a test, and what retrieval-augmented generation, hallucinations and prompt injection are, with the rules that keep an optional language model fenced in: only answered questions reach it, it sees only its rules, the question and the passages, and it must cite them. Eight real lessons from the build are kept in the guide's §12.
 
-**Checkpoint.** `python src/strainscope/ask.py --stats` reports 1198 sections from 61 files (528 document sections, 383 glossary entries, 287 code docstrings). "What is a balanced error rate?" is answered with the glossary's *Balanced error rate (BER)* (match 0.47); "What is the capital of France?" is refused because no document uses either word; "How do I run StrainScope in a Jupyter notebook?" gets the *closest* sections, marked as not a direct answer. `--golden` passes 69 of 69 (49 answered from a right section, 4 undocumented ones not answered, 16 off-topic questions and instructions refused) and reports the one known limitation. `pytest -q` → **207 passed, 1 skipped** (104 new: 98 in `tests/test_ask.py`, including a check that every link between the documents resolves, 5 for the new page in `tests/test_app.py`, and 1 for the `.env` reading in `tests/test_sources.py`; the skipped one is the known limitation).
+**Checkpoint.** `python src/strainscope/ask.py --stats` reports 1293 sections from 65 files (563 document sections, 399 glossary entries, 331 code docstrings). "What is a balanced error rate?" is answered with the glossary's *Balanced error rate (BER)* (match 0.46); "What is the capital of France?" is refused because no document uses either word; "How do I run StrainScope in a Jupyter notebook?" gets the *closest* sections, marked as not a direct answer. `--golden` passes 75 of 75 (55 answered from a right section, 4 undocumented ones not answered, 16 off-topic questions and instructions refused) and reports the one known limitation. `pytest -q` → **207 passed, 1 skipped** (104 new: 98 in `tests/test_ask.py`, including a check that every link between the documents resolves, 5 for the new page in `tests/test_app.py`, and 1 for the `.env` reading in `tests/test_sources.py`; the skipped one is the known limitation).
 **Commit message:** `feat: add Ask StrainScope, answers from the project's own documents with links and a golden question set`. **Tag:** `v0.3.0` ("usable by anyone"), with the ritual in [`docs/07b-docs-assistant.md` §17](07b-docs-assistant.md#17-save-your-work-safety-gate-the-commit-ritual-and-the-v030-release).
 
 ---
@@ -419,7 +420,7 @@ flowchart TB
 
 ![What a model is sent, the checks, and the test that chose the request](../figures/written_answer_check.png)
 
-**Checkpoint.** With Ollama and llama3.2:3b switched on: `python src/strainscope/ask_graph.py "How does iturin suppress disease?"` shows a block `Written answer (llama3.2:3b, from the facts below):` that cites the facts by number, such as `[3][4]`, and `python src/strainscope/service.py check-model` ends with `4 of 4 written answers would be shown.` (on an Intel MacBook Pro, 5 to 15 seconds per answer). Without a model, `check-model` says that none is switched on and sends nothing. `python src/strainscope/ask.py "How do I set up my laptop?"` suggests *Part F: Create the project folder and a virtual environment* and no *Steps*; with the model on, its written answer (when shown) can only cite [1], the setup guide. `python src/strainscope/ask.py --golden` passes 69 of 69. `pytest -q` → **368 passed, 1 skipped** (14 new: 6 in `tests/test_ask.py` for the suggestions, the request and the strong matches, 2 in `tests/test_llm.py` for the request and its worked example, 4 in `tests/test_service.py` for the model check, and 2 golden questions).
+**Checkpoint.** With Ollama and llama3.2:3b switched on: `python src/strainscope/ask_graph.py "How does iturin suppress disease?"` shows a block `Written answer (llama3.2:3b, from the facts below):` that cites the facts by number, such as `[3][4]`, and `python src/strainscope/service.py check-model` ends with `4 of 4 written answers would be shown.` (on an Intel MacBook Pro, 5 to 15 seconds per answer). Without a model, `check-model` says that none is switched on and sends nothing. `python src/strainscope/ask.py "How do I set up my laptop?"` suggests *Part F: Create the project folder and a virtual environment* and no *Steps*; with the model on, its written answer (when shown) can only cite [1], the setup guide. `python src/strainscope/ask.py --golden` passes 75 of 75. `pytest -q` → **368 passed, 1 skipped** (14 new: 6 in `tests/test_ask.py` for the suggestions, the request and the strong matches, 2 in `tests/test_llm.py` for the request and its worked example, 4 in `tests/test_service.py` for the model check, and 2 golden questions).
 **Save it**: tests and gate first, then the commit ritual (no tag: this fix arrives with v1.0.0):
 
 ```bash
@@ -501,7 +502,7 @@ git switch develop
 
 ![Every push to master: eleven jobs on fresh computers](../figures/ci_matrix.png)
 
-**Checkpoint.** `pipeline.py --list` shows four plans (`everything`, `database`, `probe`, `real`); `pipeline.py --quiet` ends with *All 5 steps finished* and every required health line ✓ (the two optional ones show ·) (on Linux without R: about 3 minutes, most of it `model.py all`; on my Intel Mac with R and the real tables: 7 min 12 s). `pipeline.py compare` ends with *All 34 compared files match the committed results* (38 with the real tables); without the real data of Stages 4 and 5, it lists four graph tables as not compared; on a Mac with an M chip it lists the random forest's numbers apart, as expected on that processor; and `git status` shows eight rewritten result files (`git restore artifacts/` brings back the committed ones). With the hook on, a push with a key-shaped string in a new file stops at `✗ NOT SAFE TO PUSH`. `tools/check_accessibility.py` passes on all 14 page views with Streamlit 1.65 (with 1.57, five fail on Streamlit's own dropdowns and tabs). On GitHub, the run of *tests* shows eleven green jobs, then the tag `v1.0.0`, a release with the changelog's notes, **Cite this repository** in the sidebar, and *About this copy* online says *StrainScope v1.0.0*. `pytest -q` → **446 passed, 1 skipped** (38 new: 20 in `tests/test_pipeline.py`, 4 in `tests/test_mcp.py` for `config --write`, 5 in `tests/test_deploy.py` for the release files, 3 in `tests/test_safety_gate.py` for the hook, and 6 golden questions).
+**Checkpoint.** `pipeline.py --list` shows four plans (`everything`, `database`, `probe`, `real`; since Stage 15 also `simulate` and `workflow`); `pipeline.py --quiet` ends with *All 5 steps finished* and every required health line ✓ (the two optional ones show ·) (on Linux without R: about 3 minutes, most of it `model.py all`; on my Intel Mac with R and the real tables: 7 min 12 s). `pipeline.py compare` ends with *All 34 compared files match the committed results* (38 with the real tables); without the real data of Stages 4 and 5, it lists four graph tables as not compared; on a Mac with an M chip it lists the random forest's numbers apart, as expected on that processor; and `git status` shows eight rewritten result files (`git restore artifacts/` brings back the committed ones). With the hook on, a push with a key-shaped string in a new file stops at `✗ NOT SAFE TO PUSH`. `tools/check_accessibility.py` passes on all 14 page views with Streamlit 1.65 (with 1.57, five fail on Streamlit's own dropdowns and tabs). On GitHub, the run of *tests* shows eleven green jobs, then the tag `v1.0.0`, a release with the changelog's notes, **Cite this repository** in the sidebar, and *About this copy* online says *StrainScope v1.0.0*. `pytest -q` → **446 passed, 1 skipped** (38 new: 20 in `tests/test_pipeline.py`, 4 in `tests/test_mcp.py` for `config --write`, 5 in `tests/test_deploy.py` for the release files, 3 in `tests/test_safety_gate.py` for the hook, and 6 golden questions).
 **Save it**: the commit comes first this time, because `compare` checks against it; then the rebuild, the committed results put back, the gate, the push, the tests on GitHub, and the tag only when they're green (the ritual is also in [`docs/09-packaging.md` §23](09-packaging.md#23-save-your-work-the-whole-ritual-in-one-block)):
 
 ```bash
@@ -534,11 +535,57 @@ Check the result with `git tag -n1`: all five tags, `v0.1.0` to `v1.0.0`, each w
 
 ---
 
-## Stage 15: Beyond the repository, the product
+## Stage 15: Phase 9, the whole workflow on your own data
+
+**What.** Follow [`docs/10-workflow-and-your-data.md`](10-workflow-and-your-data.md). In three sittings:
+
+1. **Check that nothing old changed:** `python src/strainscope/pipeline.py database --quiet`, then `pytest -q`.
+2. **An example and its checks:** `python src/strainscope/datasets.py example data/raw/my_tables` writes three tables of 120 simulated strains into a folder Git ignores; `python src/strainscope/datasets.py check data/raw/my_tables` reads every cell. Change one gene call to `maybe` and check again to see an error with its row, then put it back.
+3. **A dataset, and every phase on it:** `python src/strainscope/datasets.py new trial --from data/raw/my_tables` saves the tables as the dataset `trial` (its own folder, `data/processed/datasets/trial/`); `python src/strainscope/pipeline.py --dataset trial --quiet` runs cleaning, integration, the models and the graph inside it; `python src/strainscope/datasets.py show trial` lists the steps and what each one found.
+4. **The same in the app:** start it, choose `trial` in the sidebar's new **Dataset** box and look at every page; then, on the **Workflow** page, upload the example's three files, save them as `trial_app` and press *Run every step*.
+5. **The library rebuilt as a dataset:** `python src/strainscope/datasets.py new seed42 --simulate --seed 42 --strains 600`, `python src/strainscope/pipeline.py --dataset seed42 --quiet`, then `python src/strainscope/pipeline.py compare --dataset seed42`.
+6. **Your own tables:** `python src/strainscope/datasets.py template data/raw/my_strains` writes empty ones into `data/raw/my_strains/`; fill them in as the guide's §12 explains, then check, save and run them the same way.
+7. **Push without a tag,** watch the eleven jobs on GitHub's **Actions** tab, then tag v1.1.0 and publish the release. The online copy gets the Workflow page, with the limits of a shared copy.
+8. **Optional:** the figures with `python figures/make_phase9_figures.py` and `docs/interactive/workflow_explorer.html`.
+
+![From three tables to every page of the app](img/workflow_steps.png)
+
+**Why.** Until this stage the app showed the results of one simulated library. A screening team brings its own strains and wants every phase run on them. This stage teaches how one set of scripts serves many sets of data without mixing them up (a folder per dataset, and one environment variable, `STRAINSCOPE_DATASET`, to choose it), how to prepare strains as three tables and read what the checks say (errors stop, warnings say what was left out or rests on very little, notes say what was assumed), why the checks ask for at least 40 strains with 10 of each class, what changes without an answer key (nothing is graded; the knowledge graph still tells a known mechanism from a statistic), what quick settings cost, how a step knows it needs to run again, and how a shared copy keeps visitors' data apart and short-lived. Nothing about a dataset of your own ever reaches a language model. Seven notes from the build are kept in the guide's §17.
+
+![The library and your own data: what changes](../figures/library_vs_yours.png)
+
+**Checkpoint.** `datasets.py check data/raw/my_tables` prints two notes, then `✓ 120 strains (27 effective) · 31 genes · 20 compounds`; with `maybe` in a gene cell it names the column and `row 2` and stops. `pipeline.py --dataset trial --quiet` ends with *All 4 steps finished* (1 min 23 s on a Linux computer without R, most of it learning to predict) and the dataset's own health check (33 tables, 120 strains); `datasets.py show trial` marks the four steps ✓, with the elastic net as winner (balanced error 0.252, against the library's 0.128) and 23 effective strains among the top 50 (about 11 by chance). In the app, the sidebar's Dataset box switches every page, and the Workflow page shows *4 of 4 steps done*. `compare --dataset seed42` ends with *All 24 compared files match the committed results* on a computer without R and without the real tables, with DIABLO's files and the files that hold DIABLO's results listed as not compared; with R and the real tables, those are compared too. `git status` lists nothing under `data/`. `tools/check_accessibility.py` passes on all 15 page views with Streamlit 1.65. On GitHub, eleven green jobs, the tag `v1.1.0` and its release; *About this copy* online says *StrainScope v1.1.0*. `pytest -q` → **494 passed, 1 skipped** (48 new: 21 in `tests/test_datasets.py`, 21 in `tests/test_app.py` for the Workflow page and every page on a dataset, and 6 golden questions).
+**Save it** (the ritual is also in [`docs/10-workflow-and-your-data.md` §22](10-workflow-and-your-data.md#22-save-your-work-the-whole-ritual-in-one-block)):
+
+```bash
+python src/strainscope/pipeline.py database --quiet
+pytest -q                     # 494 passed, 1 skipped
+./check-public-safe.sh        # must end with: SAFE TO PUSH  (Windows: bash check-public-safe.sh in Git Bash)
+git switch develop
+git add -A
+git commit -m "feat: the whole workflow in the app, on your own data: datasets, checks, the Workflow page"
+git push origin develop develop:beta develop:master
+
+## wait until every job on the Actions tab is green, then:
+## --tags is optional, only when required: this phase completes v1.1.0
+git tag -a v1.1.0 -m "v1.1.0: every phase on your own data, from the app or a terminal"
+git push origin develop develop:beta develop:master --tags
+
+## then switch back to local master and pull in the remote changes
+git switch master
+git pull --ff-only origin master
+git switch develop
+```
+
+Check the result with `git tag -n1`: six tags, `v0.1.0` to `v1.1.0`, each with a readable message.
+
+---
+
+## Stage 16: Beyond the repository, the product
 
 **What.** Read [`docs/PRODUCT_ROADMAP.md`](PRODUCT_ROADMAP.md).
 
-**Why.** It describes what an industrial StrainScope would add (real matched multi-omics data, a multi-user web front end and API, a cloud database, scheduled pipelines, monitoring, ontologies, regulation), and for every technology it gives a verdict (*required now · recommended later · optional · not needed*) and the event that would change it. Everything marked *required now* is built (v1.0.0). Thanks to the design choices you made in Stages 3 to 14, the rest can be added on top of what exists; nothing has to be rewritten. Fixes found through use become patch releases (v1.0.1, ...), tagged the same way as v1.0.0: after the tests.
+**Why.** It describes what an industrial StrainScope would add (real matched multi-omics data, a multi-user web front end and API, a cloud database, scheduled pipelines, monitoring, ontologies, regulation), and for every technology it gives a verdict (*required now · recommended later · optional · not needed*) and the event that would change it. Everything marked *required now* is built (v1.0.0), and since v1.1.0 every phase also runs on data of your own. Thanks to the design choices you made in Stages 3 to 15, the rest can be added on top of what exists; nothing has to be rewritten. Fixes found through use become patch releases (v1.1.1, ...), tagged the same way as the others: after the tests.
 
 ---
 
@@ -654,12 +701,27 @@ python figures/make_phase6b_figures.py                 # again: its numbers grow
 python figures/make_illustrations.py                   # the journey, every stage done
 # then: push without a tag, wait for the green tests on GitHub, tag v1.0.0 (docs/09 section 23)
 
+# Stage 15, Phase 9: the whole workflow on your own data     (docs/10-workflow-and-your-data.md)
+python src/strainscope/datasets.py example data/raw/my_tables      # three tables of 120 simulated strains
+python src/strainscope/datasets.py check data/raw/my_tables        # every cell read; errors, warnings, notes
+python src/strainscope/datasets.py new trial --from data/raw/my_tables
+python src/strainscope/pipeline.py --dataset trial                 # every phase, inside the dataset's folder
+python src/strainscope/datasets.py show trial                      # the steps and what each one found
+python src/strainscope/datasets.py new seed42 --simulate --seed 42 --strains 600
+python src/strainscope/pipeline.py --dataset seed42
+python src/strainscope/pipeline.py compare --dataset seed42        # the library rebuilt as a dataset
+python src/strainscope/datasets.py template data/raw/my_strains    # empty tables for your own strains
+python -m streamlit run app/streamlit_app.py                       # the Workflow page, the Dataset box
+python figures/make_phase9_figures.py
+python figures/make_illustrations.py                               # the journey, Stage 15 done
+# then: push without a tag, wait for the green tests on GitHub, tag v1.1.0 (docs/10 section 22)
+
 # Every stage ends with
 pytest -q
 ./check-public-safe.sh                                 # Windows: bash check-public-safe.sh in Git Bash
 ```
 
-Two rules keep this list working. The order matters, because each stage reads what the stage before it wrote. And `src/strainscope/harmonize.py` rebuilds the database from scratch, so whenever you re-run it, re-run the three `publish` steps (`integrate.py publish`, `model.py publish`, `graph.py publish`), or run `python src/strainscope/pipeline.py database`, or press *Build the database* in the app, which all do the same. Since Stage 14, `python src/strainscope/pipeline.py` runs the scripts of Stages 3 and 6 to 9 in that order by itself (`pipeline.py real` adds the fetch of Stages 4 and 5).
+Two rules keep this list working. The order matters, because each stage reads what the stage before it wrote. And `src/strainscope/harmonize.py` rebuilds the database from scratch, so whenever you re-run it, re-run the three `publish` steps (`integrate.py publish`, `model.py publish`, `graph.py publish`), or run `python src/strainscope/pipeline.py database`, or press *Build the database* in the app, which all do the same. Since Stage 14, `python src/strainscope/pipeline.py` runs the scripts of Stages 3 and 6 to 9 in that order by itself (`pipeline.py real` adds the fetch of Stages 4 and 5), and since Stage 15 `python src/strainscope/pipeline.py --dataset NAME` runs them inside a dataset's own folder.
 
 ## Every session, after setup
 
@@ -669,6 +731,7 @@ source .venv/bin/activate                 # Windows PowerShell: .\.venv\Scripts\
 git switch develop && git pull --ff-only origin develop
 pytest -q                                 # everything still green?
 python -m streamlit run app/streamlit_app.py   # optional: the app, to look at the results (Ctrl+C stops it)
+python src/strainscope/datasets.py list        # optional: your datasets and how far each got (Stage 15)
 # ... work on the current stage ...
 ```
 
@@ -685,9 +748,9 @@ python src/strainscope/pipeline.py database
 pytest -q
 ```
 
-If `CHANGELOG.md` says `renv.lock` changed, also run `Rscript -e "renv::restore()"`; with the container, build the image again (`docker build -t strainscope .`). Each release's notes are in `CHANGELOG.md`; [`docs/09-packaging.md` §15](09-packaging.md#15-install-update-uninstall) explains each line.
+If `CHANGELOG.md` says `renv.lock` changed, also run `Rscript -e "renv::restore()"`; with the container, build the image again (`docker build -t strainscope .`). Your datasets (Stage 15) stay where they are, in `data/processed/datasets/`, untouched by `git pull`; to see a new release's changes in one, run its steps again (`python src/strainscope/pipeline.py --dataset NAME`). Each release's notes are in `CHANGELOG.md`; [`docs/09-packaging.md` §15](09-packaging.md#15-install-update-uninstall) explains each line.
 
-**Uninstall:** [`docs/UNINSTALL.md`](UNINSTALL.md) removes everything StrainScope can leave behind, in a safe order: first what lives outside the project folder (an assistant app's connection, a language model, the container image), then the folder, then what you published online.
+**Uninstall:** [`docs/UNINSTALL.md`](UNINSTALL.md) removes everything StrainScope can leave behind, in a safe order: first what lives outside the project folder (an assistant app's connection, a language model, the container image), then the folder (your datasets go with it, so keep a copy of any you want), then what you published online.
 
 ## Switching on a language model (optional)
 
@@ -699,7 +762,7 @@ If `CHANGELOG.md` says `renv.lock` changed, also run `Rscript -e "renv::restore(
 
 **Why.** A written answer is easier to read than three passages, and a model can write a query no recipe covers. It stays optional because a model can be wrong and, unless it runs on your computer, it means sending text to someone else; the rules around it (what may be sent, citations, five guards for SQL) are explained in [Phase 7 §1](08-deployment-ai.md#what-a-model-may-see-and-what-it-never-sees).
 
-The MCP server of Stage 13 never uses one: an assistant app that calls its tools brings its own model.
+The MCP server of Stage 13 never uses one: an assistant app that calls its tools brings its own model. And with a dataset of your own chosen (Stage 15), no model is asked at all: Ask the data answers by tested recipes, Ask the graph by facts and routes, so nothing about your data leaves the copy.
 
 **Checkpoint.** *About this copy* says *AI features (optional): on, ...* with your model's name, and each Ask page shows a switch such as *Also write a short answer*. `python src/strainscope/service.py check-model` asks the model four questions and says how many of its written answers would be shown (4 of 4 with llama3.2:3b on an Intel MacBook Pro since Stage 12.1). Switching off: `STRAINSCOPE_ASK_BACKEND=none` and a restart.
 
@@ -760,6 +823,14 @@ The MCP server of Stage 13 never uses one: an assistant app that calls its tools
 | the accessibility check reports dropdowns or tabs with *focus not visible*, or *Clear all* not reached | an older Streamlit (1.57 draws them that way): `python -m pip install --upgrade streamlit` ([`docs/09-packaging.md` §10](09-packaging.md#10-step-6-the-keyboard-and-screen-reader-check)) |
 | `Cannot connect to the Docker daemon` | Docker Desktop isn't running; start it ([`docs/09-packaging.md` §11](09-packaging.md#11-step-7-optional-run-the-app-in-a-container)) |
 | `config --write` says the settings file isn't valid JSON | it changed nothing; fix the line it names (often a missing comma) and run it again ([`docs/08b-mcp-server.md` §9](08b-mcp-server.md#a-claude-desktop-macos-and-windows)) |
+| `datasets.py check` shows `✗` lines | each names the table, the column and the spreadsheet row; fix those cells and check again ([`docs/10-workflow-and-your-data.md` §6](10-workflow-and-your-data.md#6-step-2-check-the-three-tables), §21) |
+| `... isn't UTF-8 text` or `Use a full stop as the decimal mark` | save the table again as *CSV UTF-8*, with full stops in numbers ([`docs/10-workflow-and-your-data.md` §12](10-workflow-and-your-data.md#12-step-8-your-own-tables)) |
+| `Each group needs at least 10` | too few effective strains, or too few others, for the line you chose: move the line (`--effective-at`) or add strains ([`docs/10-workflow-and-your-data.md` §21](10-workflow-and-your-data.md#21-what-could-go-wrong-mini-faq)) |
+| `There's no dataset called ...` | `python src/strainscope/datasets.py list` shows the names; a dataset is a folder in `data/processed/datasets/` |
+| a page shows the library although you chose a dataset | the choice belongs to the browser tab; choose it in this tab's sidebar (**Dataset**) |
+| the Workflow page says `Another run is going on in this copy` | one run at a time per copy of the app; wait for it to finish |
+| your dataset is gone from the online copy | a shared copy deletes a dataset an hour after its last use, and a reload starts a new visit ([`docs/10-workflow-and-your-data.md` §13](10-workflow-and-your-data.md#13-step-9-on-the-online-copy)) |
+| `compare --dataset` lists differences | only a simulated dataset with seed 42 and 600 strains is the library; any other dataset differs on purpose |
 | you want to remove StrainScope | [`docs/UNINSTALL.md`](UNINSTALL.md), in its order |
 
 ## Every file in the repository, and where it is explained
@@ -769,7 +840,7 @@ Nothing in this repository is undocumented magic. Paths are relative to the proj
 | Path | What it is | Explained in |
 |---|---|---|
 | `README.md` | the front page | n/a |
-| `CHANGELOG.md` | what changed, release by release (the newest, v1.0.0, first) | this Handbook |
+| `CHANGELOG.md` | what changed, release by release (the newest, v1.1.0, first) | this Handbook |
 | `LICENSE` | the MIT licence: what anyone may do with the code and documents | [`docs/09-packaging.md`](09-packaging.md) §1, §8 |
 | `CITATION.cff` | how to cite StrainScope (GitHub's *Cite this repository*); its version and date match the newest release | [`docs/09-packaging.md`](09-packaging.md) §8, §14 |
 | `CONTRIBUTING.md`, `SECURITY.md` | how to help, and how to report a security problem privately | [`docs/09-packaging.md`](09-packaging.md) §8, §13 |
@@ -801,14 +872,17 @@ Nothing in this repository is undocumented magic. Paths are relative to the proj
 | `src/strainscope/ask_data.py` | Ask the data: the recipe finder, a model's query behind the fifth guard, the golden questions, the command | [`docs/08-deployment-ai.md`](08-deployment-ai.md) §6 |
 | `src/strainscope/ask_graph.py` | Ask the graph (GraphRAG): finding names, walking the graph, numbered facts, the optional written answer, the golden questions, the command | [`docs/08-deployment-ai.md`](08-deployment-ai.md) §7 |
 | `src/strainscope/mcp_server.py` | the MCP server: nine read-only tools for AI assistant apps, their input checks and the call log; the commands `tools`, `call`, `check`, `config` (and since Stage 14 `config --write` and `--remove` for Claude Desktop's settings file) | [`docs/08b-mcp-server.md`](08b-mcp-server.md), [`docs/UNINSTALL.md`](UNINSTALL.md) |
-| `src/strainscope/pipeline.py` | the one-command pipeline: the plans, `--list`, `--from`, `--quiet`, and `compare` | [`docs/09-packaging.md`](09-packaging.md) §5, §6 |
+| `src/strainscope/pipeline.py` | the one-command pipeline: the plans, `--list`, `--from`, `--quiet`, and `compare`; since Stage 15 `--dataset NAME` and `compare --dataset NAME` | [`docs/09-packaging.md`](09-packaging.md) §5, §6, [`docs/10-workflow-and-your-data.md`](10-workflow-and-your-data.md) §8, §11 |
+| `src/strainscope/paths.py` | where every script reads and writes: the library's folders, or a dataset's (`STRAINSCOPE_DATASET`) | [`docs/10-workflow-and-your-data.md`](10-workflow-and-your-data.md) §1, §3 |
+| `src/strainscope/datasets.py` | datasets of your own: the checks, saving, listing and removing, the templates and the example, each step's state; the commands `template`, `example`, `check`, `new`, `list`, `show`, `remove` | [`docs/10-workflow-and-your-data.md`](10-workflow-and-your-data.md) §5 to 9, §12, §14 |
 | `tools/check_accessibility.py` | optional: the keyboard and screen-reader check of the app (needs Playwright) | [`docs/09-packaging.md`](09-packaging.md) §10 |
 | `app/streamlit_app.py`, `app/ui.py`, `app/charts.py` | the app: its front door (sidebar, page list), what the pages share, and every chart | [`docs/07-app.md`](07-app.md) §1, §4 |
-| `app/views/*.py` | the eleven pages: Home, About this copy, Ask StrainScope, Ask the data, Ask the graph, Ranking, Strain page, Knowledge graph, Integration, Data, SQL console | [`docs/07-app.md`](07-app.md) §7 to 9, [`docs/07b-docs-assistant.md`](07b-docs-assistant.md) §6, [`docs/08-deployment-ai.md`](08-deployment-ai.md) §5 to 8 |
+| `app/views/*.py` | the twelve pages: Home, About this copy, Ask StrainScope, Ask the data, Ask the graph, Ranking, Strain page, Knowledge graph, Integration, Workflow (since Stage 15), Data, SQL console | [`docs/07-app.md`](07-app.md) §7 to 9, [`docs/07b-docs-assistant.md`](07b-docs-assistant.md) §6, [`docs/08-deployment-ai.md`](08-deployment-ai.md) §5 to 8 |
 | `app/requirements.txt` | the online copy's packing list, with exact versions (Community Cloud reads it before `requirements.txt`) | [`docs/08-deployment-ai.md`](08-deployment-ai.md) §1, §3, §9 |
 | `.streamlit/config.toml` | the app's settings (colours, since Stage 14 darker small text and the heading sizes, upload size, no usage statistics, no email question); committed, holds no secrets | [`docs/07-app.md`](07-app.md) §4 |
 | `tests/test_sources.py`, `tests/test_harmonize.py`, `tests/test_integrate.py`, `tests/test_model.py`, `tests/test_graph.py`, `tests/test_service.py`, `tests/test_app.py`, `tests/test_ask.py`, `tests/test_llm.py`, `tests/test_narrate.py`, `tests/test_ask_data.py`, `tests/test_ask_graph.py`, `tests/test_deploy.py`, `tests/test_mcp.py`, `tests/test_pipeline.py` | the automated checks (`test_app.py` clicks through the app without a browser; `test_ask.py` also checks that every link between the documents resolves; `test_deploy.py` checks what the online copy relies on and that the release files agree; `test_mcp.py` also talks to the MCP server the way an assistant app does; `test_pipeline.py` runs the pipeline with stand-in steps) | each phase guide's *tests* section |
-| `tests/conftest.py` | what several test files share: the stand-in language-model server, and a fresh daily cap for every test | [`docs/08-deployment-ai.md`](08-deployment-ai.md) §15 |
+| `tests/conftest.py` | what several test files share: the stand-in language-model server, a fresh daily cap for every test, and since Stage 15 one small dataset with every phase run on it | [`docs/08-deployment-ai.md`](08-deployment-ai.md) §15, [`docs/10-workflow-and-your-data.md`](10-workflow-and-your-data.md) §18 |
+| `tests/test_datasets.py` | the tests of datasets and the whole workflow on them (Stage 15) | [`docs/10-workflow-and-your-data.md`](10-workflow-and-your-data.md) §18 |
 | `tests/golden_questions.csv` | the golden questions for Ask StrainScope, and what must happen to each | [`docs/07b-docs-assistant.md`](07b-docs-assistant.md) §1, §7 |
 | `tests/golden_data_questions.csv`, `tests/golden_graph_questions.csv` | the golden questions for Ask the data and Ask the graph | [`docs/08-deployment-ai.md`](08-deployment-ai.md) §6, §7 |
 | `tests/test_safety_gate.py` | the safety gate's own tests, and the pre-push hook's (Stage 14) | [`docs/01-setup.md`](01-setup.md) Part H, Stage 7.1 above |
@@ -821,15 +895,17 @@ Nothing in this repository is undocumented magic. Paths are relative to the proj
 | `docs/UNINSTALL.md` | every place StrainScope can leave something, and how to remove it in a safe order | [Updating and uninstalling](#updating-and-uninstalling), Stage 14 |
 | `docs/LANGUAGE_MODEL.md` | every way to switch a language model on and off, at home and online, what to do when something goes wrong, and how a written answer is asked for and checked (the model check) | [Switching on a language model](#switching-on-a-language-model-optional), Stage 12.1 |
 | `docs/img/*.svg` | the logo, icon, wordmark (the app's sidebar) and journey map | `figures/make_illustrations.py` |
-| `docs/img/app_*.png`, `docs/img/app_tour.gif` | screenshots of the running app | `figures/take_app_screenshots.py`, [`docs/07-app.md`](07-app.md) §11 |
+| `docs/img/app_*.png`, `docs/img/app_tour.gif` | screenshots of the running app (since Stage 15 also three of the Workflow page) | `figures/take_app_screenshots.py`, [`docs/07-app.md`](07-app.md) §11, [`docs/10-workflow-and-your-data.md`](10-workflow-and-your-data.md) §10 |
+| `docs/img/workflow_steps.png` | the workflow in pictures, also at the top of the app's Workflow page | `figures/make_phase9_figures.py` |
 | `docs/interactive/*.html`, `docs/interactive/plotly.min.js` | the interactive charts (open in a browser; work offline) | each phase guide's *figures* section |
 | `docs/interactive/journey.html` | this Handbook's journey as a clickable page, built from this file | `figures/make_illustrations.py` |
 | `docs/interactive/ask_explorer.html` | how each golden question scored, and every section's score for a question you pick | `figures/make_phase6b_figures.py`, [`docs/07b-docs-assistant.md`](07b-docs-assistant.md) §10 |
 | `docs/interactive/assistants_explorer.html` | the golden questions of Ask the data and Ask the graph, and every recipe's score for a question you pick | `figures/make_phase7_figures.py`, [`docs/08-deployment-ai.md`](08-deployment-ai.md) §12 |
 | `docs/interactive/release_explorer.html` | the pipeline's plans, every CI job with its steps, and the product checklist | `figures/make_phase8_figures.py`, [`docs/09-packaging.md`](09-packaging.md) §16 |
+| `docs/interactive/workflow_explorer.html` | the workflow's steps, what each reads and its receipt, measured run times, the checks' real messages and the limits | `figures/make_phase9_figures.py`, [`docs/10-workflow-and-your-data.md`](10-workflow-and-your-data.md) §15 |
 | `docs/interactive/mcp_explorer.html` | the MCP server's nine tools: each one's description, input schema, a real call and its result, two refused calls, and what the call log keeps | `figures/make_phase7b_figures.py`, [`docs/08b-mcp-server.md`](08b-mcp-server.md) §13 |
 | `docs/index.html`, `docs/.nojekyll` | the front page of the optional GitHub Pages site for the interactive figures, and the marker that publishes the folder as it is | [`docs/08-deployment-ai.md`](08-deployment-ai.md) §11 |
-| `data/` | generated data, the database, the MCP server's call log and the accessibility report: **never in Git**, rebuilt on demand | [`02`](02-data-generation.md), [`03`](03-harmonization-qc.md), [`04`](04-integration.md), [`08b`](08b-mcp-server.md) §11 |
+| `data/` | generated data, the database, the MCP server's call log, the accessibility report and, since Stage 15, your datasets (`data/processed/datasets/`): **never in Git**; everything but your datasets is rebuilt on demand | [`02`](02-data-generation.md), [`03`](03-harmonization-qc.md), [`04`](04-integration.md), [`08b`](08b-mcp-server.md) §11, [`10`](10-workflow-and-your-data.md) §1 |
 
 ## How this Handbook is maintained
 

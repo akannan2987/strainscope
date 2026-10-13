@@ -2,7 +2,7 @@
 
 ![StrainScope: multi-omics · machine learning · beneficial microbes](docs/img/strainscope_logo.svg)
 
-**Live app:** [strainscope.streamlit.app](https://strainscope.streamlit.app), online with nothing to install, or on your own computer ([how](#the-app)) · **Interactive figures:** [akannan2987.github.io/strainscope](https://akannan2987.github.io/strainscope/) · **Version:** v1.0.0, the first complete release ([changelog](CHANGELOG.md), [cite it](CITATION.cff))
+**Live app:** [strainscope.streamlit.app](https://strainscope.streamlit.app), online with nothing to install, or on your own computer ([how](#the-app)) · **Interactive figures:** [akannan2987.github.io/strainscope](https://akannan2987.github.io/strainscope/) · **Version:** v1.1.0, every phase on your own data ([changelog](CHANGELOG.md), [cite it](CITATION.cff))
 · [![tests](https://github.com/akannan2987/strainscope/actions/workflows/ci.yml/badge.svg)](https://github.com/akannan2987/strainscope/actions/workflows/ci.yml)
 ![Python](https://img.shields.io/badge/Python-3.12%20%7C%203.14-3776AB?logo=python&logoColor=white)
 ![R](https://img.shields.io/badge/R-4.x-276DC3?logo=r)
@@ -10,7 +10,7 @@
 ![DuckDB](https://img.shields.io/badge/DuckDB-SQL-FFF000?logo=duckdb&logoColor=black)
 ![data](https://img.shields.io/badge/data-synthetic%20(disclosed)-6f42c1)
 [![license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
-![status](https://img.shields.io/badge/release-v1.0.0-brightgreen)
+![status](https://img.shields.io/badge/release-v1.1.0-brightgreen)
 ![platform](https://img.shields.io/badge/runs%20on-Windows%20%7C%20macOS%20%7C%20Linux%20(RHEL%208)-informational)
 
 Reading several molecular "fingerprints" of beneficial microbes at once, and
@@ -36,11 +36,12 @@ public, with every step explained.
 - [The problem this project tackles](#the-problem-this-project-tackles)
 - [How it works](#how-it-works)
 - [The app](#the-app): rank strains, see why, score your own, ask the database (online, on your computer, or in a container)
+- [Your own data, every phase](#your-own-data-every-phase): the Workflow page runs every phase on three tables of your own, or on a fresh simulated library
 - [Ask StrainScope](#ask-strainscope): questions about the project, answered from its own documents with links
 - [Ask the data, Ask the graph, and plain words](#ask-the-data-ask-the-graph-and-plain-words): questions about the data and how things connect, and every result in plain language
 - [The MCP server](#the-mcp-server): ask your own AI assistant app about StrainScope, through nine read-only tools
 - [The data at a glance](#the-data-at-a-glance)
-- [Results, phase by phase](#results-phase-by-phase), Phases 1 to 8
+- [Results, phase by phase](#results-phase-by-phase), Phases 1 to 9
 - [Build log](#build-log): every phase, linked to its guide, with its status
 - [The tutorial, in order](#the-tutorial-in-order), the documents that teach every step from a blank laptop
 - [Roadmap](#roadmap): what was built, in which order and why, and the plans for a larger version
@@ -123,9 +124,11 @@ app, deployed free for anyone to use, ties it all together. Alongside it come
 Ask StrainScope, a documentation assistant that answers questions about the
 project from its own documents (and refuses questions that aren't about it), an
 optional AI layer that explains results in plain language, and an MCP server
-through which AI assistants can use the project's tools directly. Every step is
-documented so that a complete beginner can rebuild and understand all of it: the
-repository is the tutorial.
+through which AI assistants can use the project's tools directly. Since v1.1.0
+the whole chain, from cleaning to the knowledge graph, also runs on strains of
+your own: three tables in, checked, and every phase run on them from the app or
+one command. Every step is documented so that a complete beginner can rebuild
+and understand all of it: the repository is the tutorial.
 
 ## How it works
 
@@ -140,6 +143,7 @@ flowchart TD
         F["Knowledge graph (NetworkX)<br/>strain → gene → compound →<br/>mode of action → outcome"]
         G[/"artifacts/<br/>predictions · importances · signature ·<br/>trained model · knowledge graph"/]
         M["MCP server (Python)<br/>9 read-only tools for<br/>AI assistant apps"]
+        U["Your own strains (optional)<br/>3 CSV files, checked,<br/>a dataset folder of their own"]
     end
     subgraph CLOUD["The cloud: a free, public app (shared mode)"]
         H["Streamlit app<br/>explore · rank · SQL console · graph"]
@@ -149,6 +153,7 @@ flowchart TD
     L["a language model (optional)<br/>sees names, facts and passages;<br/>never rows"]
     N["an AI assistant app (optional)<br/>Claude Desktop, Claude Code, ...<br/>sees what the tools return"]
     A -->|"writes 3 raw tables (messy on purpose)"| B
+    U -.->|"the same steps,<br/>in the dataset's folder"| B
     B -->|clean, aligned tables| C
     C -->|multi-omics integration| D
     C -->|machine learning| E
@@ -173,7 +178,7 @@ flowchart TD
     classDef cloud fill:#E6F4EA,stroke:#4CAF7D,color:#0B3D2E;
     classDef ai fill:#F3E8FD,stroke:#9C6ADE,color:#3A1D6E;
     classDef roadmap fill:#F5F5F5,stroke:#B0B0B0,color:#555555,stroke-dasharray:4 3;
-    class A,B,D,E,F laptop
+    class A,B,D,E,F,U laptop
     class C store
     class G artifact
     class H cloud
@@ -190,15 +195,17 @@ Finally, serve everything in a public app, with three assistants (about the
 project, the data and the graph) that answer on their own and can use an
 optional language model only to rewrite what they found. On your own computer,
 an MCP server offers the same results to an AI assistant app through nine
-read-only tools. The heavy work happens once, offline.
-The app only reads the small results, and that's what keeps the public
-deployment fast and free.
+read-only tools. Strains of your own take the same path in a folder of their
+own, started from the app's Workflow page or one command. The heavy work for the
+library happens once, offline, and the app only reads its small results, which
+keeps the public deployment fast and free.
 
 ## The app
 
-![The StrainScope app: the ranking, a strain's reasons, the knowledge graph, the SQL console and an upload](docs/img/app_tour.gif)
+![The StrainScope app: the ranking, a strain's reasons, the knowledge graph, the SQL console, an upload and the Workflow page](docs/img/app_tour.gif)
 
-The app shows everything the analysis found, without any code to write. It runs
+The app shows everything the analysis found, and since v1.1.0 runs the analysis
+on data of your own, without any code to write. It runs
 online at [strainscope.streamlit.app](https://strainscope.streamlit.app) with nothing to install (Phase 7; after a
 quiet spell it sleeps, and the button on the page wakes it), or on your own
 computer. After the setup in
@@ -219,17 +226,23 @@ it takes about 15 seconds). Then:
   its source), and its corner of the graph drawn as five columns.
 - **Knowledge graph**: the network, a path finder ("how is accE linked to disease
   suppression?" gets a single statistics-only step, with no mechanism behind it), and a look-up for anything.
-- **Data**: upload your own strains as a CSV file. They're checked (with a plain
-  message for every problem), scored by the saved model and explained by the
-  graph, and never written to disk. On your own computer, the same page rebuilds
-  every result from scratch with one button and compares the numbers with the
-  committed ones (Phase 8).
+- **Workflow**: run every phase, from cleaning to the knowledge graph, on three
+  tables of your own or on a fresh simulated library, with a live log and each
+  step's state ([next section](#your-own-data-every-phase), Phase 9).
+- **Data**: upload strains as a CSV file. They're checked (with a plain message
+  for every problem), scored by the saved model of the dataset chosen in the
+  sidebar and explained by its graph, and never written to disk. On your own
+  computer, the same page rebuilds every result from scratch with one button
+  and compares the numbers with the committed ones (Phase 8).
 - **SQL console**: ask the database anything, read-only, with the
   [Query Cookbook](docs/QUERY_COOKBOOK.md)'s recipes one click away.
 - **Ask StrainScope, Ask the data, Ask the graph**: questions in plain words
   (next sections).
 - **About this copy**: the version, a health check, and whether the AI features
   use a language model.
+
+The sidebar's **Dataset** box switches every page between the built-in library
+and your datasets.
 
 It runs the same on Windows, macOS and a RHEL 8 virtual machine (reach a VM
 through an SSH tunnel), online on Streamlit Community Cloud, and in a container
@@ -238,6 +251,49 @@ which is checked on every page at every push. The guides are
 [`docs/07-app.md`](docs/07-app.md), for the online copy
 [`docs/08-deployment-ai.md`](docs/08-deployment-ai.md), and for the container and
 the accessibility check [`docs/09-packaging.md`](docs/09-packaging.md).
+
+## Your own data, every phase
+
+![The Workflow page: every step of a dataset done, with what each one found](docs/img/app_workflow.png)
+
+The **Workflow** page runs every phase, from cleaning to the knowledge graph, on
+strains of your own (Phase 9, [`docs/10-workflow-and-your-data.md`](docs/10-workflow-and-your-data.md)).
+You bring three CSV files in the library's layout, one row per strain:
+
+| File | What it holds | Needed columns |
+| --- | --- | --- |
+| `genomics.csv` | a column per gene: 1, 0 or empty | `strain_id` |
+| `metabolomics.csv` | a column per compound: the level measured | `strain_id` |
+| `phenotype.csv` | the trial result, and where the strain came from | `strain_id`, `kingdom`, `suppression_score` |
+
+The page offers an empty template and a 120-strain example to download. The
+checks read every cell before anything is saved and name each problem with its
+row (a "maybe" where a 1 belongs, a decimal comma, an unknown kingdom, too few
+strains to learn from). The tables then become a **dataset**, a folder of its
+own under `data/processed/datasets/`, and the scripts of Phases 2 to 5 run
+inside it, so the library's committed results are never touched. Choose the
+dataset in the sidebar and every page shows it. From a terminal:
+
+```bash
+python src/strainscope/datasets.py example data/raw/my_tables   # 120 example strains, messy on purpose
+python src/strainscope/datasets.py check data/raw/my_tables     # errors, warnings and notes, with row numbers
+python src/strainscope/datasets.py new trial --from data/raw/my_tables
+python src/strainscope/pipeline.py --dataset trial              # every phase on it (under 2 minutes for 120 strains)
+python src/strainscope/datasets.py show trial                   # each step: done, run again or to do, and what it found
+```
+
+- **No answer key for your data.** The library is simulated, so its findings
+  can be graded against the planted truth. Yours can't be, so they're listed
+  without grades; the cross-validated errors, the calibration, the error
+  analysis and the knowledge graph's *statistics only* flags all still work.
+- **A fresh simulated library** with any seed and size works too, and keeps its
+  answer key. Seed 42 with 600 strains draws the library itself:
+  `pipeline.py compare --dataset seed42` found every committed file that
+  doesn't depend on DIABLO matching (24 files, on a computer without R).
+- **Nothing about your data goes to a language model**, even with one switched
+  on. On the shared online copy a dataset is listed only in the browser tab that
+  made it, runs with quick settings and lower limits, and is deleted an hour
+  after its last use.
 
 ## Ask StrainScope
 
@@ -384,7 +440,7 @@ means, matching the build log below. Nothing is shown before it exists.*
   ![A strain's page: the reasons behind its rank, and its corner of the knowledge graph](docs/img/app_strain.png)
 
   An uploaded copy of a library strain gets exactly the explanation of the original (a test checks every strain of a hand-made project), and a slightly different score, because the ranking uses out-of-fold predictions while an upload is scored by the final model. Run it with `python -m streamlit run app/streamlit_app.py`; the guide is [`docs/07-app.md`](docs/07-app.md).
-- **Phase 6b (Ask StrainScope):** ✅ a documentation assistant that searches every guide, glossary entry and docstring (1198 sections) and answers with the matching passages, word for word, with links. Before anything is shown, a gate of four checks decides between *answered*, *closest* and *refused*, and 70 golden questions keep it in check: every in-scope one is answered from a right section, every off-topic question and instruction is refused, and one known limitation is reported rather than hidden. No single score threshold separates the two groups; the extra checks do:
+- **Phase 6b (Ask StrainScope):** ✅ a documentation assistant that searches every guide, glossary entry and docstring (1293 sections) and answers with the matching passages, word for word, with links. Before anything is shown, a gate of four checks decides between *answered*, *closest* and *refused*, and 76 golden questions keep it in check: every in-scope one is answered from a right section, every off-topic question and instruction is refused, and one known limitation is reported rather than hidden. No single score threshold separates the two groups; the extra checks do:
 
   ![The golden questions: how well each one matched](figures/golden_scores.png)
 
@@ -407,6 +463,11 @@ means, matching the build log below. Nothing is shown before it exists.*
   ![Every push to master: eleven jobs on fresh computers](figures/ci_matrix.png)
 
   The accessibility check (axe-core, a walk with the Tab key, and what a screen reader reads) found faint small text, skipped heading levels, charts without their numbers, hidden buttons that took the focus and pictures without a description, all fixed. A licence (MIT), a citation file, a contribution guide, a security policy, a container and an uninstall guide complete the release. Explore it in `docs/interactive/release_explorer.html`; the guide is [`docs/09-packaging.md`](docs/09-packaging.md).
+- **Phase 9 (the whole workflow on your own data):** ✅ every phase runs on a **dataset**: three tables of your own, checked cell by cell before anything is saved, or a fresh simulated library with any seed and size. One setting (`STRAINSCOPE_DATASET`, set by `pipeline.py --dataset NAME` and by the app) sends every script to the dataset's own folder, and the app's new Workflow page runs the steps with a live log and shows which are done, which need to run again and what each found. On the 120-strain example the model is trained on those strains alone (balanced error 0.252, rougher than the library's 0.128 on 600), and its best 50 hold 23 effective strains against about 11 by chance. Without an answer key nothing is graded; the knowledge graph's *statistics only* flags still say which leads no known mechanism explains:
+
+  ![The library and your own data: what changes](figures/library_vs_yours.png)
+
+  A simulated dataset with the library's own seed and size reproduced every committed file that doesn't depend on DIABLO, which checks that nothing in the library changed. Nothing about your data is sent to a language model. Explore the steps, the measured run times and the checks' messages in `docs/interactive/workflow_explorer.html`; the guide is [`docs/10-workflow-and-your-data.md`](docs/10-workflow-and-your-data.md). This is **v1.1.0**.
 
 ## Build log
 
@@ -431,8 +492,9 @@ means, matching the build log below. Nothing is shown before it exists.*
 | 7.1 | [Fix: small language models cite their sources, the model check, clearer suggestions](docs/HANDBOOK.md#stage-121-fix-for-small-language-models-the-model-check-and-clearer-suggestions) | ✅ |
 | 7b | [The MCP server: nine read-only tools for AI assistant apps](docs/08b-mcp-server.md) | ✅ |
 | 8 | [Packaging & release 1.0: one command, tests on every system, a container, reuse and citation](docs/09-packaging.md) | ✅ **v1.0.0** |
+| 9 | [The whole workflow in the app, on your own data: datasets, checks, the Workflow page](docs/10-workflow-and-your-data.md) | ✅ **v1.1.0** |
 
-*Legend: ✅ done · 🔨 living / in progress · ⏳ next · ⬜ planned. Every phase is built; fixes found through use become patch releases.*
+*Legend: ✅ done · 🔨 living / in progress · ⏳ next · ⬜ planned. Every phase is built; fixes found through use become patch releases, and what a larger version would add is in the product roadmap.*
 
 ## The tutorial, in order
 
@@ -460,6 +522,7 @@ Read them in this order:
 | n/a | [Switching on a language model](docs/LANGUAGE_MODEL.md) | Optional written answers for the three assistants: Ollama on your computer, a hosted provider at home or for the online copy, switching off, and what to do when something goes wrong |
 | 08b | [The MCP server](docs/08b-mcp-server.md) | The Model Context Protocol: servers, clients and tools; stdio and why standard output belongs to the protocol; input schemas and tool annotations; read-only tools with checked input, refusals as sentences and a call log; connecting Claude Desktop, Claude Code or another app on Windows, macOS and RHEL 8; what an assistant sees |
 | 09 | [Packaging and release 1.0](docs/09-packaging.md) | A pipeline in one command, and checking that a rebuild gives the same numbers; continuous integration (workflows, jobs, runners, a matrix) on Windows, macOS, Linux and RHEL 8; containers with Docker or Podman; licence, citation file, contribution guide, security policy; Dependabot; accessibility checked with axe-core, the Tab key and a screen reader's view; Git hooks; releases |
+| 10 | [The whole workflow on your own data](docs/10-workflow-and-your-data.md) | One set of scripts, many datasets (a folder each, chosen by an environment variable); preparing three tables and what the checks say (errors, warnings, notes); what changes without an answer key; quick settings; following a run's steps; a fresh simulated library, and checking it rebuilds the library; datasets on a shared copy; a minor version |
 | n/a | [Uninstalling](docs/UNINSTALL.md) | Every place StrainScope can leave something, on your computer and online, and how to remove each in a safe order |
 | n/a | [Roadmap](docs/ROADMAP.md) · [Product roadmap](docs/PRODUCT_ROADMAP.md) | What is built next and why; what an industrial version would add, with a verdict for every technology |
 | n/a | [Glossary](docs/GLOSSARY.md) | Every term, plain language, by phase |
@@ -479,8 +542,11 @@ through the [Model Context Protocol](https://modelcontextprotocol.io), read-only
 checked and logged. Last came packaging and release 1.0 (Phase 8): one
 command that rebuilds every result and checks the numbers, automatic tests on
 Windows, macOS, Linux and RHEL 8 at every push, a container, a licence, a
-citation file and a contribution guide (v1.0.0). Every row of the roadmap's
-product checklist is done; fixes found through use become patch releases.
+citation file and a contribution guide (v1.0.0). Phase 9 then put the whole
+workflow in the app: three tables of your own (or a fresh simulated library)
+become a dataset, checked first, and every phase runs on it from a button or one
+command (v1.1.0). Every row of the roadmap's product checklist is done; fixes
+found through use become patch releases.
 
 What a larger, industrial version would add is laid out in
 [`docs/PRODUCT_ROADMAP.md`](docs/PRODUCT_ROADMAP.md): real matched laboratory
@@ -518,9 +584,11 @@ rather add a tool when something calls for it than pile tools up in advance.
   app). It does **not** show that the predictions would hold on real-world
   strains. The docs state that limit clearly, and I think that's how
   synthetic-data work should be presented.
-- **Optional real-data path:** the [roadmap](docs/ROADMAP.md#deferred-items-and-their-triggers)
-  keeps a slot for swapping in a real matched dataset if one ever becomes
-  available. It would plug in at the Phase 3 hand-off files.
+- **Your own data:** since v1.1.0 every phase runs on three tables of your own
+  ([how](#your-own-data-every-phase)). They stay on your computer, in a folder
+  Git ignores; their results are learned from them alone and, without an answer
+  key, aren't graded. The same route takes a real matched dataset, should a
+  public one become available ([roadmap](docs/ROADMAP.md#deferred-items-and-their-triggers)).
 
 ## Repository map
 
@@ -570,6 +638,7 @@ strainscope/
 │   ├── 08-deployment-ai.md        ← Phase 7: online, plain words, Ask the data/graph ✅
 │   ├── 08b-mcp-server.md          ← Phase 7b: the MCP server                       ✅
 │   ├── 09-packaging.md            ← Phase 8: one command, CI, container, release   ✅
+│   ├── 10-workflow-and-your-data.md ← Phase 9: every phase on your own data        ✅
 │   ├── UNINSTALL.md               ← removing StrainScope, completely and safely    ✅
 │   ├── ROADMAP.md                 ← what is built next, and why                    ✅
 │   ├── PRODUCT_ROADMAP.md         ← beyond the repo: verdicts and triggers         ✅
@@ -590,6 +659,7 @@ strainscope/
 │       ├── assistants_explorer.html ← Phase 7: Ask the data and Ask the graph
 │       ├── mcp_explorer.html      ← Phase 7b: the nine tools, their inputs, real calls
 │       ├── release_explorer.html  ← Phase 8: the plans, the CI jobs, the checklist
+│       ├── workflow_explorer.html ← Phase 9: the steps, run times, the checks
 │       └── journey.html           ← the Handbook's journey, clickable
 │
 ├── figures/                       ← teaching figures, each regenerated by a script
@@ -605,12 +675,14 @@ strainscope/
 │   ├── make_phase7_figures.py     ← Phase 7: deployment, the assistants, the guards ✅
 │   ├── make_phase7b_figures.py    ← Phase 7b: the MCP pictures + tool explorer     ✅
 │   ├── make_phase8_figures.py     ← Phase 8: pipeline, CI, release, container, ... ✅
-│   ├── take_app_screenshots.py    ← Phases 6 to 8: screenshots (optional, Playwright) ✅
+│   ├── make_phase9_figures.py     ← Phase 9: three tables, datasets, checks, explorer ✅
+│   ├── take_app_screenshots.py    ← Phases 6 to 9: screenshots (optional, Playwright) ✅
 │   ├── make_illustrations.py      ← logo, icon, journey map + interactive journey  ✅
 │   └── *.png                      ← the figures themselves                         ✅
 │
 ├── src/strainscope/               ← the reusable backend code (Python)
 │   ├── __init__.py                ← marks the folder as a Python package           ✅
+│   ├── paths.py                   ← Phase 9: where every script reads and writes   ✅
 │   ├── generate_data.py           ← Phase 1: the synthetic data generator          ✅
 │   ├── fetch_real.py              ← Phase 1b: the real-data command (probe/fetch)  ✅
 │   ├── sources/                   ← Phases 1b-1c: one plug per source (BacDive ·
@@ -628,7 +700,8 @@ strainscope/
 │   ├── ask_data.py                ← Phase 7: Ask the data (recipes, five guards)   ✅
 │   ├── ask_graph.py               ← Phase 7: Ask the graph (GraphRAG)              ✅
 │   ├── mcp_server.py              ← Phase 7b: the MCP server (nine read-only tools) ✅
-│   └── pipeline.py                ← Phase 8: the one-command pipeline + compare    ✅
+│   ├── pipeline.py                ← Phase 8: the one-command pipeline + compare    ✅
+│   └── datasets.py                ← Phase 9: check, save, list, remove datasets     ✅
 │
 ├── R/
 │   └── diablo_integration.R       ← Phase 3: DIABLO (mixOmics), run on the laptop  ✅
@@ -645,11 +718,11 @@ strainscope/
 │   ├── streamlit_app.py           ← its front door: sidebar, page list, first start ✅
 │   ├── ui.py, charts.py           ← what the pages share; every chart               ✅
 │   ├── requirements.txt           ← the online copy's packing list (exact versions) ✅
-│   └── views/                     ← eleven pages: home, about, ask, ask_data,
+│   └── views/                     ← twelve pages: home, about, ask, ask_data,
 │                                     ask_graph, ranking, strain, knowledge_graph,
-│                                     integration, data, sql_console                ✅
+│                                     integration, data, workflow, sql_console      ✅
 │
-├── tests/                         ← automated checks (pytest): 447 today           ✅
+├── tests/                         ← automated checks (pytest): 495 today           ✅
 │   ├── test_sources.py            ← ingestion parsers, offline
 │   ├── test_harmonize.py          ← cleaning rules and the database loader
 │   ├── test_integrate.py          ← integration, grading, the R ↔ Python contract
@@ -663,7 +736,8 @@ strainscope/
 │   ├── test_deploy.py             ← what the online copy and a release rely on
 │   ├── test_mcp.py                ← the MCP server: tools, checks, the log, over stdio
 │   ├── test_pipeline.py           ← the one-command pipeline, compare, the button
-│   ├── conftest.py                ← the stand-in model server the tests share
+│   ├── test_datasets.py           ← datasets: the checks, the folders, a real run
+│   ├── conftest.py                ← the stand-in model server and the example run the tests share
 │   ├── golden_questions.csv       ← the golden questions and what must happen to each
 │   ├── golden_data_questions.csv, golden_graph_questions.csv ← the same, Phase 7
 │   └── test_safety_gate.py        ← the safety gate and its hook, in throw-away repos
@@ -671,7 +745,8 @@ strainscope/
 ├── data/                          ← NOT in Git; regenerated on demand
 │   ├── raw/                       ← raw synthetic tables + real-data evidence locker
 │   └── processed/                 ← clean tables, integration blocks, strainscope.duckdb,
-│                                     the MCP server's call log, the accessibility report
+│                                     the MCP server's call log, the accessibility report,
+│                                     and datasets/ (one folder per dataset, Phase 9)
 │
 ├── .venv/                         ← Python's sealed toolbox (NOT in Git)
 └── renv/library/                  ← R's sealed library, NOT in Git (rebuilt from renv.lock)
@@ -683,12 +758,12 @@ strainscope/
 | `.github/` | GitHub's settings files: the automatic tests (`workflows/ci.yml`), Dependabot, the issue forms and the pull-request checklist |
 | `tools/` | Optional tools for checking the project, beyond the tests: the keyboard and screen-reader check |
 | `docs/` | The Handbook, the phase-by-phase tutorial, glossary, cookbook and roadmaps (the repo's teaching layer) |
-| `src/strainscope/` | The reusable Python backend: generate, fetch, clean, query, integrate, then model, graph, serve, ask, explain in plain words, and the MCP server for AI assistant apps |
+| `src/strainscope/` | The reusable Python backend: generate, fetch, clean, query, integrate, then model, graph, serve, ask, explain in plain words, the MCP server for AI assistant apps, and datasets of your own |
 | `R/` | The single specialised R script (DIABLO integration), run on the laptop |
 | `artifacts/` | Small precomputed outputs the app serves; they're the bridge from laptop to cloud |
-| `app/` | The Streamlit app (the frontend): eleven pages over the service layer in `src/strainscope/service.py` and the assistants; `app/requirements.txt` is the online copy's packing list |
+| `app/` | The Streamlit app (the frontend): twelve pages over the service layer in `src/strainscope/service.py` and the assistants; `app/requirements.txt` is the online copy's packing list |
 | `tests/` | Automated checks that confirm the code does what it claims |
-| `data/` | Raw + processed data and the DuckDB file. **Never in Git**; regenerated on demand |
+| `data/` | Raw + processed data, the DuckDB file and your datasets. **Never in Git**; the library's part is regenerated on demand, your datasets are yours to keep |
 
 Two kinds of "not in Git": `data/` because the scripts recreate it (that's the
 proof they work), and `.venv/`, `renv/library/`, `.env` and `.streamlit/secrets.toml`
@@ -718,6 +793,16 @@ python src/strainscope/pipeline.py compare   # every rebuilt number against the 
 git restore artifacts/                       # the committed results back, so a rebuild never ends up in a commit
 python src/strainscope/pipeline.py database  # or just the database, from the committed results (15 s)
 
+# Every phase on your own data (Phase 9): three CSV files, checked, then run
+python src/strainscope/datasets.py template data/raw/my_strains    # three empty tables to fill in
+python src/strainscope/datasets.py example data/raw/my_tables      # or 120 example strains to practise on
+python src/strainscope/datasets.py check data/raw/my_tables        # every problem, with its row
+python src/strainscope/datasets.py new trial --from data/raw/my_tables   # --quick: 2 repeats instead of 10
+python src/strainscope/pipeline.py --dataset trial                 # every phase, in the dataset's own folder
+python src/strainscope/datasets.py show trial                      # its steps, and what each found
+python src/strainscope/datasets.py new seed7 --simulate --seed 7 --strains 300   # or a fresh simulated library
+python src/strainscope/datasets.py list                            # every dataset; remove NAME deletes one
+
 # ... or phase by phase, the same steps by hand
 python src/strainscope/generate_data.py   # Phase 1  - the synthetic library
 python src/strainscope/fetch_real.py      # Phase 1b/1c - real data (optional, needs internet)
@@ -746,10 +831,11 @@ python figures/make_phase6b_figures.py    # redraw the Phase 6b figures + Ask ex
 python figures/make_phase7_figures.py     # redraw the Phase 7 figures + assistants explorer
 python figures/make_phase7b_figures.py    # redraw the Phase 7b figures + MCP tool explorer
 python figures/make_phase8_figures.py     # redraw the Phase 8 figures + release explorer
+python figures/make_phase9_figures.py     # redraw the Phase 9 figures + workflow explorer
 python src/strainscope/graph.py why STRAIN_0485   # why does this strain rank first?
 
 # Check everything
-pytest -q                                 # 446 passed, 1 skipped
+pytest -q                                 # 494 passed, 1 skipped
 python tools/check_accessibility.py      # optional: keyboard and screen-reader check (needs Playwright)
 
 # Or run the app in a container: only Docker (or Podman) and this folder needed
@@ -812,7 +898,7 @@ The push line sends local `develop` to remote `develop` and fast-forwards remote
 `beta` and `master` to match, so one command keeps all three branches in
 lock-step. The `master` sync-back keeps the local copy consistent with what was
 just pushed. `--ff-only` means "update only if it's clean, otherwise stop and
-warn." Tags (`v0.1.0`, `v0.1.1`, `v0.2.0`, `v0.3.0`, `v1.0.0`; [why these](docs/ROADMAP.md#version-tags))
+warn." Tags (`v0.1.0`, `v0.1.1`, `v0.2.0`, `v0.3.0`, `v1.0.0`, `v1.1.0`; [why these](docs/ROADMAP.md#version-tags))
 are pushed with `--tags` only when a new version is cut, and since v1.0.0 only after
 every automatic test on GitHub has passed on that commit. The full reasoning and the
 "if it goes wrong" cases are in [`docs/01-setup.md`](docs/01-setup.md#part-h-initialise-git-and-push-with-the-master--beta--develop-workflow);

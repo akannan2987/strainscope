@@ -60,7 +60,7 @@ A **widget** is anything you can click or type into: a slider, a dropdown (Strea
 | **Data** | the simulated library; **upload your own strains**; real data from public databases | the database, the saved model, the graph |
 | **SQL console** | ask the database anything, with the [Query Cookbook](QUERY_COOKBOOK.md)'s recipes one click away | the database, `docs/QUERY_COOKBOOK.md` |
 
-Phase 6b added an eighth page, **Ask StrainScope**: questions about the project, answered from its own documents with links ([`docs/07b-docs-assistant.md`](07b-docs-assistant.md)). Phase 7 added three more: **Ask the data** and **Ask the graph**, which sit with Ask StrainScope in the sidebar's *Ask* group, and **About this copy**, a health page under Home ([`docs/08-deployment-ai.md`](08-deployment-ai.md)). The picture above shows all eleven.
+Phase 6b added an eighth page, **Ask StrainScope**: questions about the project, answered from its own documents with links ([`docs/07b-docs-assistant.md`](07b-docs-assistant.md)). Phase 7 added three more: **Ask the data** and **Ask the graph**, which sit with Ask StrainScope in the sidebar's *Ask* group, and **About this copy**, a health page under Home ([`docs/08-deployment-ai.md`](08-deployment-ai.md)). The picture above shows those eleven. Phase 9 added a twelfth, **Workflow** (under *Work with data*), which runs every phase on a dataset of your own, and a **Dataset** box in the sidebar that switches every page to the chosen dataset ([`docs/10-workflow-and-your-data.md`](10-workflow-and-your-data.md)).
 
 ---
 
@@ -136,7 +136,7 @@ What runs where: everything on your own computer. The app is a small web server 
 
 - **No logins or user accounts.** One person on a laptop doesn't need them. A multi-user web front end is item A1 of the [product roadmap](PRODUCT_ROADMAP.md#a1-web-front-end-react-with-typescript), with the event that would schedule it.
 - **No React or FastAPI.** Streamlit is enough for one person exploring. The split into a back-end API and a separate front end is recorded in the [roadmap](ROADMAP.md#deferred-items-and-their-triggers) as a deferred item with its trigger.
-- **No re-training from the app.** The analysis steps take minutes and print a lot that's worth reading, so in this phase they stay on the command line. Phase 8 added a *Rebuild everything from scratch* button on the Data page, which runs the one-command pipeline with its live output ([`docs/09-packaging.md` §7](09-packaging.md#7-step-3-the-same-from-the-app)).
+- **No re-training from the app.** The analysis steps take minutes and print a lot that's worth reading, so in this phase they stay on the command line. Phase 8 added a *Rebuild everything from scratch* button on the Data page, which runs the one-command pipeline with its live output ([`docs/09-packaging.md` §7](09-packaging.md#7-step-3-the-same-from-the-app)), and Phase 9 the Workflow page, which runs every phase on a dataset of your own ([`docs/10-workflow-and-your-data.md` §10](10-workflow-and-your-data.md#10-step-6-the-same-in-the-app-the-workflow-page)).
 - **No language model in this phase.** The plain-language explanations, Ask the data and Ask the graph (GraphRAG) came in Phase 7 ([`docs/08-deployment-ai.md`](08-deployment-ai.md)); the documentation assistant of Phase 6b has its own page ([`docs/07b-docs-assistant.md`](07b-docs-assistant.md)), with optional written answers.
 - **No editing of data in the app.** The data flows one way ([architecture §5b](00-architecture.md#5b-the-one-design-rule-that-makes-it-reproducible)); an app that edited results would break that rule.
 
@@ -318,6 +318,8 @@ These two get their own steps next.
 ## 8. Step 4: score your own strains
 
 On the **Data** page, open the **Upload your strains** tab.
+
+> **Since Phase 9** this upload scores your strains with the saved model of the dataset chosen in the sidebar (the library's, unless you chose another) and doesn't learn from them. To run every phase on your strains, so that the model learns from them alone, use the Workflow page ([`docs/10-workflow-and-your-data.md`](10-workflow-and-your-data.md)). The steps below use the library.
 
 1. **Download an example (12 strains).** It's twelve library strains, three per kingdom (the best, a middling and the lowest ranked of each), renamed `EXAMPLE_01` to `EXAMPLE_12`, with a last column `copied_from` that names the original. (*Download the empty template* gives the header row only: `strain_id`, `kingdom`, `genus`, the 31 gene columns and the 20 compound columns.)
    Your browser saves it as `strainscope_example.csv`, usually in your Downloads folder.

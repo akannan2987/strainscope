@@ -278,7 +278,7 @@ def draw_footprint():
                    ("the code, documents, results", "safe on GitHub"),
                    (".venv/ (the Python toolbox)", "rebuilt from requirements.txt"),
                    ("renv/library/ (links into renv)", "rebuilt from renv.lock"),
-                   ("data/ (database, call log)", "rebuilt by the pipeline"),
+                   ("data/ (database, datasets, call log)", "your datasets: keep a copy"),
                    (".env (your keys)", "revoke keys at the provider"),
                    ("the pre-push hook setting", "lives in .git/config")], DARK_GREEN),
                ("3. online", "only if you published them", [

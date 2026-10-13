@@ -8,25 +8,38 @@ import ui
 
 st.title("Integration: genes and chemistry, read together")
 card = ui.artifact("integration/signature_report_card.csv")
+graded = ui.info().get("answer_key", True)
 if card is None:
-    ui.needs("These results come from Phase 3, and artifacts/integration/ is empty.",
-             "python src/strainscope/integrate.py all")
+    ui.needs("These results come from Phase 3, and they aren't there yet.",
+             ui.fix_command("python src/strainscope/integrate.py all"))
     st.stop()
 st.markdown(
     "Each strain was measured twice: which genes it carries and how much of each compound it makes. "
-    "Integration looks for the short list of features that tell **one story across both**. Because the data "
-    "is simulated, we know which features really drive the outcome, so every list can be graded. "
-    f"Explained step by step in {ui.doc('04-integration.md', 'docs/04-integration.md')}.")
+    "Integration looks for the short list of features that tell **one story across both**. "
+    + ("Because the data is simulated, we know which features really drive the outcome, so every list can be "
+       "graded. " if graded else "Your own data has no answer key, so the lists are shown as found, not graded. ")
+    + f"Explained step by step in {ui.doc('04-integration.md', 'docs/04-integration.md')}.")
 ui.simulated_note()
 
-st.header("The report card")
-st.dataframe(card.rename(columns={"n_selected": "picked", "n_signal_selected": "true drivers",
-                                  "n_decoys_selected": "decoys", "decoys_selected": "which decoys"}),
-             hide_index=True, width="stretch",
-             column_config={"precision": st.column_config.NumberColumn(format="%.2f", help="share of picks that are true drivers"),
-                            "recall": st.column_config.NumberColumn(format="%.2f", help="share of true drivers that were picked")})
-st.caption("Robust = picked in at least 80 % of re-fits on resampled data. DIABLO's robust list has no decoys, "
-           "and every feature the Python lasso picks is on it too.")
+st.header("The report card" if graded else "The signatures found")
+if graded:
+    st.dataframe(card.rename(columns={"n_selected": "picked", "n_signal_selected": "true drivers",
+                                      "n_decoys_selected": "decoys", "decoys_selected": "which decoys"}),
+                 hide_index=True, width="stretch",
+                 column_config={"precision": st.column_config.NumberColumn(format="%.2f", help="share of picks that are true drivers"),
+                                "recall": st.column_config.NumberColumn(format="%.2f", help="share of true drivers that were picked")})
+else:
+    st.dataframe(card[["method", "n_selected"]].rename(columns={"n_selected": "picked"}),
+                 hide_index=True, width="content")
+    picked = ui.artifact("integration/python_selection.csv")
+    if picked is not None:
+        robust = picked.loc[picked["selection_frequency"] >= 0.8, "feature"].tolist()
+        st.markdown("**Picked by the Python lasso in 80 % of folds or more:** " + (", ".join(robust) or "none"))
+if ui.builtin():
+    st.caption("Robust = picked in at least 80 % of re-fits on resampled data. DIABLO's robust list has no decoys, "
+               "and every feature the Python lasso picks is on it too.")
+else:
+    st.caption("Robust = picked in at least 80 % of re-fits on resampled data.")
 
 sig, ann = ui.artifact("integration/diablo_signature.csv"), ui.artifact("integration/feature_annotations.csv")
 summary = ui.artifact("integration/diablo_summary.csv")
@@ -37,7 +50,12 @@ with left:
     if sig is not None:
         ui.chart(charts.signature_figure(sig, ann))
         ui.numbers_behind(sig.sort_values(["component", "stability"], ascending=[True, False]))
-        st.caption("Blue: genes. Gold: compounds. Red: a decoy that slipped in (none of them is robust).")
+        st.caption("Blue: genes. Gold: compounds. Red: a decoy that slipped in"
+                   + (" (none of them is robust)." if ui.builtin() else "."))
+    else:
+        st.info("DIABLO runs in R, and R wasn't there when this dataset ran (the online copy has no R). The "
+                "Python methods on the right did the same job. On a computer with R (docs/01-setup.md, Part I), "
+                "run the dataset's steps again to add DIABLO.")
 with right:
     st.header("Every method, same folds")
     if board is not None:
@@ -50,8 +68,10 @@ with right:
                                                 "auc_mean": "AUC", "auc_sd": "AUC spread (sd)",
                                                 "n_folds_scored": "folds"}))
         st.caption("Lower is better. The two grey controls (the kingdom label on its own, and shuffled "
-                   "labels) must sit near a coin's 0.50 to show the scoring is fair, and they do. DIABLO's "
-                   "bar is the number R reported in Phase 3.")
+                   "labels) must sit near a coin's 0.50 to show the scoring is fair"
+                   + (", and they do. DIABLO's bar is the number R reported in Phase 3." if ui.builtin() else
+                      ". If one doesn't, the outcome may follow the kingdom closely (or something leaks).")
+                   )
     agreement = ui.artifact("integration/language_agreement.csv")
     if agreement is not None:
         a = agreement.iloc[0]
@@ -65,5 +85,7 @@ if cross is not None:
     ui.numbers_behind(cross.sort_values("spearman_rho", ascending=False).rename(
         columns={"spearman_rho": "correlation (Spearman)", "is_producer_pair": "the gene makes the compound"}),
         "this chart (strongest first)")
-    st.caption("Spearman correlation between carrying each gene and the level of each compound. The bright "
-               "red cells are genes and the compounds they make (phlD and DAPG, ituA and iturin, ...).")
+    st.caption("Spearman correlation between carrying each gene and the level of each compound."
+               + (" The bright red cells are genes and the compounds they make (phlD and DAPG, ituA and "
+                  "iturin, ...)." if ui.builtin() else
+                  " Known gene and product pairs (ituA and iturin, ...) are marked in the table below."))

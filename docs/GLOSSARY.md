@@ -446,6 +446,28 @@ first appears. If a term is missing, that's a documentation bug worth fixing.
 - **Patch release**: a version that only fixes something (the third number: v1.0.1).
 - **Uninstall guide**: [`docs/UNINSTALL.md`](UNINSTALL.md), every place StrainScope can leave something behind, and how to remove it in a safe order.
 
+## Phase 9: the whole workflow on your own data (doc 10)
+
+### Datasets
+- **Dataset**: one set of data with a folder of its own, `data/processed/datasets/NAME/`, laid out like the library's folders (`raw/`, `processed/`, `artifacts/`, `figures/`). It is either *your own data* (three tables you bring) or a *simulated library* (a seed and a size). Each dataset gets its own database and results, and the library's are never touched.
+- **The library (built in)**: the 600 simulated strains of Phase 1 (seed 42) and their committed results in `data/` and `artifacts/`. Every page shows it when no dataset is chosen.
+- **`dataset.json`**: the label on a dataset's folder: its kind, whether it has an answer key, where it came from, the line for "effective", the number of repeats, the check's notes and when each step last ran.
+- **`STRAINSCOPE_DATASET`**: an environment variable (one of the named values of Phase 1c) that names the dataset every script works on. `pipeline.py --dataset NAME` and the app set it for the scripts they start; empty or unset means the library. By hand: `NAME=value command` on macOS and Linux, `$env:NAME = "value"` in PowerShell.
+- **Template**: the three CSV files with only their header row, to fill in (`datasets.py template FOLDER`, or *Empty template* on the Workflow page).
+- **Check levels**: the three kinds of message the checks give. An **error** stops, and nothing is saved until it's fixed; a **warning** says something was left out or rests on very little; a **note** says what was assumed. A message about one cell gives its **spreadsheet row number**, counting the header as row 1.
+- **Answer key**: the features that really drive the outcome, known only for simulated data because the generator wrote them into its formula. With one, findings are graded; without one (your own data), they are listed as "not graded".
+- **Line for "effective"** (`effective_at`): the suppression score from which a strain counts as effective when its table has no `is_effective` column. 65 % unless you choose another.
+
+### Running and following the steps
+- **Quick settings**: two repeats of the five-fold cross-validation instead of ten, so the model step runs two to three times faster and the ± values are rougher. Always on for a shared copy.
+- **Plans `simulate` and `workflow`**: the pipeline's plans for a dataset. `simulate` starts with the generator (a simulated library); `workflow` starts with cleaning (your own data, which needs no generator). `pipeline.py --dataset NAME` picks the right one.
+- **Receipt (of a step)**: a file a step writes at the end of its work: the cleaning ledger, the integration report card, the model card or the explanations. Its time says when the step last finished.
+- **Step state**: *done* (its receipt is newer than every earlier step's and, for your own data, than the raw tables), *run again* (an earlier step ran after it, or a raw table changed, so its input has changed) or *to do* (no receipt yet). `datasets.py show NAME` and the Workflow page both show it.
+- **Workflow page**: the app page, under *Work with data*, that makes datasets and runs their steps with buttons. Not the same as a GitHub Actions *workflow* (Phase 8), which is the file listing CI's jobs.
+- **Dataset box**: the choice in the sidebar of what every page shows, the built-in library or one of your datasets. Each browser tab has its own.
+- **Temporary dataset**: on a shared copy, a dataset named `visit_` and eight letters and digits. Only the browser tab that made it lists it (the tab holds a random **owner token**), and it is deleted an hour after it was last used.
+- **Minor version**: the second number of a version (1.**1**.0), raised when something new arrives and nothing that worked before has changed.
+
 ## The Handbook, releases and the roadmaps (docs HANDBOOK, ROADMAP, PRODUCT_ROADMAP)
 
 - **Handbook**: [`docs/HANDBOOK.md`](HANDBOOK.md), the one living document that walks the whole journey from a blank laptop to the finished product and links every specialised guide. Read it first; it's updated in the same commit as every change. [`docs/interactive/journey.html`](interactive/journey.html) is the same journey as a clickable page, built from the Handbook.

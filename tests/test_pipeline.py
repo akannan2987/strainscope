@@ -135,7 +135,7 @@ def test_from_outside_the_plan_is_refused(capsys):
 def test_ctrl_c_stops_the_run_and_says_where(stand_in_steps, monkeypatch, capsys):
     plan = stand_in_steps("one.py", "two.py")
 
-    def interrupted(name, root, start):
+    def interrupted(name, root, start, dataset=None):
         yield {"event": "start", "step": 1, "label": "python src/strainscope/one.py"}
         raise KeyboardInterrupt
     monkeypatch.setattr(sv, "pipeline_events", interrupted)

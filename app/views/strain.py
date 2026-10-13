@@ -14,8 +14,9 @@ pred = ui.ranking()
 G = ui.strain_graph()
 if pred is None or G is None:
     ui.needs("The strain page needs Phase 4's ranking and Phase 5's graph.",
-             "python src/strainscope/model.py all\npython src/strainscope/graph.py all")
+             ui.fix_command("python src/strainscope/model.py all\npython src/strainscope/graph.py all"))
     st.stop()
+place = ui.info()
 
 ids = pred.sort_values("rank")["strain_id"].tolist()
 # The strain to show: the one picked in this tab (Ranking page, Previous/Next),
@@ -48,8 +49,9 @@ row = pred[pred["strain_id"] == strain].iloc[0]
 node = G.nodes.get(f"strain:{strain}", {})
 st.title(strain)
 genus = row.get("genus") if isinstance(row.get("genus"), str) else node.get("genus", "unknown")
-st.markdown(f"*{genus}*, {str(row['kingdom']).lower()}"
-            + (" · from your upload" if ui.showing_upload() else " · simulated library"))
+where = (" · from your upload" if ui.showing_upload() else " · simulated library" if ui.builtin()
+         else f" · dataset {ui.dataset()}")
+st.markdown(f"*{genus}*, {str(row['kingdom']).lower()}" + where)
 
 expl = ui.explanation(strain)
 paths = int(expl["mechanism_paths"].iloc[0]) if len(expl) else 0
@@ -61,20 +63,26 @@ m[1].metric("Chance of being effective", narrate.percent(row["probability"]),
             f"{band} · {'flagged' if row['probability'] >= threshold else 'not flagged'}",
             delta_color="off", delta_arrow="off",
             help=f"Likely above 70 %, borderline from 30 % to 70 %, unlikely below 30 %. 'Effective' means "
-                 f"suppressing disease by at least 65 % in the trial, and strains just either side of that "
-                 f"line are much alike, so a middling chance is called borderline. Flagged when the chance "
-                 f"is above {threshold:.0%}, the library's share of effective strains.")
+                 f"suppressing disease by at least {float(place.get('effective_at', 65)):g} % in the trial, and "
+                 f"strains just either side of that line are much alike, so a middling chance is called "
+                 f"borderline. Flagged when the chance is above {threshold:.0%}, the share of effective "
+                 f"strains in the {'library' if ui.builtin() else 'dataset'}.")
 m[2].metric("Mechanism paths", paths, help="Routes in the knowledge graph from this strain, through a weapon "
                                            "and the way it works, to disease suppression.")
 if "is_effective" in row.index and pd.notna(row.get("is_effective")):
-    m[3].metric("In the simulated trial", "effective" if int(row["is_effective"]) == 1 else "not effective",
-                help="The answer key, known only because the data is simulated.")
+    if place["kind"] == "yours":
+        m[3].metric("In your trial results", "effective" if int(row["is_effective"]) == 1 else "not effective",
+                    help="What the trial-results table says about this strain.")
+    else:
+        m[3].metric("In the simulated trial", "effective" if int(row["is_effective"]) == 1 else "not effective",
+                    help="The answer key, known only because the data is simulated.")
 elif "library_rank" in row.index:
-    lr = int(row["library_rank"])
-    m[3].metric("Would rank in the library", f"{lr} of 600" if lr <= 600 else "below all 600")
+    lr, n_all = int(row["library_rank"]), int(place.get("strains", 600))
+    m[3].metric("Would rank among the dataset's strains" if not ui.builtin() else "Would rank in the library",
+                f"{lr} of {n_all}" if lr <= n_all else f"below all {n_all}")
 
 # -- in plain words (Phase 7) ---------------------------------------------------------
-story = narrate.strain(row.to_dict(), expl, len(pred), ui.card(), uploaded=ui.showing_upload())
+story = narrate.strain(row.to_dict(), expl, len(pred), ui.card(), uploaded=ui.showing_upload(), place=place)
 with st.container(border=True):
     st.markdown("**In plain words**")
     for para in story.paragraphs:
@@ -124,8 +132,13 @@ with st.expander("Everything it carries and produces"):
                        G.out_edges(f"strain:{strain}", data=True) if e["relation"] == "produces"),
                       key=lambda x: -(x[1] or 0))
     st.markdown("**Genes it carries:** " + (", ".join(carried) or "none recorded"))
-    st.markdown("**Compounds it produces** (at least 4 times the library's usual level): "
-                + (", ".join(f"{c} ({w:.1f}x)" for c, w in produced) or "none"))
-    st.caption("From a terminal: `python src/strainscope/graph.py show " + strain + "`"
-               if not ui.showing_upload() else "Uploaded strains are not in the saved graph, so `graph.py show` "
-                                               "doesn't know them; this page does.")
+    st.markdown(f"**Compounds it produces** (at least 4 times the {'library' if ui.builtin() else 'dataset'}'s "
+                "usual level): " + (", ".join(f"{c} ({w:.1f}x)" for c, w in produced) or "none"))
+    if ui.showing_upload():
+        st.caption("Uploaded strains are not in the saved graph, so `graph.py show` doesn't know them; this page does.")
+    elif ui.builtin():
+        st.caption("From a terminal: `python src/strainscope/graph.py show " + strain + "`")
+    else:
+        st.caption(f"From a terminal, with STRAINSCOPE_DATASET set to {ui.dataset()}: "
+                   f"`python src/strainscope/graph.py show {strain}` "
+                   f"({ui.doc('10-workflow-and-your-data.md', 'docs/10-workflow-and-your-data.md')}).")

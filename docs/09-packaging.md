@@ -261,6 +261,8 @@ python src/strainscope/pipeline.py --list
   Run one with: python src/strainscope/pipeline.py <plan>
 ```
 
+(Since Phase 9 the list also shows the plans `simulate` and `workflow`, before `compare`, and ends with a line about `--dataset NAME`: they run every phase on a dataset of its own, [`docs/10-workflow-and-your-data.md` §8](10-workflow-and-your-data.md#8-step-4-run-every-phase-on-it).)
+
 Now the real thing. The scripts print a lot; `--quiet` keeps only the steps and the summary, which is easier to follow the first time:
 
 ```bash
@@ -587,7 +589,24 @@ Two switches in the repository's settings, once. On the repository's page: **Set
 
 The same page offers a third switch, **Dependabot security updates**. Leave it off: those pull requests always go to master and would skip develop (§18).
 
-The monthly update suggestions need no switch: `.github/dependabot.yml` asks for them, and they arrive as pull requests into develop, each tested by CI. To take one: merge it on GitHub if its tests are green, then bring develop up to date on your computer (`git switch develop`, then `git pull --ff-only origin develop`) and push the usual way, so beta and master follow. scikit-learn is left out on purpose: the saved model was built with an exact version (`artifacts/model/model_card.json`), and it moves only together with a rebuild of the model (`python src/strainscope/model.py all`, then the new version in `app/requirements.txt`; `tests/test_deploy.py` checks that the two agree).
+The monthly update suggestions need no switch: `.github/dependabot.yml` asks for them, and they arrive as pull requests into develop, each tested by CI. There are two ways to take one whose tests are green.
+
+- **On GitHub:** press *Merge pull request* on its page, then bring develop up to date on your computer (`git switch develop`, then `git pull --ff-only origin develop`) and push the usual way, so beta and master follow.
+- **From a terminal**, without GitHub's buttons (this is how I took the first two, for the actions CI uses). The pull request's page names its branch under the title, after "wants to merge ... from"; it starts with `dependabot/`. Then:
+
+```bash
+git switch develop
+git pull --ff-only origin develop
+git fetch origin
+git merge --no-edit origin/dependabot/github_actions/develop/actions/setup-python-7   # the branch from the page
+pytest -q
+./check-public-safe.sh        # must end with: SAFE TO PUSH  (Windows: bash check-public-safe.sh in Git Bash)
+git push origin develop develop:beta develop:master
+```
+
+`git merge` joins the suggestion's commits into your develop, the tests and the gate check the result on your own computer, and the push sends it everywhere. GitHub notices that the pull request's commits are now on develop and marks it *Merged* by itself, so there's nothing left to press. Dependabot deletes its branch afterwards.
+
+scikit-learn is left out on purpose: the saved model was built with an exact version (`artifacts/model/model_card.json`), and it moves only together with a rebuild of the model (`python src/strainscope/model.py all`, then the new version in `app/requirements.txt`; `tests/test_deploy.py` checks that the two agree).
 
 ---
 
@@ -811,4 +830,4 @@ git switch develop
 - Run `python src/strainscope/pipeline.py real` on a computer with internet, then `compare`: the four graph tables are compared too, against the real data fetched on my computer. How much has the outside world changed?
 - With VoiceOver or NVDA on, try to answer "which strain ranks first, and why?" using only the keyboard.
 
-**What's next.** The repository is complete: every row of the [product checklist](ROADMAP.md#what-finished-means-the-product-checklist) is done. What a larger, multi-user StrainScope would add (real matched data, logins, a web API, a cloud database, scheduled pipelines, monitoring) is in the [product roadmap](PRODUCT_ROADMAP.md), Handbook [Stage 15](HANDBOOK.md#stage-15-beyond-the-repository-the-product). Fixes found through use become patch releases (v1.0.1, ...), tagged the same way, after the tests.
+**What's next.** With v1.0.0 every row of the [product checklist](ROADMAP.md#what-finished-means-the-product-checklist) was done, but the one-command pipeline still worked only on the simulated library, and the app could only show results computed beforehand. Phase 9 ([`docs/10-workflow-and-your-data.md`](10-workflow-and-your-data.md), Handbook [Stage 15](HANDBOOK.md#stage-15-phase-9-the-whole-workflow-on-your-own-data)) runs every step from the app, on three tables of your own or on a fresh simulated library, and is release v1.1.0. What a larger, multi-user StrainScope would add (real matched data, logins, a web API, a cloud database, scheduled pipelines, monitoring) is in the [product roadmap](PRODUCT_ROADMAP.md), Handbook [Stage 16](HANDBOOK.md#stage-16-beyond-the-repository-the-product). Fixes found through use become patch releases (v1.1.1, ...), tagged the same way, after the tests.

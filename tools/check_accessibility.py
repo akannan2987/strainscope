@@ -80,7 +80,8 @@ STUCK = 60               # the same element focused this many times in a row cou
 PAGES = [("Home", "", None), ("About this copy", "about", None), ("Ask StrainScope", "ask", None),
          ("Ask the data", "ask_data", None), ("Ask the graph", "ask_graph", None), ("Ranking", "ranking", None),
          ("Strain page", "strain?strain=STRAIN_0485", None), ("Knowledge graph", "knowledge_graph", None),
-         ("Integration", "integration", None), ("Data", "data", None), ("SQL console", "sql_console", None),
+         ("Integration", "integration", None), ("Workflow", "workflow", None), ("Data", "data", None),
+         ("SQL console", "sql_console", None),
          ("Ask StrainScope, answered", "ask", "What is a balanced error rate?"),
          ("Ask the data, answered", "ask_data", "Which strains are borderline?"),
          ("Ask the graph, answered", "ask_graph", "How does iturin suppress disease?")]

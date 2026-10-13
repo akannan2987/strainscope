@@ -21,8 +21,8 @@ abstract: >-
 authors:
   - family-names: Kannan
     given-names: Abhilash
-version: 1.0.0
-date-released: "2026-10-12"
+version: 1.1.0
+date-released: "2026-10-13"
 license: MIT
 repository-code: "https://github.com/akannan2987/strainscope"
 url: "https://github.com/akannan2987/strainscope"

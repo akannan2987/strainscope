@@ -69,3 +69,9 @@ How do I cite StrainScope?,answer,docs/GLOSSARY.md::Citation File Format | READM
 How do I run the app in a container?,answer,docs/09-packaging.md::Step 7 | docs/GLOSSARY.md::Container
 What does continuous integration check?,answer,docs/GLOSSARY.md::Continuous integration | docs/09-packaging.md::continuous integration
 How do I report a security problem?,answer,SECURITY.md:: | docs/GLOSSARY.md::Security policy | docs/GLOSSARY.md::Private vulnerability reporting
+How do I run every phase on my own strains?,answer,docs/10-workflow-and-your-data.md::Step 4 | docs/HANDBOOK.md::Stage 15
+How do I check my tables before a run?,answer,docs/10-workflow-and-your-data.md::Step 2
+What are quick settings?,answer,docs/GLOSSARY.md::Quick settings | docs/10-workflow-and-your-data.md::Quick settings
+Is my own data sent to a language model?,answer,docs/10-workflow-and-your-data.md::Where your data goes | docs/LANGUAGE_MODEL.md:: | README.md::Your own data
+What happens to a dataset on the online copy?,answer,docs/10-workflow-and-your-data.md::Step 9 | docs/GLOSSARY.md::Temporary dataset
+How do I delete a dataset?,answer,docs/10-workflow-and-your-data.md::Removing a dataset

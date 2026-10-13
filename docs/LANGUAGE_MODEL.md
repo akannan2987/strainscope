@@ -10,7 +10,7 @@ Everything in StrainScope works without a language model. The three assistants f
 - **Ask the graph** writes a short answer above the numbered facts, citing them, and may not add a number of its own.
 - **Ask the data** writes a new SQL query when no tested recipe fits. The query passes five guards before it runs, and it's shown so you can check it.
 
-*In plain words* (the Strain and Ranking pages) never uses a model. What each assistant may send to a model, and what it never sends, is the table in [Phase 7 §1](08-deployment-ai.md#what-a-model-may-see-and-what-it-never-sees). The short version: the question you typed, documentation passages, table and column names, a few example recipes and facts about concepts may go, along with StrainScope's fixed rules for the model; a row of data, a strain's results, an upload or anything else on your computer never does.
+*In plain words* (the Strain and Ranking pages) never uses a model. What each assistant may send to a model, and what it never sends, is the table in [Phase 7 §1](08-deployment-ai.md#what-a-model-may-see-and-what-it-never-sees). The short version: the question you typed, documentation passages, table and column names, a few example recipes and facts about concepts may go, along with StrainScope's fixed rules for the model; a row of data, a strain's results, an upload or anything else on your computer never does. With a dataset of your own chosen in the app (Phase 9), no model is asked at all, even with one switched on: Ask the data then answers with the tested recipes only, and Ask the graph with its facts and routes, because your column names and your strains' facts are your own ([`docs/10-workflow-and-your-data.md`](10-workflow-and-your-data.md#where-your-data-goes)).
 
 This page collects every way to switch a model on and off in one place, and how to check that your model follows the rules (§9). The two guides linked above explain the ideas behind it.
 
@@ -249,10 +249,10 @@ So Ask StrainScope now gives the model the best passage and, of the next two, on
 
 | Question | Matches of the three passages shown | Given to the model |
 |---|---|---|
-| "What is a balanced error rate?" | 0.47, 0.26, 0.20 | [1] only |
-| "Why is the data simulated?" | 0.17, 0.16, 0.15 | all three |
+| "What is a balanced error rate?" | 0.46, 0.26, 0.20 | [1] only |
+| "Why is the data simulated?" | 0.15, 0.14, 0.13 | all three |
 
-Of the 49 starter and golden questions the search answers, 27 now send one passage and 22 send two or three. (Three quarters of the best *match* is a different rule from the gate's 75 % of the question's *words*, described in [Phase 6b §1](07b-docs-assistant.md#the-gate-answered-closest-or-refused); they just happen to use the same share.)
+Of the 55 starter and golden questions the search answers, 30 now send one passage and 25 send two or three. (Three quarters of the best *match* is a different rule from the gate's 75 % of the question's *words*, described in [Phase 6b §1](07b-docs-assistant.md#the-gate-answered-closest-or-refused); they just happen to use the same share.)
 
 ### Check your own model
 

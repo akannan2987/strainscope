@@ -1,5 +1,5 @@
 """
-app/streamlit_app.py: the StrainScope app (Phases 6 to 8).
+app/streamlit_app.py: the StrainScope app (Phases 6 to 9).
 ==========================================================
 Start it from the project folder, with the virtual environment active:
 
@@ -16,21 +16,25 @@ shared mode (STRAINSCOPE_MODE=public, from the app's secrets).
 
 THIS FILE
 ---------
-It sets the page title and icon, draws the sidebar, and lists the pages. Each
-page is its own small script in app/views/. Streamlit runs this file first on
-every click, then the page that is open.
+It sets the page title and icon, draws the sidebar (with the dataset every
+page shows, Phase 9), and lists the pages. Each page is its own small script
+in app/views/. Streamlit runs this file first on every click, then the page
+that is open.
 
 WHAT THE APP READS (and never changes)
 --------------------------------------
   artifacts/integration/, artifacts/model/, artifacts/graph/   the committed results of Phases 3 to 5
   data/processed/strainscope.duckdb                              the database (read-only)
+  data/processed/datasets/<name>/                                a dataset's own data and results (Phase 9)
   docs/QUERY_COOKBOOK.md                                         the recipes in the SQL console
   README.md, docs/*.md, the docstrings in src/ and app/          what Ask StrainScope answers from
 The only things that write files are the database build (on the Home and Data
 pages, and by itself on the first start of a shared copy), the rebuild from
-scratch and the real-data fetch (on the Data page). They run the same scripts
-you'd run by hand (src/strainscope/service.py, PIPELINES; and
-src/strainscope/pipeline.py, the one-command pipeline of Phase 8).
+scratch and the real-data fetch (on the Data page), and the Workflow page,
+which saves datasets and runs every phase on them inside their own folders.
+They run the same scripts you'd run by hand (src/strainscope/service.py,
+PIPELINES; src/strainscope/pipeline.py, the one-command pipeline of Phase 8;
+and src/strainscope/datasets.py, the datasets of Phase 9).
 """
 import streamlit as st
 
@@ -64,21 +68,38 @@ pages = {
         st.Page(ui.PAGES["integration"], title="Integration", icon=":material/join_inner:"),
     ],
     "Work with data": [
+        st.Page(ui.PAGES["workflow"], title="Workflow", icon=":material/play_circle:"),
         st.Page(ui.PAGES["data"], title="Data", icon=":material/database:"),
         st.Page(ui.PAGES["sql"], title="SQL console", icon=":material/terminal:"),
     ],
 }
 page = st.navigation(pages)
 ui.first_start()                 # shared mode: build the database on the first visit (Phase 7)
+ui.tidy_shared_copy()            # shared mode: delete visitors' datasets an hour after their last use (Phase 9)
+
+
+def _pick_dataset() -> None:
+    """The sidebar box changed: switch every page to that dataset."""
+    ui.choose_dataset(st.session_state["sidebar_dataset"])
+
 
 with st.sidebar:
+    choices = [ui.LIBRARY, *ui.dataset_names()]
+    st.session_state["sidebar_dataset"] = ui.dataset() or ui.LIBRARY
+    st.selectbox("Dataset", choices, key="sidebar_dataset", on_change=_pick_dataset,
+                 format_func=lambda n: ui.label(n),
+                 help="Which data every page shows: the built-in simulated library, or a dataset made on the "
+                      "Workflow page (your own data, or a fresh simulation).")
     if ui.upload() is not None:
         n = len(ui.upload()["scores"])
+        whole = f"All {ui.info().get('strains', '')} strains".replace("  ", " ")
         st.radio("Strains shown", ["library", "upload"], key="source", horizontal=True,
-                 format_func=lambda s: "Library (600)" if s == "library" else f"My upload ({n})",
-                 help="Ranking and Strain page show either the simulated library or the strains you uploaded "
-                      "on the Data page. Your upload is kept for this browser tab only and never saved.")
-    st.caption(("Shared copy · " if ui.PUBLIC else "") + "Simulated data · read-only database · "
+                 format_func=lambda s: whole if s == "library" else f"My upload ({n})",
+                 help="Ranking and Strain page show either the dataset's strains or the strains you uploaded "
+                      "on the Data page and scored with its model. Your upload is kept for this browser tab "
+                      "only and never saved.")
+    kind = {"library": "Simulated data", "simulated": "Simulated data", "yours": "Your data"}[ui.info()["kind"]]
+    st.caption(("Shared copy · " if ui.PUBLIC else "") + f"{kind} · read-only database · "
                f"[guide]({ui.DOCS}/07-app.md) · [Handbook]({ui.DOCS}/HANDBOOK.md)")
 
 page.run()

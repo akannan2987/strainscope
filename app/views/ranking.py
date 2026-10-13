@@ -12,36 +12,40 @@ from strainscope import narrate
 uploaded = ui.showing_upload()
 st.title("Ranking: your strains" if uploaded else "Ranking")
 pred = ui.ranking()
+place = ui.info()
 if pred is None:
-    ui.needs("The ranking comes from Phase 4, and artifacts/model/predictions.csv is missing.",
-             "python src/strainscope/model.py all")
+    ui.needs("The ranking comes from Phase 4, and its predictions are missing.",
+             ui.fix_command("python src/strainscope/model.py all"))
     st.stop()
 
 if uploaded:
     st.markdown(f"The {len(pred)} strains from **{ui.upload()['name']}**, scored by the saved model. "
-                "Switch back to the library in the sidebar.")
+                "Switch back to the whole dataset in the sidebar.")
     with st.container(border=True):
         st.markdown("**In plain words**")
-        st.markdown(narrate.shortlist(pred, len(pred), uploaded=True).text)
+        st.markdown(narrate.shortlist(pred, len(pred), uploaded=True, place=place).text)
 else:
-    st.markdown("All 600 library strains, ranked by their predicted chance of being effective. Each chance "
+    whose = "library strains" if ui.builtin() else f"strains of dataset {ui.dataset()}"
+    st.markdown(f"All {len(pred)} {whose}, ranked by their predicted chance of being effective. Each chance "
                 "comes from a model that **never saw that strain** while learning (out-of-fold), so the "
                 "ranking is a fair test of how the model would do on new strains.")
     ui.simulated_note()
 
     # -- the screening question ------------------------------------------------
     st.header("If you can test N strains, how many would work?")
-    n = st.slider("Strains you can test next season", 5, len(pred), 50, step=5, key="top_n")
+    n = st.slider("Strains you can test next season", min(5, len(pred)), len(pred), min(50, len(pred)),
+                  step=5 if len(pred) >= 10 else 1, key="top_n")
     top = pred.nsmallest(n, "rank")
     found, chance = int(top["is_effective"].sum()), n * pred["is_effective"].mean()
     c1, c2, c3 = st.columns(3)
     c1.metric(f"Effective among the top {n}", f"{found}", f"{found / n:.0%} of them", delta_color="off", delta_arrow="off")
     c2.metric("Picking at random would find", f"about {chance:.0f}", delta_color="off", delta_arrow="off")
     c3.metric("Effective strains you'd miss", f"{int(pred['is_effective'].sum()) - found}",
-              f"of {int(pred['is_effective'].sum())} in the library", delta_color="off", delta_arrow="off")
+              f"of {int(pred['is_effective'].sum())} in the {'library' if ui.builtin() else 'dataset'}",
+              delta_color="off", delta_arrow="off")
     with st.container(border=True):
         st.markdown("**In plain words**")
-        st.markdown(narrate.shortlist(pred, n).text)
+        st.markdown(narrate.shortlist(pred, n, place=place).text)
         st.caption("Written by rules from the ranking. The model's chances are calibrated (Phase 4), so adding "
                    "them up gives the number it expects to work.")
     ui.chart(charts.top_n_figure(pred, n))
@@ -76,11 +80,11 @@ event = st.dataframe(
                                                              "borderline from 30 % to 70 %, unlikely below 30 %"),
         "predicted_effective": st.column_config.CheckboxColumn("flagged", help="above the decision line"),
         "is_effective": st.column_config.CheckboxColumn("effective in the data",
-                                                        help="the simulated trial result (the answer key)"),
+                                                        help="the trial result: for simulated data, the answer key"),
         "mechanism_paths": st.column_config.NumberColumn("mechanism paths",
                                                          help="routes in the knowledge graph from this strain "
                                                               "to disease suppression"),
-        "library_rank": st.column_config.NumberColumn("would rank in the library"),
+        "library_rank": st.column_config.NumberColumn("would rank among the dataset's strains"),
         "strongest_reason": "strongest reason",
     })
 if event.selection.rows:
@@ -120,9 +124,17 @@ with t3:
                                                       "reliably_important", "role", "block"]].rename(
             columns={"importance_mean": "importance", "importance_sd": "spread (sd)",
                      "reliably_important": "reliably important"}))
-        st.caption("Green: a planted driver. Red: a decoy (it shouldn't matter). ✓: reliably important across "
-                   "folds. `accE` is the one decoy the model leans on; the knowledge graph flags it as "
-                   "'statistics only' on every strain page.")
+        if ui.builtin():
+            st.caption("Green: a planted driver. Red: a decoy (it shouldn't matter). ✓: reliably important across "
+                       "folds. `accE` is the one decoy the model leans on; the knowledge graph flags it as "
+                       "'statistics only' on every strain page.")
+        elif place.get("answer_key"):
+            st.caption("Green: a planted driver. Red: a decoy (it shouldn't matter). ✓: reliably important across "
+                       "folds. A decoy the model leans on is flagged 'statistics only' on the strain pages.")
+        else:
+            st.caption("Your own data has no answer key, so nothing is coloured as a driver or a decoy. ✓: reliably "
+                       "important across folds. A feature the model leans on with no known mechanism is flagged "
+                       "'statistics only' on the strain pages: a discovery or a problem, worth a closer look.")
 with t4:
     if card is not None:
         st.markdown(f"**{card['model']}**. Intended use: {card['intended_use']}. Not for: {card['not_for']}.")

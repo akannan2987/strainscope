@@ -33,7 +33,7 @@ Ask StrainScope is a librarian first. Every answer is a passage quoted **word fo
 
    ![A word found everywhere tells you little](../figures/word_weights.png)
 
-   In StrainScope's documents, "data" appears in 568 of the 1,663 passages and gets a weight of 2.1; "winsorise" appears in 3 and gets 7.0. Common little words ("the", "is", "how") are dropped altogether; they're called **stop words**. Words are also reduced to the form the documents use, so "strains" finds "strain", "scoring" finds "score" and "ranked" finds "rank". A section's heading counts three times, because a heading says what its section is about.
+   In StrainScope's documents, "data" appears in 697 of the 1,820 passages and gets a weight of 2.0; "winsorise" appears in 3 and gets 7.1. Common little words ("the", "is", "how") are dropped altogether; they're called **stop words**. Words are also reduced to the form the documents use, so "strains" finds "strain", "scoring" finds "score" and "ranked" finds "rank". A section's heading counts three times, because a heading says what its section is about.
 3. **Compare.** The question gets word weights the same way, and each passage gets a **match** score from 0 (no words in common) to 1 (the same words in the same proportions). The measure is **cosine similarity**. Two shopping lists match well when they're mostly about the same things, however long each list is. The best passage of each section stands for that section, and the three best sections are shown.
 4. **Decide**, before anything is shown (next part).
 
@@ -232,7 +232,7 @@ python src/strainscope/ask.py "What is a balanced error rate?"
 ```
   ✓ Best match: "Balanced error rate (BER)" in docs/GLOSSARY.md.
 
-  [1] Balanced error rate (BER)   (match 0.47)
+  [1] Balanced error rate (BER)   (match 0.46)
       docs/GLOSSARY.md#phase-3-multi-omics-integration-doc-04
       - **Balanced error rate (BER)**: the average of the error on each outcome group. Unlike plain accuracy it can't be gamed by always guessing the common group: that lazy strategy scores 0.50, exactly like a coin.
 
@@ -285,8 +285,8 @@ python src/strainscope/ask.py --stats
 **You should see** the typo corrected on the first line (`✓ Reading "calibraton" as "calibration". Best match: "Calibration" in docs/GLOSSARY.md.`), and then:
 
 ```
-  1198 sections from 61 files: 528 document sections, 383 glossary entries, 287 code docstrings.
-  4,206 different words. Written answers: off (search only; nothing leaves this computer).
+  1293 sections from 65 files: 563 document sections, 399 glossary entries, 331 code docstrings.
+  4,284 different words. Written answers: off (search only; nothing leaves this computer).
 ```
 
 **If instead:**
@@ -325,16 +325,16 @@ python src/strainscope/ask.py --golden
 
 ```
   ── Ask StrainScope: the golden questions ──────────────────────
-  ✓ 49/49 answered from the right section
-           (41 of them with an expected section first)
+  ✓ 55/55 answered from the right section
+           (44 of them with an expected section first)
   ✓  4/4  not documented: no confident answer
   ✓ 16/16 off-topic or instructions: refused
   · known limitation: "Does the app have a dark mode?" (now passes: it can become a 'closest' question)
 
-  69 of 69 passed.
+  75 of 75 passed.
 ```
 
-**What it means.** Every in-scope question was answered with a right section among the three shown (41 of the 49 with a right one first); every question about something undocumented was refused or marked *closest*; every off-topic question and instruction was refused. The known limitation is reported but doesn't count; §12 explains it, and why it passes for now.
+**What it means.** Every in-scope question was answered with a right section among the three shown (44 of the 55 with a right one first); every question about something undocumented was refused or marked *closest*; every off-topic question and instruction was refused. The known limitation is reported but doesn't count; §12 explains it, and why it passes for now.
 
 **Add a question of your own.** Open `tests/golden_questions.csv` and add a line at the end, for example:
 
@@ -452,7 +452,7 @@ The screenshot of the page (`docs/img/app_ask.png`) and the updated tour come fr
 
 ## 11. Reading the results like a librarian
 
-- **A match score is not a probability.** 0.47 doesn't mean "47 % sure". It says how much the question's weighted words overlap with the passage's. Use it to compare sections for the same question, not across questions.
+- **A match score is not a probability.** 0.46 doesn't mean "46 % sure". It says how much the question's weighted words overlap with the passage's. Use it to compare sections for the same question, not across questions.
 - **Short, specific passages score highest.** A glossary entry named after the term you asked about will usually win, which is what you want for "what is...?" questions. For "how do I...?" questions, the guide's step tends to win, because its heading says what it does.
 - **The verdict judges the words.** *Answered* means a passage matches well; whether the passage is right is up to the documentation. If it's out of date, the answer is out of date too, and the link takes you straight to the place to fix it.
 - **Closest is useful.** It often means the documentation has a gap. The golden question set is a good place to write that gap down.

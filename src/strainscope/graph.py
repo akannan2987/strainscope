@@ -31,6 +31,11 @@ WHERE THINGS GO
                               and small result tables (committed: the app reads them)
   data/processed/strainscope.duckdb   gains kg_* tables after `publish`
 
+Inside a dataset of Phase 9 (src/strainscope/paths.py) the same files go into
+that dataset's folder. A gene or compound the domain model knows by name gets
+its mechanism there too; one it doesn't know is linked to the outcome only by
+the statistics of Phases 3 and 4, and its edges say "your data".
+
 THE DECISIONS, WRITTEN DOWN (each is explained in docs/06-knowledge-graph.md)
 ---------------------------------------------------------------------------
 1. ONTOLOGY FIRST. The kinds of nodes and connections are fixed in ontology.py
@@ -68,14 +73,15 @@ import pandas as pd
 # Make `strainscope` importable no matter where the script is run from.
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from strainscope import paths  # noqa: E402
 from strainscope.integrate import DB_PATH, ROOT, feature_annotations  # noqa: E402
 from strainscope.ontology import (  # noqa: E402  (after the path fix)
     DOMAIN_SOURCE, FEATURE_MODES, KNOWLEDGE_TYPES, MODES_OF_ACTION, NODE_TYPES,
     OUTCOMES, RELATIONS, check_edge, ontology_tables)
 
-ARTIFACTS = ROOT / "artifacts" / "graph"
-INTEGRATION = ROOT / "artifacts" / "integration"
-MODEL = ROOT / "artifacts" / "model"
+ARTIFACTS = paths.HERE.graph            # artifacts/graph, or a dataset's (Phase 9)
+INTEGRATION = paths.HERE.integration
+MODEL = paths.HERE.model
 
 SEED = 42                 # the project's one seed (Louvain is randomised)
 DETECTION_FOLD = 4.0      # "produces" = at least 4x the compound's median level
@@ -88,7 +94,8 @@ TARGET = "disease suppression"
 KINGDOM_WORD = {"Bacteria": "bacterial", "Fungi": "fungal", "Yeast": "yeast", "Oomycete": "oomycete"}
 
 # Short, consistent provenance labels (stored on every edge).
-P_SYNTH = "synthetic library (Phase 1, cleaned in Phase 2)"
+P_SYNTH = ("your data (cleaned in Phase 2)" if paths.setting("kind", "library") == "yours"
+           else "synthetic library (Phase 1, cleaned in Phase 2)")
 P_DOMAIN = DOMAIN_SOURCE
 P_PHASE3 = "Phase 3 (DIABLO signature, stability >= 0.8)"
 P_PHASE4 = "Phase 4 (permutation importance of the winning model)"
@@ -139,10 +146,11 @@ def load_inputs(db_path: Path = DB_PATH, integration_dir: Path = INTEGRATION,
         con.close()
     card_path = Path(model_dir) / "model_card.json"
     card = json.loads(card_path.read_text(encoding="utf-8")) if card_path.exists() else None
+    ann_path = Path(integration_dir) / "feature_annotations.csv"   # every column of this data (Phase 3)
     return {
         **data,
         "real": real,
-        "annotations": feature_annotations(),
+        "annotations": pd.read_csv(ann_path) if ann_path.exists() else feature_annotations(),
         "correlations": _read_csv(Path(integration_dir) / "cross_block_correlation.csv"),
         "signature": _read_csv(Path(integration_dir) / "diablo_signature.csv"),
         "importance": _read_csv(Path(model_dir) / "feature_importance.csv"),
@@ -208,7 +216,8 @@ def build_tables(inp: dict) -> tuple[pd.DataFrame, pd.DataFrame, list[str]]:
         sig = inp["signature"][inp["signature"]["component"] == 1]
         stability = dict(zip(sig["feature"], sig["stability"]))
     else:
-        notes.append("no Phase 3 results: run python src/strainscope/integrate.py all for DIABLO edges")
+        notes.append("no DIABLO signature (Phase 3 hasn't run, or R isn't installed): the graph has no "
+                     "DIABLO edges; the model's importance edges are there")
     rho = {}
     if inp["correlations"] is not None:
         pairs = inp["correlations"][inp["correlations"]["is_producer_pair"].astype(bool)]
@@ -224,18 +233,22 @@ def build_tables(inp: dict) -> tuple[pd.DataFrame, pd.DataFrame, list[str]]:
     # -- kingdoms, genera, strains ---------------------------------------------
     preds = (inp["predictions"].set_index("strain_id")
              if inp["predictions"] is not None else None)
+    known_genus = pheno["genus"].notna() & (pheno["genus"].astype(str).str.strip() != "")
     for sid, row in pheno.iterrows():
-        t.node("Kingdom", row["kingdom"], description=NODE_TYPES["Kingdom"]["description"])
-        gid = t.node("Genus", row["genus"], kingdom=row["kingdom"])
-        attrs = {"kingdom": row["kingdom"], "genus": row["genus"],
+        gid = None
+        if known_genus[sid]:    # your own data may not record the genus (Phase 9): then no genus or kingdom node
+            t.node("Kingdom", row["kingdom"], description=NODE_TYPES["Kingdom"]["description"])
+            gid = t.node("Genus", row["genus"], kingdom=row["kingdom"])
+        attrs = {"kingdom": row["kingdom"], "genus": row["genus"] if known_genus[sid] else "not recorded",
                  "suppression_score": float(row["suppression_score"]),
                  "is_effective": int(row["is_effective"])}
         if preds is not None and sid in preds.index:
             attrs.update(probability=float(preds.loc[sid, "probability"]),
                          rank=int(preds.loc[sid, "rank"]))
         s = t.node("Strain", sid, **attrs)
-        t.edge(s, "belongs_to", gid, P_SYNTH, evidence="genus column after Phase 2's fixes")
-    for genus, kingdom in pheno[["genus", "kingdom"]].drop_duplicates().itertuples(index=False):
+        if gid is not None:
+            t.edge(s, "belongs_to", gid, P_SYNTH, evidence="genus column after Phase 2's fixes")
+    for genus, kingdom in pheno.loc[known_genus, ["genus", "kingdom"]].drop_duplicates().itertuples(index=False):
         t.edge(node_id("Genus", genus), "in_kingdom", node_id("Kingdom", kingdom), P_SYNTH)
 
     # -- genes and compounds, with what we know about each ---------------------
@@ -681,8 +694,11 @@ def _print_analyse(hub, comm, check, agree, artifacts_dir, seconds) -> None:
     loose = comm[comm["community"] < 0]
     if len(loose):
         print(f"  no strong ties ({len(loose)}): {', '.join(loose['label'])}")
-    print(f"  graded against the planted arsenals: purity {check['purity']:.2f} · "
-          f"adjusted Rand index {check['ari']:.2f} ({int(check['signal_features'])} signal features)")
+    if int(check["signal_features"]):
+        print(f"  graded against the planted arsenals: purity {check['purity']:.2f} · "
+              f"adjusted Rand index {check['ari']:.2f} ({int(check['signal_features'])} signal features)")
+    else:
+        print("  not graded: there's no answer key for this data (no planted arsenals to compare with)")
     print("  ── Knowledge vs data (disease suppression) ─────────────────────────")
     for verdict, grp in agree.groupby("verdict", sort=False):
         print(f"  {verdict:<48} {len(grp):>2}  {', '.join(grp['label'].head(8))}{' …' if len(grp) > 8 else ''}")
@@ -814,7 +830,10 @@ def attach_expectations(G, db_path: Path = DB_PATH) -> None:
     sizes = pd.Series(kingdom_of).value_counts()
     counts: dict[tuple[str, str], int] = {}
     for s, g, e in G.edges(data=True):
-        if e["relation"] == "carries" and G.nodes[g].get("role") == "signal" and _reaches_target(G, g):
+        # a weapon: a gene whose known mechanism leads to disease suppression
+        # (in the library, exactly the planted drivers; in your own data, any
+        # gene the domain model knows that way)
+        if e["relation"] == "carries" and _reaches_target(G, g):
             counts[(kingdom_of[s], g)] = counts.get((kingdom_of[s], g), 0) + 1
     expected: dict[str, list] = {}
     for (k, g), n in counts.items():

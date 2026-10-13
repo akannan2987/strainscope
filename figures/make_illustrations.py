@@ -57,7 +57,8 @@ STAGES = [
     ("12", "Deploy + AI layer", "Phase 7", "☁️", "done"),
     ("13", "MCP server", "Phase 7b", "🔌", "done"),
     ("14", "Release 1.0", "Phase 8", "🚀", "done"),
-    ("15", "The product", "beyond the repo", "🏭", "next"),
+    ("15", "Your own data", "Phase 9", "📥", "done"),
+    ("16", "The product", "beyond the repo", "🏭", "next"),
 ]
 STATUS_STYLE = {"done": (GREEN, "#E6F4EA", "built ✓"),
                 "next": (GOLD, "#FFF3CD", "next"),
@@ -133,18 +134,23 @@ def wordmark_svg() -> str:
 
 
 def journey_svg() -> str:
-    """A winding road of stepping stones: two rows of eight, left to right then
-    right to left, so the whole journey fits on one screen."""
+    """A winding road of stepping stones: two rows (the first one longer when
+    the count is odd), left to right then right to left, so the whole journey
+    fits on one screen."""
     width, height = 1180, 470
-    xs = [90 + i * 143 for i in range(8)]
-    rows = [(150, xs), (345, list(reversed(xs)))]
+    per_row = (len(STAGES) + 1) // 2
+    step = 1000 / (per_row - 1)
+    xs = [round(90 + i * step) for i in range(per_row)]
+    rows = [(150, xs), (345, list(reversed(xs))[:len(STAGES) - per_row])]
     points = []
     for (y, row_xs) in rows:
         points += [(x, y) for x in row_xs]
+    last = per_row - 1
     path = f"M {points[0][0]} {points[0][1]} " + " ".join(
-        f"L {x} {y}" for x, y in points[1:8])
-    path += f" C {points[7][0] + 90} {points[7][1]}, {points[8][0] + 90} {points[8][1]}, {points[8][0]} {points[8][1]} "
-    path += " ".join(f"L {x} {y}" for x, y in points[9:])
+        f"L {x} {y}" for x, y in points[1:per_row])
+    path += (f" C {points[last][0] + 90} {points[last][1]}, {points[per_row][0] + 90} {points[per_row][1]}, "
+             f"{points[per_row][0]} {points[per_row][1]} ")
+    path += " ".join(f"L {x} {y}" for x, y in points[per_row + 1:])
     out = [f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" '
            f'viewBox="0 0 {width} {height}" role="img" aria-label="StrainScope journey map">',
            "<title>StrainScope: the journey from day 0 to the product</title>",

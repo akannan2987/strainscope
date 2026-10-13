@@ -36,7 +36,13 @@ WHAT IT OFFERS
   PIPELINES, pipeline_events(), run_pipeline()
                            the scripts of Phases 1 to 5, run in order, with live output
                            (the app's build buttons, and src/strainscope/pipeline.py, the
-                           one-command pipeline of Phase 8)
+                           one-command pipeline of Phase 8), on the library or on a
+                           dataset of Phase 9 (src/strainscope/datasets.py)
+
+Every function that reads files takes the database and the results folder as
+arguments. Their defaults are the place this program works on
+(src/strainscope/paths.py): the built-in library, unless STRAINSCOPE_DATASET
+names a dataset. The app passes the dataset chosen in its sidebar.
 
 THE COMMAND LINE (the manual path; the app is the automatic one)
 -----------------------------------------------------------------
@@ -57,7 +63,6 @@ SQL SAFETY (the SQL console in the app runs through query_database)
 from __future__ import annotations
 
 import argparse
-import os
 import re
 import subprocess
 import sys
@@ -72,10 +77,11 @@ import pandas as pd
 
 # Make `strainscope` importable no matter where the script is run from.
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from strainscope import paths  # noqa: E402
 
-ROOT = Path(__file__).resolve().parents[2]
-DB_PATH = ROOT / "data" / "processed" / "strainscope.duckdb"
-ARTIFACTS = ROOT / "artifacts"
+ROOT = paths.ROOT
+DB_PATH = paths.HERE.db               # data/processed/strainscope.duckdb, or a dataset's (Phase 9)
+ARTIFACTS = paths.HERE.artifacts      # artifacts/, or a dataset's artifacts/ folder
 COOKBOOK = ROOT / "docs" / "QUERY_COOKBOOK.md"
 
 SQL_TIMEOUT_S = 10          # a query still running after this is stopped
@@ -140,7 +146,7 @@ def table_group(name: str) -> str:
                           ("kg_", "Phase 5: knowledge graph"), ("real_", "Real data (Phases 1b and 1c)")):
         if name.startswith(prefix):
             return group
-    return "Clean library (Phase 2)"
+    return "Clean tables (Phase 2)"
 
 
 @dataclass
@@ -152,19 +158,31 @@ class Check:
     fix: str = ""
 
 
+def _dataset_of(artifacts_dir: Path) -> str | None:
+    """The name of the dataset whose results folder this is, or None for the library."""
+    folder = Path(artifacts_dir).resolve()
+    if folder == paths.folders(None).artifacts.resolve():
+        return None
+    return folder.parent.name
+
+
 def status(db_path: Path = DB_PATH, artifacts_dir: Path = ARTIFACTS) -> list[Check]:
     """A health check of everything the app reads. Cheap: it opens the
-    database read-only for a moment and looks at file names."""
+    database read-only for a moment and looks at file names. For a dataset
+    of Phase 9, every fix is the one command that runs its workflow."""
     tables = database_tables(db_path)
     names = set(tables["table"])
     checks = []
     core = {"genomics", "metabolomics", "phenotype"}
+    dataset = _dataset_of(artifacts_dir)
+    run_all = f"python src/strainscope/pipeline.py --dataset {dataset}" if dataset else ""
     if not Path(db_path).exists():
         checks.append(Check("Database", False, "no database file yet",
-                            "build it on the app's Home or Data page, or run the five commands in docs/07-app.md section 5"))
+                            run_all or "build it on the app's Home or Data page, or run the five commands "
+                                       "in docs/07-app.md section 5"))
     elif not core <= names:
         checks.append(Check("Database", False, f"the clean tables are missing ({', '.join(sorted(core - names))})",
-                            "python src/strainscope/harmonize.py"))
+                            run_all or "python src/strainscope/harmonize.py"))
     else:
         n = int(tables.loc[tables["table"] == "phenotype", "rows"].iloc[0])
         checks.append(Check("Database", True, f"{len(names)} tables, {n} strains"))
@@ -174,19 +192,21 @@ def status(db_path: Path = DB_PATH, artifacts_dir: Path = ARTIFACTS) -> list[Che
                                           ("kg_", "Phase 5 results", "graph", "graph.py")):
         files = sorted((Path(artifacts_dir) / folder).glob("*.csv"))
         in_db = sum(t.startswith(prefix) for t in names)
+        where = paths.rel(Path(artifacts_dir) / folder)
         if not files:
-            checks.append(Check(phase, False, f"nothing in artifacts/{folder}/",
-                                f"python src/strainscope/{script} all"))
+            checks.append(Check(phase, False, f"nothing in {where}/",
+                                run_all or f"python src/strainscope/{script} all"))
         elif in_db == 0 and Path(db_path).exists():
-            checks.append(Check(phase, False, f"{len(files)} files in artifacts/{folder}/, none in the database",
-                                f"python src/strainscope/{script} publish"))
+            checks.append(Check(phase, False, f"{len(files)} files in {where}/, none in the database",
+                                run_all or f"python src/strainscope/{script} publish"))
         else:
-            checks.append(Check(phase, True, f"{len(files)} files in artifacts/{folder}/, {in_db} {prefix}* tables"))
+            checks.append(Check(phase, True, f"{len(files)} files in {where}/, {in_db} {prefix}* tables"))
 
     card = model_card(artifacts_dir)
     model_file = Path(artifacts_dir) / "model" / "strainscope_model.joblib"
     if card is None or not model_file.exists():
-        checks.append(Check("Saved model", False, "no saved model", "python src/strainscope/model.py final"))
+        checks.append(Check("Saved model", False, "no saved model",
+                            run_all or "python src/strainscope/model.py final"))
     else:
         import sklearn
         built = card.get("versions", {}).get("scikit-learn")
@@ -953,8 +973,9 @@ def check_model(cfg=None, G=None, report=None) -> list[dict]:
 
 
 def explain_in_words(strain_id: str, artifacts_dir: Path = ARTIFACTS) -> dict:
-    """One library strain's rank and reasons in plain words
-    (src/strainscope/narrate.py), from the committed results only."""
+    """One strain's rank and reasons in plain words (src/strainscope/narrate.py),
+    from the results in artifacts_dir: the library's committed ones, or a
+    dataset's, which are then described in the dataset's own words."""
     from strainscope import narrate
     pred = read_artifact("model/predictions.csv", artifacts_dir)
     reasons = read_artifact("graph/explanations.csv", artifacts_dir)
@@ -968,7 +989,8 @@ def explain_in_words(strain_id: str, artifacts_dir: Path = ARTIFACTS) -> dict:
     if nodes is not None:
         genus = nodes.loc[nodes["label"] == strain_id, "genus"]
         row["genus"] = genus.iloc[0] if len(genus) else None
-    story = narrate.strain(row, reasons[reasons["strain_id"] == strain_id], len(pred), model_card(artifacts_dir))
+    story = narrate.strain(row, reasons[reasons["strain_id"] == strain_id], len(pred), model_card(artifacts_dir),
+                           place=paths.info(_dataset_of(artifacts_dir)))
     return {"strain_id": strain_id, "text": story.text, "paragraphs": story.paragraphs}
 
 
@@ -1011,8 +1033,43 @@ PIPELINES = {
         "steps": [("fetch_real.py",), ("harmonize.py",), ("integrate.py", "publish"),
                   ("model.py", "publish"), ("graph.py", "all")],
     },
+    # The two plans for a dataset of Phase 9 (src/strainscope/datasets.py). They
+    # run in the dataset's own folder, so the library's files are never touched.
+    "simulate": {
+        "title": "Simulate a library and run every phase on it",
+        "takes": "about 3 minutes for 600 strains, 1 with quick settings; DIABLO in R adds about 3",
+        "what": ("simulates a library with the dataset's seed and size, cleans it into the dataset's own "
+                 "database, and computes every result: the integration (DIABLO too, when R is installed), "
+                 "the models and the knowledge graph"),
+        "steps": [("generate_data.py",), ("harmonize.py",), ("integrate.py", "all"),
+                  ("model.py", "all"), ("graph.py", "all")],
+    },
+    "workflow": {
+        "title": "Run every phase on your data",
+        "takes": "about 3 minutes for 600 strains, 1 with quick settings; DIABLO in R adds about 3",
+        "what": ("cleans your three tables into the dataset's own database, and computes every result on "
+                 "them: the integration (DIABLO too, when R is installed), the models and the knowledge graph"),
+        "steps": [("harmonize.py",), ("integrate.py", "all"), ("model.py", "all"), ("graph.py", "all")],
+    },
 }
+# What each step is, in a few words, for the app's Workflow page (Phase 9).
+STEP_NAMES = {"generate_data.py": "Simulate the data", "harmonize.py": "Clean it into a database",
+              "integrate.py": "Read genes and chemistry together", "model.py": "Learn to predict",
+              "graph.py": "Build the knowledge graph", "fetch_real.py": "Fetch real data"}
 _PIPELINE_LOCK = threading.Lock()
+
+
+def plan_for(dataset: str | Path | None = None) -> str:
+    """The plan that builds every result for a place: 'everything' for the
+    library, 'simulate' for a simulated dataset, 'workflow' for your own data."""
+    kind = paths.info(dataset)["kind"]
+    return {"library": "everything", "simulated": "simulate"}.get(kind, "workflow")
+
+
+def pipeline_busy() -> bool:
+    """True while a plan is running in this program (the app shows it, so a
+    second visitor of a shared copy knows why their button waits)."""
+    return _PIPELINE_LOCK.locked()
 
 
 def step_command(step: tuple[str, ...]) -> list[str]:
@@ -1025,7 +1082,7 @@ def step_label(step: tuple[str, ...]) -> str:
     return "python src/strainscope/" + " ".join(step)
 
 
-def pipeline_events(name: str, root: Path = ROOT, start: int = 1):
+def pipeline_events(name: str, root: Path = ROOT, start: int = 1, dataset: str | Path | None = None):
     """Run one of PIPELINES from step `start` on, and yield what happens, as
     dictionaries with an "event" key:
 
@@ -1037,7 +1094,11 @@ def pipeline_events(name: str, root: Path = ROOT, start: int = 1):
 
     Each step runs in its own Python process, with the Python running this
     code. A step that fails stops the rest. Only one pipeline runs at a time,
-    in this program, so two buttons can't write the database together."""
+    in this program, so two buttons can't write the database together.
+
+    `dataset` (a name or a folder, Phase 9) makes every step work in that
+    dataset's folder; without it, the place this program works on (the
+    library, unless STRAINSCOPE_DATASET says otherwise)."""
     steps = PIPELINES[name]["steps"]
     if not 1 <= start <= len(steps):
         raise ValueError(f"The '{name}' pipeline has steps 1 to {len(steps)}; there's no step {start}.")
@@ -1047,7 +1108,7 @@ def pipeline_events(name: str, root: Path = ROOT, start: int = 1):
         return
     proc = None
     try:
-        env = {**os.environ, "PYTHONUTF8": "1", "PYTHONIOENCODING": "utf-8"}  # Windows prints UTF-8 too
+        env = paths.child_environment(dataset)     # the place to work on; Windows prints UTF-8 too
         for number, step in enumerate(steps, start=1):
             if number < start:
                 continue
@@ -1064,7 +1125,11 @@ def pipeline_events(name: str, root: Path = ROOT, start: int = 1):
                 yield {"event": "failed", "step": number,
                        "text": f"Step {number} ({label}) stopped with exit code {code}. Its output is above."}
                 return
-            yield {"event": "end", "step": number, "label": label, "seconds": time.time() - started}
+            seconds = time.time() - started
+            if dataset is not None:                       # remembered for the Workflow page (Phase 9)
+                from strainscope import datasets
+                datasets.record_step(dataset, step[0], seconds)
+            yield {"event": "end", "step": number, "label": label, "seconds": seconds}
         what = f"All {len(steps)} steps" if start == 1 else f"Steps {start} to {len(steps)}"
         yield {"event": "done", "step": None, "text": f"{what} finished."}
     finally:
@@ -1074,12 +1139,12 @@ def pipeline_events(name: str, root: Path = ROOT, start: int = 1):
         _PIPELINE_LOCK.release()
 
 
-def run_pipeline(name: str, root: Path = ROOT, start: int = 1):
+def run_pipeline(name: str, root: Path = ROOT, start: int = 1, dataset: str | Path | None = None):
     """The same run, as the app shows it: (step_number, step_label,
     output_line) as the scripts print. The last item yielded is
     (None, 'done' or 'failed', summary)."""
     total = len(PIPELINES[name]["steps"])
-    for e in pipeline_events(name, root, start):
+    for e in pipeline_events(name, root, start, dataset):
         if e["event"] == "start":
             yield e["step"], e["label"], f"$ {e['label']}"
         elif e["event"] == "line":
@@ -1094,10 +1159,10 @@ def run_pipeline(name: str, root: Path = ROOT, start: int = 1):
 # 8. THE COMMAND LINE
 # =============================================================================
 
-def _print_status() -> None:
+def _print_status(db_path: Path = DB_PATH, artifacts_dir: Path = ARTIFACTS) -> None:
     mark = {True: "✓", False: "✗", None: "·"}
     print("  ── StrainScope: what the app can read ──────────────────────────")
-    for c in status():
+    for c in status(db_path, artifacts_dir):
         print(f"  {mark[c.ok]} {c.name:<24} {c.detail}")
         if c.fix:
             word = {False: "fix", None: "to add", True: "tip"}[c.ok]

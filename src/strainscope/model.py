@@ -29,6 +29,11 @@ WHERE THINGS GO
                              (committed: the app and the MCP server read them)
   data/processed/strainscope.duckdb   gains ml_* tables after `publish`
 
+Inside a dataset of Phase 9 (src/strainscope/paths.py) the same files go into
+that dataset's folder. Its "effective" line and number of repeats come from
+the dataset's settings, and with your own data nothing is graded (there is no
+answer key).
+
 THE DECISIONS, WRITTEN DOWN (each is explained in docs/05-machine-learning.md)
 -----------------------------------------------------------------------------
 1. LEAK-PROOF PREPARATION. Gap filling, the near-constant rule and centring
@@ -82,18 +87,23 @@ from sklearn.base import BaseEstimator, TransformerMixin
 # Make `strainscope` importable no matter where the script is run from.
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from strainscope.generate_data import EFFECTIVE_THRESHOLD  # noqa: E402
+from strainscope import paths  # noqa: E402
 from strainscope.integrate import (  # noqa: E402  (after the path fix)
     DB_PATH, ROOT, align_blocks, balanced_error_rate, feature_annotations,
-    grade_signature, load_clean_tables)
+    grade_signature, load_clean_tables, mean_and_sd, per_repeat_means)
 
-ARTIFACTS = ROOT / "artifacts" / "model"
-INTEGRATION = ROOT / "artifacts" / "integration"
+ARTIFACTS = paths.HERE.model            # artifacts/model, or a dataset's (Phase 9)
+INTEGRATION = paths.HERE.integration
 MODEL_FILE = ARTIFACTS / "strainscope_model.joblib"
 CARD_FILE = ARTIFACTS / "model_card.json"
 
 SEED = 42                     # the project's one seed: same folds as Phase 3
-CV_FOLDS, CV_REPEATS = 5, 10  # 5-fold cross-validation, repeated 10 times
+CV_FOLDS = 5                  # 5-fold cross-validation, ...
+CV_REPEATS = int(paths.setting("repeats", 10))     # ... repeated 10 times (a dataset may ask for fewer)
+# "Effective" means at least this much disease suppressed: 65 % for the
+# library (src/strainscope/generate_data.py); a dataset records its own line.
+EFFECTIVE_THRESHOLD = float(paths.setting("effective_at", 65))
+CUTOFF = f"distance from the {EFFECTIVE_THRESHOLD:g} % cut-off"   # a group name in error_by_group.csv
 NEAR_CONSTANT_SHARE = 0.95    # Phase 3's rule 3
 ELASTIC_NET_C = (0.05, 0.2, 1.0)   # the small grid searched INSIDE each fold
 TOP_N = 50                    # "if the team can test 50 strains next season ..."
@@ -347,9 +357,8 @@ def summarise(values: list[float], repeats: int, folds: int) -> tuple[float, flo
     its folds), the same definition as Phase 3 and mixOmics, so every ± in the
     project measures the same thing: how much the score moves when the folds
     are reshuffled."""
-    per_repeat = np.asarray(values, dtype=float).reshape(repeats, folds).mean(axis=1)
-    sd = float(per_repeat.std(ddof=1)) if repeats > 1 else float("nan")
-    return float(per_repeat.mean()), sd
+    per_repeat = per_repeat_means(values, repeats, folds)   # a fold that couldn't be scored is skipped
+    return mean_and_sd(per_repeat)
 
 
 def expected_calibration_error(y_true: np.ndarray, prob: np.ndarray, bins: int = 10) -> float:
@@ -719,7 +728,7 @@ def explain(db_path: Path = DB_PATH, artifacts_dir: Path = ARTIFACTS,
     trees = [k for k in ("random_forest", "gradient_boosting") if k != winner]
     tree_key = min(trees, key=lambda k: board.loc[k, "ber_mean"])
 
-    ann = feature_annotations().set_index("feature")
+    ann = annotations(integration_dir, genes, metabs).set_index("feature")
     dropped = KingdomPrep(tuple(genes), tuple(metabs)).fit(X).dropped_
     tables, grades = [], []
     for key, kparams in ((winner, params), (tree_key, {})):
@@ -775,14 +784,18 @@ def explain(db_path: Path = DB_PATH, artifacts_dir: Path = ARTIFACTS,
             print(f"  {MODEL_NAMES[key].split(' (')[0]:<26} top 6: "
                   + ", ".join(f"{f} ({v:.3f})" for f, v in zip(top["feature"], top["importance_mean"])))
         for g in grades:
-            print(f"  {g['method']:<58} {g['n_selected']:>2} picked · "
-                  f"{g['n_signal_selected']:>2} true drivers · decoys: {g['decoys_selected']}")
+            if g["n_signal_selected"] == g["n_signal_selected"]:          # graded (not NaN)
+                print(f"  {g['method']:<58} {g['n_selected']:>2} picked · "
+                      f"{int(g['n_signal_selected']):>2} true drivers · decoys: {g['decoys_selected']}")
+            else:
+                print(f"  {g['method']:<58} {g['n_selected']:>2} picked (not graded: no answer key)")
         if agreement:
             print(f"  vs Phase 3 (DIABLO robust signature): {agreement['in_both']} shared · "
                   f"{agreement['model_only']} only here ({agreement['model_only_features']}) · "
                   f"{agreement['diablo_only']} only in DIABLO")
-        print("  ── Where the winner goes wrong (out-of-fold, majority of 10 repeats) ─")
-        margin = errors[errors["group_type"] == "distance from the 65 % cut-off"]
+        repeats = int(board.loc[winner, "n_folds_scored"]) // CV_FOLDS
+        print(f"  ── Where the winner goes wrong (out-of-fold, majority of {repeats} repeats) ─")
+        margin = errors[errors["group_type"] == CUTOFF]
         for _, r in margin.iterrows():
             print(f"  {r['group']:<34} {r['n_errors']:>3} of {r['n_strains']:>3} strains wrong "
                   f"({r['error_rate']:.0%})")
@@ -790,7 +803,7 @@ def explain(db_path: Path = DB_PATH, artifacts_dir: Path = ARTIFACTS,
         print("  by kingdom: " + " · ".join(f"{r['group']} {r['error_rate']:.0%}"
                                            for _, r in kingdom_rows.iterrows()))
         n_all = int(hard["missed_by_all_models"].sum())
-        print(f"  {len(hard)} strains are wrong in at least 8 of 10 repeats; "
+        print(f"  {len(hard)} strains are wrong in at least 80 % of the repeats; "
               f"{n_all} of them are missed by all three models")
         print(f"  results → {_rel(artifacts_dir)}/   ({time.time() - started:.0f} s)")
     return {"importance": importance, "report_card": report_card, "agreement": agreement,
@@ -804,14 +817,15 @@ def error_analysis(X: pd.DataFrame, y: np.ndarray, outcome: pd.DataFrame,
     A strain counts as an error when the winner's out-of-fold prediction was
     wrong in the majority of the 10 repeats. Errors are grouped by kingdom, by
     how far the strain's real score sits from the 65 % cut-off that defines
-    "effective", and by how many of its readings were missing."""
+    "effective" (a dataset's own line, in Phase 9), and by how many of its
+    readings were missing."""
     oof = oof.set_index("strain_id").loc[outcome.index]
     wrong = oof[f"correct_share_{winner}"].to_numpy() < 0.5
     distance = (outcome["suppression_score"] - EFFECTIVE_THRESHOLD).abs().to_numpy()
     n_missing = X.drop(columns="kingdom").isna().sum(axis=1).to_numpy()
     groups = {
         "kingdom": outcome["kingdom"].to_numpy(),
-        f"distance from the {EFFECTIVE_THRESHOLD} % cut-off": pd.cut(
+        CUTOFF: pd.cut(
             distance, [0, 2, 5, 10, np.inf], right=False,
             labels=["within 2 points", "2 to 5 points", "5 to 10 points", "more than 10 points"]
         ).astype(str),
@@ -820,8 +834,7 @@ def error_analysis(X: pd.DataFrame, y: np.ndarray, outcome: pd.DataFrame,
         "true class": np.where(y == 1, "effective", "not effective"),
     }
     order = {"kingdom": ["Bacteria", "Fungi", "Yeast", "Oomycete"],
-             f"distance from the {EFFECTIVE_THRESHOLD} % cut-off":
-                 ["within 2 points", "2 to 5 points", "5 to 10 points", "more than 10 points"],
+             CUTOFF: ["within 2 points", "2 to 5 points", "5 to 10 points", "more than 10 points"],
              "missing readings": ["none", "one", "two or more"],
              "true class": ["effective", "not effective"]}
     rows = []
@@ -853,7 +866,8 @@ def error_analysis(X: pd.DataFrame, y: np.ndarray, outcome: pd.DataFrame,
 # =============================================================================
 
 def final(db_path: Path = DB_PATH, artifacts_dir: Path = ARTIFACTS, verbose: bool = True) -> dict:
-    """Fit the calibrated winner on all 600 strains and save it with its card.
+    """Fit the calibrated winner on all the strains (600 in the library) and
+    save it with its card.
 
     The ranking written to predictions.csv uses each strain's OUT-OF-FOLD
     calibrated probability (from `calibrate`): for strains we already know,
@@ -881,9 +895,10 @@ def final(db_path: Path = DB_PATH, artifacts_dir: Path = ARTIFACTS, verbose: boo
     pred.insert(0, "rank", np.arange(1, len(pred) + 1))
     pred.to_csv(artifacts_dir / "predictions.csv", index=False)
 
-    top = pred.head(TOP_N)
+    top_n = min(TOP_N, len(pred))          # a small dataset may have fewer than 50 strains
+    top = pred.head(top_n)
     hits = int(top["is_effective"].sum())
-    expected = TOP_N * base_rate
+    expected = top_n * base_rate
     board = _read(artifacts_dir, "scoreboard.csv").set_index("model_key")
     calib = _read(artifacts_dir, "calibration_summary.csv").set_index("version")
     kept = model.calibrated_classifiers_[0].estimator.named_steps["prep"].kept_
@@ -893,11 +908,13 @@ def final(db_path: Path = DB_PATH, artifacts_dir: Path = ARTIFACTS, verbose: boo
                               "of `compare` (nested cross-validation)",
         "wrapped_in": "CalibratedClassifierCV(method='sigmoid', cv=5)",
         "intended_use": "rank candidate microbial strains for further testing; research use",
-        "not_for": "regulatory decisions or any real-world claim (the training data is SIMULATED)",
+        "not_for": ("regulatory decisions or any real-world claim (the training data is SIMULATED)"
+                    if paths.setting("kind", "library") != "yours" else
+                    "regulatory decisions or any real-world claim before the ranking is checked in the lab"),
         "training_data": {"strains": int(len(y)), "effective": int(y.sum()),
                           "base_rate": round(base_rate, 4), "features_used": len(kept),
                           "features_dropped": sorted(set(genes + metabs) - set(kept)),
-                          "source": "data/processed/strainscope.duckdb (clean Phase 2 tables)"},
+                          "source": f"{paths.rel(db_path)} (clean Phase 2 tables)"},
         "decision_threshold": round(base_rate, 4),
         "threshold_meaning": "flag a strain when its calibrated probability exceeds the base rate",
         "cross_validated_performance": {
@@ -908,7 +925,7 @@ def final(db_path: Path = DB_PATH, artifacts_dir: Path = ARTIFACTS, verbose: boo
             "calibration_error_raw": calib.loc["raw", "ece_pooled"],
             "calibration_error_calibrated": calib.loc["calibrated", "ece_pooled"],
             "brier_calibrated": calib.loc["calibrated", "brier_mean"]},
-        "top_n_check": {"n": TOP_N, "truly_effective": hits, "expected_by_chance": round(expected, 1)},
+        "top_n_check": {"n": top_n, "truly_effective": hits, "expected_by_chance": round(expected, 1)},
         "input_format": "a table with a 'kingdom' column plus the raw gene and metabolite "
                         "columns of the clean Phase 2 tables; gaps are allowed",
         "versions": {"python": platform.python_version(), "scikit-learn": sklearn.__version__,
@@ -926,7 +943,7 @@ def final(db_path: Path = DB_PATH, artifacts_dir: Path = ARTIFACTS, verbose: boo
         ("cv_average_precision", board.loc[winner, "ap_mean"]),
         ("ece_raw", calib.loc["raw", "ece_pooled"]),
         ("ece_calibrated", calib.loc["calibrated", "ece_pooled"]),
-        ("top_n", TOP_N), ("top_n_truly_effective", hits),
+        ("top_n", top_n), ("top_n_truly_effective", hits),
         ("top_n_expected_by_chance", round(expected, 1)),
         ("scikit_learn_version", sklearn.__version__),
         ("model_file_kb", round((artifacts_dir / MODEL_FILE.name).stat().st_size / 1024, 1)),
@@ -938,13 +955,16 @@ def final(db_path: Path = DB_PATH, artifacts_dir: Path = ARTIFACTS, verbose: boo
         print(f"  {_short(winner)}" + (f", C = {params['C']}" if params else "")
               + ", calibrated (Platt scaling), fitted on all "
               f"{len(y)} strains · {len(kept)} features")
-        print(f"  ranking check: of the top {TOP_N} strains (out-of-fold probabilities), "
+        print(f"  ranking check: of the top {top_n} strains (out-of-fold probabilities), "
               f"{hits} are truly effective; chance alone would give {expected:.0f}")
         print(f"  saved → {_rel(artifacts_dir / MODEL_FILE.name)} "
               f"({summary.set_index('key').loc['model_file_kb', 'value']} KB) + "
               f"{_rel(artifacts_dir / CARD_FILE.name)}")
         print(f"  ranking → {_rel(artifacts_dir / 'predictions.csv')}   ({time.time() - started:.0f} s)")
-        print("  Reminder: the data is SIMULATED. This proves the workflow, not real-world accuracy.")
+        if paths.setting("kind", "library") == "yours":
+            print("  Reminder: a model is only as good as its data. Check the top of the ranking in the lab.")
+        else:
+            print("  Reminder: the data is SIMULATED. This proves the workflow, not real-world accuracy.")
     return {"card": card, "predictions": pred}
 
 
@@ -1017,6 +1037,15 @@ def publish(artifacts_dir: Path = ARTIFACTS, db_path: Path = DB_PATH,
 def _short(key: str) -> str:
     """A model's name without the bracketed detail, e.g. 'Random forest'."""
     return MODEL_NAMES[key].split(" (")[0]
+
+
+def annotations(integration_dir: Path = INTEGRATION, genes=None, metabs=None) -> pd.DataFrame:
+    """What is known about each feature: the table Phase 3's `prepare` wrote
+    (every column of this data), or, without it, the library's list."""
+    path = Path(integration_dir) / "feature_annotations.csv"
+    if path.exists():
+        return pd.read_csv(path)
+    return feature_annotations(genes, metabs)
 
 
 def _rel(path: Path) -> str:

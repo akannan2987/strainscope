@@ -9,6 +9,11 @@ tests/conftest.py: what several test files share (pytest reads this file first).
     tests/test_ask_graph.py. No test needs the network, a real model or a key.
   * a fresh daily cap for every test (src/strainscope/llm.py keeps one per
     running copy, and a test must not use up another test's requests).
+  * workflow_dataset: one small dataset of "your own" data (120 simulated
+    strains saved as three tables, quick settings), with every phase run on
+    it once for the whole test session (about a minute), in a folder of its
+    own under pytest's temporary folder. tests/test_datasets.py and
+    tests/test_app.py read it (Phase 9).
 """
 import json
 import sys
@@ -61,3 +66,36 @@ def fresh_daily_cap():
     llm._CAP = None
     yield
     llm._CAP = None
+
+
+@pytest.fixture(scope="session")
+def workflow_dataset(tmp_path_factory):
+    """A dataset of your own with every phase run on it: (folder, run output)."""
+    import subprocess
+    from strainscope import datasets as ds
+    base = tmp_path_factory.mktemp("datasets")
+    files = ds.write_tables(ds.example(120, 7), base.parent / "example_tables")    # as a person would have them
+    check = ds.check_tables(*(ds.read_table(f)[0] for f in files))
+    assert check.ok, check.errors
+    home = ds.create("trial", check.tables, "yours", "tests/conftest.py", quick=True, base=base)
+    before = _library_files()
+    run = subprocess.run([sys.executable, str(ROOT / "src" / "strainscope" / "pipeline.py"),
+                          "--dataset", str(home), "--quiet"], cwd=ROOT, capture_output=True, text=True,
+                         encoding="utf-8", env={**__import__("os").environ, "PYTHONUTF8": "1",
+                                                "STRAINSCOPE_RSCRIPT": "none"})
+    assert run.returncode == 0, run.stdout[-3000:] + run.stderr[-3000:]
+    LIBRARY_FILES.update(before=before, after=_library_files())
+    return home, run.stdout
+
+
+LIBRARY_FILES: dict = {}        # the library's files before and after the run above
+
+
+def _library_files() -> dict:
+    """Every file of the library's results and pictures, with its size and time of change."""
+    out = {}
+    for folder in ("artifacts", "figures", "data/raw"):
+        for f in (ROOT / folder).rglob("*"):
+            if f.is_file():
+                out[f.relative_to(ROOT).as_posix()] = (f.stat().st_size, f.stat().st_mtime_ns)
+    return out

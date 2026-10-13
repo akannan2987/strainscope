@@ -29,10 +29,16 @@ st.markdown("How are two things connected? What does a compound do? Ask, and the
             "competition, STRAIN_0485).")
 G = ui.graph()
 if G is None:
-    ui.needs("Ask the graph needs Phase 5's graph.", "python src/strainscope/graph.py all")
+    ui.needs("Ask the graph needs Phase 5's graph.", ui.fix_command("python src/strainscope/graph.py all"))
     st.stop()
+ui.simulated_note()
 
 cfg = llm.settings()
+if ui.info()["kind"] == "yours" and cfg.on:
+    # Facts about your own data stay here: no model writes from them (Phase 9).
+    st.caption("With your own data, the answers are the facts and the route only: the language model isn't "
+               "asked to write from them, so nothing about your data leaves this copy.")
+    cfg = llm.Settings()                 # the "none" setting: facts and routes only
 question = st.text_input("Your question", key="graph_question", placeholder="e.g. How does iturin suppress disease?",
                          help="Press Enter to ask.")
 write = False

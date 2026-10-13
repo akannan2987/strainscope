@@ -29,10 +29,15 @@ st.markdown("A question about the data in plain words, answered with a **SQL que
             "database is read-only here, as everywhere in the app.")
 ui.simulated_note()
 if not ui.has_database():
-    ui.needs("Ask the data needs the database.", "python src/strainscope/harmonize.py")
+    ui.needs("Ask the data needs the database.", ui.fix_command("python src/strainscope/harmonize.py"))
     st.stop()
 
 cfg = llm.settings()
+if ui.info()["kind"] == "yours" and cfg.on:
+    # Your own data's table and column names are yours: no model sees them (Phase 9).
+    st.caption("With your own data, only the Query Cookbook's tested recipes answer here: the language model "
+               "isn't asked to write a query, so not even a column name of your data leaves this copy.")
+    cfg = llm.Settings()                 # the "none" setting: recipes only
 question = st.text_input("Your question", key="data_question", placeholder="e.g. Which strains are borderline?",
                          help="Press Enter to ask. Name what you want to see: strains, a kingdom, a gene, "
                               "a model, the graph.")
@@ -50,7 +55,7 @@ if not question.strip():
         cols[n % 2].button(q, key=f"data_starter_{n}", on_click=_set_question, args=(q,), width="stretch")
 else:
     with st.spinner("Looking for a recipe and running it..."):
-        answer = qa.ask(question, ui.DB_PATH, write=use_model, cfg=cfg if use_model else None)
+        answer = qa.ask(question, ui.db(), write=use_model, cfg=cfg if use_model else None)
     BOX[answer.verdict](answer.message, icon=ICON[answer.verdict])
     if answer.note and answer.verdict == qa.CLOSEST and use_model:
         st.caption(f"No new query: {answer.note}")

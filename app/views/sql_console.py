@@ -11,11 +11,11 @@ from strainscope import service as sv
 st.title("SQL console")
 st.markdown(
     "SQL is the language databases understand. Each question here runs against "
-    "`data/processed/strainscope.duckdb`, **read-only**: you can look at anything and change nothing. "
+    f"`{ui.paths.rel(ui.db())}`, **read-only**: you can look at anything and change nothing. "
     f"New to SQL? Start with the recipes below; each one is explained in "
     f"{ui.doc('QUERY_COOKBOOK.md', 'docs/QUERY_COOKBOOK.md')}.")
 if not ui.has_database():
-    ui.needs("The console needs the database.", "python src/strainscope/harmonize.py")
+    ui.needs("The console needs the database.", ui.fix_command("python src/strainscope/harmonize.py"))
     st.stop()
 
 recipes = ui.recipes()
@@ -58,7 +58,7 @@ sql = st.text_area("Your query", key="sql_text", height=200,
                    help="One query, or several separated by ';' (only the last one's result is shown).")
 run = st.button("Run", type="primary")
 if run:
-    st.session_state["sql_result"] = (sql, sv.query_database(sql, ui.DB_PATH))
+    st.session_state["sql_result"] = (sql, sv.query_database(sql, ui.db()))
 if "sql_result" in st.session_state:
     ran, result = st.session_state["sql_result"]
     if ran != sql:

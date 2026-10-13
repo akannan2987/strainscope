@@ -31,6 +31,13 @@ strains. A language model could make the wording smoother, but it would
 need to see a strain's measurements to do so, and StrainScope never sends
 data to a model (docs/08-deployment-ai.md, section 3). The rules are easy
 to read and easy to test; that was the deciding point.
+
+ANY DATASET (Phase 9)
+---------------------
+Both functions take an optional `place` (src/strainscope/paths.py, info()):
+what the strains are. Without it, the wording is the library's. With a
+dataset of your own, the trial is "your trial results", nothing is called
+simulated, and "effective" uses the dataset's own line.
 """
 from __future__ import annotations
 
@@ -90,13 +97,23 @@ def _reason(text: str, first: bool) -> str:
     return f"{body}, which works by {mode}" if first else f"{body} ({mode})"
 
 
+def _place(place: dict | None) -> dict:
+    """The words that depend on which data this is (the library unless said)."""
+    place = place or {"kind": "library"}
+    kind = place.get("kind", "library")
+    whose = "the library" if kind == "library" else f"dataset {place.get('name', '')}"
+    return {"line": f"{float(place.get('effective_at', EFFECTIVE_LINE)):g}",
+            "trial": "your trial results" if kind == "yours" else "the simulated trial",
+            "whose": whose, "n": int(place.get("strains", 600) or 600), "simulated": kind != "yours"}
+
+
 def _kingdom(kingdom: str) -> str:
     word = KINGDOM_WORD.get(str(kingdom))
     return f"a {word} strain" if word else "a strain of a kingdom the model hasn't seen"
 
 
 def strain(row: dict, reasons: pd.DataFrame, total: int, card: dict | None = None,
-           uploaded: bool = False) -> Story:
+           uploaded: bool = False, place: dict | None = None) -> Story:
     """One strain's rank and reasons in plain words.
 
     row      the strain's line of the ranking: strain_id, kingdom, rank,
@@ -104,8 +121,10 @@ def strain(row: dict, reasons: pd.DataFrame, total: int, card: dict | None = Non
              answer key), library_rank (an upload's place among the 600)
     reasons  its rows of artifacts/graph/explanations.csv (or an upload's)
     total    how many strains are ranked (600, or the strains in an upload)
-    card     the model card (for the top-50 check), when there is one"""
+    card     the model card (for the top-50 check), when there is one
+    place    which data this is (Phase 9); the library when left out"""
     story = Story()
+    w = _place(place)
     p = float(row["probability"])
     rank, sid = int(row["rank"]), row["strain_id"]
     genus = row.get("genus")
@@ -114,22 +133,26 @@ def strain(row: dict, reasons: pd.DataFrame, total: int, card: dict | None = Non
     where = f"of the {total} strains in your file" if uploaded else f"of {total}"
     first = [f"{sid} is {_kingdom(row.get('kingdom'))}{genus} at rank {rank} {where}.",
              f"The model puts its chance of being effective at {percent(p)} (effective means suppressing disease "
-             f"by at least {EFFECTIVE_LINE} % in a trial)."]
+             f"by at least {w['line']} % in a trial)."]
     if band == "likely":
         first.append(f"That counts as likely (above {BANDS[1]} %).")
     elif band == "unlikely":
         first.append(f"That counts as unlikely (below {BANDS[0]} %).")
     else:
         first.append(f"That counts as borderline (from {BANDS[0]} % to {BANDS[1]} %): strains just either side of "
-                     f"the {EFFECTIVE_LINE} % line are much alike, so read it as a maybe.")
+                     f"the {w['line']} % line are much alike, so read it as a maybe.")
     check = (card or {}).get("top_n_check")
     if not uploaded and check and rank <= int(check["n"]):
         first.append(f"It's in the top {check['n']}, and {check['truly_effective']} of those {check['n']} strains "
-                     "were effective in the simulated trial.")
+                     f"were effective in {w['trial']}.")
     if uploaded and pd.notna(row.get("library_rank")):
-        lr = int(row["library_rank"])
-        first.append(f"Among the library's 600 strains it would rank {lr}." if lr <= 600
-                     else "It would rank below all 600 strains of the library.")
+        lr, n = int(row["library_rank"]), w["n"]
+        if w["whose"] == "the library":
+            first.append(f"Among the library's {n} strains it would rank {lr}." if lr <= n
+                         else f"It would rank below all {n} strains of the library.")
+        else:
+            first.append(f"Among the {n} strains of {w['whose']} it would rank {lr}." if lr <= n
+                         else f"It would rank below all {n} strains of {w['whose']}.")
     story.paragraphs.append(" ".join(first))
 
     columns = ["kind", "text", "feature", "mode", "mechanism_paths"]
@@ -185,18 +208,22 @@ def strain(row: dict, reasons: pd.DataFrame, total: int, card: dict | None = Non
             verdict = ", so this is one the model missed."
         else:
             verdict = ", so the model was wrong about this one."
-        story.paragraphs.append(f"In the simulated trial {said}{verdict} (The trial result is known only because "
-                                "the data is simulated.)")
+        if w["simulated"]:
+            story.paragraphs.append(f"In the simulated trial {said}{verdict} (The trial result is known only "
+                                    "because the data is simulated.)")
+        else:
+            story.paragraphs.append(f"In your trial results {said}{verdict}")
 
-    story.numbers = _allowed(row, rows, total, card, p)
+    story.numbers = _allowed(row, rows, total, card, p) | numbers_of(w["line"], str(w["n"]))
     return story
 
 
-def shortlist(pred: pd.DataFrame, n: int, uploaded: bool = False) -> Story:
+def shortlist(pred: pd.DataFrame, n: int, uploaded: bool = False, place: dict | None = None) -> Story:
     """What testing the n best-ranked strains would bring, in plain words.
     The model's chances are calibrated (Phase 4), so adding them up gives
     the number of effective strains it expects among the n."""
     story = Story()
+    w = _place(place)
     n = max(1, min(int(n), len(pred)))
     top = pred.nsmallest(n, "rank")
     expected = float(top["probability"].sum())
@@ -209,9 +236,10 @@ def shortlist(pred: pd.DataFrame, n: int, uploaded: bool = False) -> Story:
     if not uploaded and "is_effective" in pred:
         found, total = int(top["is_effective"].sum()), int(pred["is_effective"].sum())
         base = pred["is_effective"].mean()
-        lines.append(f"In the simulated trial, {found} of the {n} were effective ({found / n * 100:.0f} %).")
-        lines.append(f"Picking {n} at random would find about {n * base:.0f}, because {base * 100:.0f} % of the "
-                     f"library is effective, and {total - found} of the {total} effective strains would be left untested.")
+        lines.append(f"In {w['trial']}, {found} of the {n} were effective ({found / n * 100:.0f} %).")
+        lines.append(f"Picking {n} at random would find about {n * base:.0f}, because {base * 100:.0f} % of "
+                     f"{w['whose']} is effective, and {total - found} of the {total} effective strains would be "
+                     "left untested.")
     story.paragraphs.append(" ".join(lines))
     story.numbers = numbers_of(*story.paragraphs)
     return story
@@ -252,7 +280,8 @@ def main(argv: list[str] | None = None) -> int:
         pred = sv.read_artifact("model/predictions.csv")
         if pred is None:
             sys.exit("The ranking is missing. Run: python src/strainscope/model.py all")
-        paragraphs = shortlist(pred, args.top).paragraphs
+        from strainscope import paths
+        paragraphs = shortlist(pred, args.top, place=paths.info()).paragraphs
     elif args.strain:
         try:
             paragraphs = sv.explain_in_words(args.strain.upper())["paragraphs"]

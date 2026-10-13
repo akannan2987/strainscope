@@ -1,0 +1,80 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>StrainScope: the whole workflow</title>
+<style>
+body{font-family:system-ui,-apple-system,Segoe UI,sans-serif;max-width:1100px;margin:24px auto;padding:0 16px;color:#1F2933;background:#FFFFFF}
+h1{font-size:22px} h2{font-size:16px;margin:18px 0 6px} p{color:#4B5563;line-height:1.5}
+.tabs button{margin:0 6px 8px 0;padding:8px 12px;border:1px solid #DCE6F5;border-radius:8px;background:#F5F9FF;font-size:14px;cursor:pointer;color:#1F2933}
+.tabs button[aria-selected="true"]{background:#E6F4EA;border-color:#2E7D5B;font-weight:600}
+button:focus-visible{outline:3px solid #1A5FA6;outline-offset:2px}
+table{border-collapse:collapse;width:100%} td,th{border-bottom:1px solid #E3E6EA;padding:6px 8px;text-align:left;vertical-align:top;font-size:14px}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px}
+.bar{display:flex;height:22px;border-radius:4px;overflow:hidden;min-width:2px} .bar span{display:block;height:100%}
+.legend span{display:inline-block;margin-right:14px;font-size:13px} .legend i{display:inline-block;width:12px;height:12px;margin-right:5px;vertical-align:-1px;border-radius:2px}
+.error{border-left:4px solid #D9634C} .warning{border-left:4px solid #C9A227} .note{border-left:4px solid #5B8DEF}
+.msg{padding:6px 10px;margin:6px 0;background:#FAFBFC;font-size:14px;line-height:1.45}
+</style></head><body>
+<h1>StrainScope: the whole workflow, on your own data</h1>
+<p>Phase 9 in four views, built from the project's own code: the steps and what each one reads and writes
+(<code>src/strainscope/datasets.py</code>, <code>src/strainscope/service.py</code>), how long a run took,
+the checks a dataset passes before it's saved, and the limits. The guide is
+<code>docs/10-workflow-and-your-data.md</code>.</p>
+<div class="tabs" role="tablist">
+<button role="tab" id="t-steps" aria-selected="true" onclick="tab('steps')">The steps</button>
+<button role="tab" id="t-time" aria-selected="false" onclick="tab('time')">How long</button>
+<button role="tab" id="t-checks" aria-selected="false" onclick="tab('checks')">The checks</button>
+<button role="tab" id="t-limits" aria-selected="false" onclick="tab('limits')">Limits</button>
+</div>
+<div id="view"></div>
+<script>
+const D = {"steps": [{"script": "generate_data.py", "name": "Simulate the data", "reads": "the dataset's seed and size (dataset.json)", "receipt": "raw/phenotype.csv"}, {"script": "harmonize.py", "name": "Clean it into a database", "reads": "raw/ (the three tables)", "receipt": "processed/cleaning_ledger.csv"}, {"script": "integrate.py", "name": "Read genes and chemistry together", "reads": "the clean tables in the database", "receipt": "artifacts/integration/signature_report_card.csv"}, {"script": "model.py", "name": "Learn to predict", "reads": "the clean tables in the database", "receipt": "artifacts/model/model_card.json"}, {"script": "graph.py", "name": "Build the knowledge graph", "reads": "the clean tables, the domain model, Phases 3 and 4", "receipt": "artifacts/graph/explanations.csv"}], "plans": {"simulate": {"title": "Simulate a library and run every phase on it", "takes": "about 3 minutes for 600 strains, 1 with quick settings; DIABLO in R adds about 3", "steps": ["python src/strainscope/generate_data.py", "python src/strainscope/harmonize.py", "python src/strainscope/integrate.py all", "python src/strainscope/model.py all", "python src/strainscope/graph.py all"]}, "workflow": {"title": "Run every phase on your data", "takes": "about 3 minutes for 600 strains, 1 with quick settings; DIABLO in R adds about 3", "steps": ["python src/strainscope/harmonize.py", "python src/strainscope/integrate.py all", "python src/strainscope/model.py all", "python src/strainscope/graph.py all"]}}, "timings": [{"name": "example120", "what": "the example, 120 strains, quick settings", "steps": {"harmonize.py": 0.8, "integrate.py": 2.0, "model.py": 36.5, "graph.py": 2.2}}, {"name": "seed7_300", "what": "simulated, 300 strains, quick settings", "steps": {"generate_data.py": 0.6, "harmonize.py": 0.6, "integrate.py": 2.1, "model.py": 38.7, "graph.py": 2.4}}, {"name": "seed42_600_quick", "what": "simulated, 600 strains, quick settings", "steps": {"generate_data.py": 0.6, "harmonize.py": 0.7, "integrate.py": 2.1, "model.py": 65.1, "graph.py": 3.4}}, {"name": "seed42_600", "what": "simulated, 600 strains, full settings (the library's)", "steps": {"generate_data.py": 0.6, "harmonize.py": 0.7, "integrate.py": 3.6, "model.py": 170.2, "graph.py": 3.3}}, {"name": "seed11_1000", "what": "simulated, 1,000 strains, quick settings", "steps": {"generate_data.py": 0.6, "harmonize.py": 0.7, "integrate.py": 2.1, "model.py": 66.6, "graph.py": 4.1}}], "checks": {"error": ["Gene column `ituA` must hold 1 or 0 (or yes/no); found maybe on row 6.", "Compound column `iturin` must hold numbers; found 2,5 on row 4. Use a full stop as the decimal mark (2.5, not 2,5)."], "warning": ["2 strain(s) of the genes table are missing from another table and are left out: STRAIN_0001, STRAIN_0002. Integration needs every strain in all three tables.", "2 strain(s) of the trial-results table are missing from another table and are left out: STRAIN_0001, STRAIN_0002. Integration needs every strain in all three tables."], "note": ["8 strain(s) appear more than once (STRAIN_0004, STRAIN_0017, STRAIN_0056, STRAIN_0064 and 4 more), in the genes table, the compounds table and the trial-results table. Cleaning (Phase 2) keeps the first row of each and counts the rest in its ledger.", "There's no `is_effective` column, so a strain counts as effective when its `suppression_score` is at least 65 % (you can choose another line).", "There's no `batch_id` column, so cleaning has no lab drift to correct (it says so in its ledger).", "192 empty cell(s) are read as 'not known' or 'not measured', never as 0."]}, "limits": {"local": {"strains": 5000, "genes": 300, "compounds": 300, "megabytes": 20}, "shared": {"strains": 1000, "genes": 100, "compounds": 100, "megabytes": 5}}, "quick": 2, "min": [40, 10], "names": {"generate_data.py": "Simulate the data", "harmonize.py": "Clean it into a database", "integrate.py": "Read genes and chemistry together", "model.py": "Learn to predict", "graph.py": "Build the knowledge graph", "fetch_real.py": "Fetch real data"}};
+const esc = s => String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'})[c]);
+const COLOURS = {"generate_data.py":"#8A94A6","harmonize.py":"#5B8DEF","integrate.py":"#C9A227","model.py":"#2E7D5B","graph.py":"#9C6ADE"};
+function tab(name) {
+  ['steps','time','checks','limits'].forEach(t => document.getElementById('t-'+t).setAttribute('aria-selected', t === name));
+  const v = document.getElementById('view');
+  if (name === 'steps') {
+    v.innerHTML = '<p>A dataset of your own runs the <b>workflow</b> plan; a simulated one runs <b>simulate</b>, which '
+      + 'starts with the generator. Each step runs in the dataset\'s folder. A step counts as done when its last file '
+      + '(the receipt) exists and is newer than the step before it.</p><table><tr><th>Step</th><th>Reads</th>'
+      + '<th>Its last file (in the dataset folder)</th></tr>' + D.steps.map(s => '<tr><td><b>' + esc(s.name)
+      + '</b><br><code>python src/strainscope/' + esc(s.script) + '</code></td><td>' + esc(s.reads) + '</td><td><code>'
+      + esc(s.receipt) + '</code></td></tr>').join('') + '</table>' + Object.entries(D.plans).map(([k, p]) =>
+      '<h2>' + esc(k) + ': ' + esc(p.title) + '</h2><p>' + esc(p.takes) + '.</p><ol>' + p.steps.map(s => '<li><code>'
+      + esc(s) + '</code></li>').join('') + '</ol>').join('');
+  }
+  if (name === 'time') {
+    const most = Math.max(...D.timings.map(t => Object.values(t.steps).reduce((a, b) => a + b, 0)));
+    v.innerHTML = '<p>Measured on 2026-10-13 on a Linux computer without R (so without DIABLO), with '
+      + '<code>python src/strainscope/pipeline.py --dataset NAME</code>. Quick settings use ' + D.quick
+      + ' cross-validation repeats instead of 10. Learning to predict takes most of the time.</p><div class="legend">'
+      + Object.entries(COLOURS).map(([k, c]) => '<span><i style="background:' + c + '"></i>' + esc(D.names[k]) + '</span>').join('')
+      + '</div><table><tr><th>Dataset</th><th style="width:55%">Seconds per step</th><th>In all</th></tr>'
+      + D.timings.map(t => { const total = Object.values(t.steps).reduce((a, b) => a + b, 0);
+        return '<tr><td><code>' + esc(t.name) + '</code><br>' + esc(t.what) + '</td><td><div class="bar" style="width:'
+        + (100 * total / most).toFixed(1) + '%">' + Object.entries(t.steps).map(([k, s]) => '<span title="'
+        + esc(D.names[k]) + ': ' + s + ' s" style="width:' + (100 * s / total).toFixed(2) + '%;background:' + COLOURS[k]
+        + '"></span>').join('') + '</div><div style="font-size:12px;color:#5f6b7a">' + Object.entries(t.steps).map(([k, s]) =>
+        esc(D.names[k]) + ' ' + s + ' s').join(' · ') + '</div></td><td>' + Math.round(total) + ' s</td></tr>'; }).join('')
+      + '</table>';
+  }
+  if (name === 'checks') {
+    v.innerHTML = '<p>Real messages from the checks, on the example with a few mistakes put in. Errors stop the save; '
+      + 'warnings say what was left out or rests on very little; notes say what was assumed.</p>' + ['error','warning','note'].map(l =>
+      '<h2>' + {error:'Errors',warning:'Warnings',note:'Notes'}[l] + '</h2>' + D.checks[l].map(m =>
+      '<div class="msg ' + l + '">' + esc(m) + '</div>').join('')).join('');
+  }
+  if (name === 'limits') {
+    const L = D.limits;
+    v.innerHTML = '<table><tr><th></th><th>On your own computer</th><th>On a shared copy</th></tr>'
+      + [['strains', 'strains'], ['genes', 'genes'], ['compounds', 'compounds'], ['megabytes', 'size of one file (MB)']]
+        .map(([k, w]) => '<tr><td>' + w + '</td><td>' + L.local[k].toLocaleString('en') + '</td><td>'
+        + L.shared[k].toLocaleString('en') + '</td></tr>').join('')
+      + '<tr><td>settings</td><td>full (10 repeats) or quick (' + D.quick + ')</td><td>quick (' + D.quick + ')</td></tr>'
+      + '<tr><td>kept</td><td>until you delete it</td><td>an hour after its last use; only the browser tab that made it '
+      + 'lists it</td></tr></table><p>At least ' + D.min[0] + ' strains in all three tables, with at least ' + D.min[1]
+      + ' effective and ' + D.min[1] + ' not, so a model has both sides to learn from.</p>';
+  }
+}
+tab('steps');
+</script></body></html>

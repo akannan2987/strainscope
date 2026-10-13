@@ -10,7 +10,8 @@ from strainscope import graph as kg
 st.title("Knowledge graph")
 G, layout = ui.graph(), ui.knowledge_layout()
 if G is None or layout is None:
-    ui.needs("The graph comes from Phase 5, and artifacts/graph/ is empty.", "python src/strainscope/graph.py all")
+    ui.needs("The graph comes from Phase 5, and its files aren't there yet.",
+             ui.fix_command("python src/strainscope/graph.py all"))
     st.stop()
 edges = ui.artifact("graph/edges.csv")
 st.markdown(
@@ -18,6 +19,7 @@ st.markdown(
     "gene **makes** a compound, the compound **acts by** a mode of action, which **contributes to** disease "
     "suppression. Every connection records where it came from. "
     f"The ideas are explained in {ui.doc('06-knowledge-graph.md', 'docs/06-knowledge-graph.md')}.")
+ui.simulated_note()
 
 net, find, look, groups, agree = st.tabs(["The network", "Find a path", "Look something up",
                                           "Hubs and communities", "Knowledge vs data"])
@@ -70,8 +72,10 @@ with find:
             note = " :orange-badge[statistics only, no known mechanism]" if stats else ""
             st.markdown(f"{i}. **{h['from']}** *{h['relation']}* **{h['to']}**{note}")
             st.caption(f"source: {h['provenance']}" + (f" · {h['evidence']}" if h["evidence"] else ""))
-        st.caption(f"From a terminal: `python src/strainscope/graph.py path {_quoted(start)} {_quoted(end)}`")
-    st.caption("Try accE to disease suppression: the decoy has only a statistic, no mechanism.")
+        if ui.builtin():
+            st.caption(f"From a terminal: `python src/strainscope/graph.py path {_quoted(start)} {_quoted(end)}`")
+    if ui.builtin():
+        st.caption("Try accE to disease suppression: the decoy has only a statistic, no mechanism.")
 
 # =============================================================================
 with look:
@@ -88,7 +92,8 @@ with look:
         shown = ", ".join(names) if len(names) <= 40 else ", ".join(names[:40]) + f" ... ({len(names)} in total)"
         st.markdown(f"**{rel}** {shown}")
         st.caption(f"source: {'; '.join(grp['sources'])}")
-    st.caption(f"From a terminal: `python src/strainscope/graph.py show {_quoted(what)}`")
+    if ui.builtin():
+        st.caption(f"From a terminal: `python src/strainscope/graph.py show {_quoted(what)}`")
 
 # =============================================================================
 with groups:
@@ -106,9 +111,14 @@ with groups:
                      hide_index=True, width="stretch")
     if comm is not None and check is not None:
         c = check.iloc[0]
-        st.markdown(f"**Communities.** Features that turn up in the same strains, grouped with the Louvain "
-                    f"method. Graded against the planted arsenals: purity **{c['purity']:.2f}**, adjusted Rand "
-                    f"index **{c['ari']:.2f}** (1 = a perfect match).")
+        if int(c["signal_features"]):
+            st.markdown(f"**Communities.** Features that turn up in the same strains, grouped with the Louvain "
+                        f"method. Graded against the planted arsenals: purity **{c['purity']:.2f}**, adjusted "
+                        f"Rand index **{c['ari']:.2f}** (1 = a perfect match).")
+        else:
+            st.markdown("**Communities.** Features that turn up in the same strains, grouped with the Louvain "
+                        "method. Your own data has no planted arsenals, so the groups aren't graded: read them "
+                        "as hints of which genes and compounds travel together.")
         linked = comm[comm["community"] > 0]
         for k, grp in linked.groupby("community"):
             main = grp["arsenal"].value_counts()

@@ -33,21 +33,40 @@ HOW TO RUN IT
 Outputs:
   data/processed/genomics_clean.csv, metabolomics_clean.csv, phenotype_clean.csv
   data/processed/strainscope.duckdb      <- the database (synthetic + real tables)
+  data/processed/cleaning_ledger.csv     <- the ledger as a table (the app's Workflow page shows it)
   and a printed cleaning ledger.
+
+YOUR OWN DATA (Phase 9)
+-----------------------
+Inside a dataset (src/strainscope/paths.py), the same rules run on that
+dataset's raw/ folder and write into its processed/ folder. Your tables may
+leave out the columns that only describe where a strain came from (genus,
+collection_site, isolation_date, batch_id, growth_promotion). They're kept as
+empty (NULL) columns so every database has the same shape, and a step that
+needs one says in the ledger that it had nothing to work on: without batch_id
+there is no lab drift to correct.
 """
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
 import duckdb
 import pandas as pd
 
-ROOT = Path(__file__).resolve().parents[2]
-RAW = ROOT / "data" / "raw"
-PROCESSED = ROOT / "data" / "processed"
-REAL = PROCESSED / "real"
-DB_PATH = PROCESSED / "strainscope.duckdb"
+# Make `strainscope` importable no matter where the script is run from.
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from strainscope import paths  # noqa: E402  (after the path fix)
+
+ROOT = paths.ROOT
+RAW = paths.HERE.raw                  # data/raw, or a dataset's raw/ folder (Phase 9)
+PROCESSED = paths.HERE.processed      # data/processed, or the dataset's processed/ folder
+REAL = paths.REAL                     # the public reference tables, shared by every dataset
+DB_PATH = paths.HERE.db
+# Columns that describe where a strain came from. Your own tables may leave
+# them out; they are added back as empty columns (Phase 9).
+OPTIONAL_PHENOTYPE = ("genus", "collection_site", "isolation_date", "batch_id", "growth_promotion")
 
 # --- The vocabulary the messy text must be harmonised INTO -------------------
 # (One agreed spelling per real-world thing. This tiny "controlled vocabulary"
@@ -117,12 +136,14 @@ def harmonize_text(df: pd.DataFrame, ledger: Ledger) -> pd.DataFrame:
     out = df.copy()
     changed = 0
     for col, case in (("genus", "title"), ("collection_site", "lower")):
-        before = out[col].copy()
-        cleaned = out[col].astype(str).str.strip()
+        known = out[col].notna()                     # an empty cell stays empty
+        before = out.loc[known, col].copy()
+        cleaned = before.astype(str).str.strip()
         cleaned = cleaned.str.title() if case == "title" else cleaned.str.lower()
         if col == "genus":
             cleaned = cleaned.replace(GENUS_FIXES)
-        out[col] = cleaned
+        out[col] = out[col].astype(object)
+        out.loc[known, col] = cleaned
         changed += int((before != cleaned).sum())
     ledger.add("harmonize_text", "phenotype", len(out), len(out), changed,
                "stripped spaces, unified case, fixed known typos")
@@ -192,8 +213,15 @@ def correct_batch_effect(df: pd.DataFrame, batch: pd.Series,
     means) so the correction can't be dragged by leftover extremes.
 
     ORDER MATTERS: this runs AFTER outlier capping. Otherwise one spike could
-    poison its whole batch's scaling factor."""
+    poison its whole batch's scaling factor.
+
+    Without batch numbers (a dataset whose phenotype table has no batch_id)
+    there is nothing to correct, and the ledger says so."""
     out = df.copy()
+    if batch.dropna().nunique() < 2:
+        ledger.add("correct_batch", "metabolomics", len(out), len(out), 0,
+                   "skipped: no batch_id, or only one batch, so no drift to correct")
+        return out
     # Whole-number CSVs parse as integers; scaling produces decimals, and
     # writing decimals into an integer column is an error in modern pandas.
     # Coerce to float first so the function is safe for ANY input table.
@@ -275,6 +303,16 @@ def run(verbose: bool = True) -> tuple[dict[str, pd.DataFrame], Ledger, list[str
     metabolomics = pd.read_csv(RAW / "metabolomics.csv")
     phenotype = pd.read_csv(RAW / "phenotype.csv")
     metab_cols = [c for c in metabolomics.columns if c != "strain_id"]
+    # Your own data may leave out where strains came from: those columns are
+    # added back empty, so every database has the same columns (Phase 9).
+    missing_cols = [c for c in OPTIONAL_PHENOTYPE if c not in phenotype.columns]
+    for c in missing_cols:      # numbers stay numbers and words stay words, even when empty
+        numeric = c in ("batch_id", "growth_promotion")
+        phenotype[c] = pd.Series(float("nan") if numeric else None, index=phenotype.index,
+                                 dtype="float64" if numeric else "string")
+    if missing_cols:
+        ledger.add("optional_columns", "phenotype", len(phenotype), len(phenotype), 0,
+                   f"not given, kept empty: {', '.join(missing_cols)}")
 
     # 1. Duplicates first: everything after depends on correct row counts.
     genomics = drop_duplicate_strains(genomics, "genomics", ledger)
@@ -300,19 +338,20 @@ def run(verbose: bool = True) -> tuple[dict[str, pd.DataFrame], Ledger, list[str
              "phenotype": phenotype}
     account_missing(clean, ledger)
 
-    # Write the clean CSVs (never overwriting raw).
+    # Write the clean CSVs (never overwriting raw), and the ledger as a table.
     PROCESSED.mkdir(parents=True, exist_ok=True)
     for name, df in clean.items():
         df.to_csv(PROCESSED / f"{name}_clean.csv", index=False)
+    ledger.to_frame().to_csv(PROCESSED / "cleaning_ledger.csv", index=False)
 
     tables = load_to_duckdb(clean)
 
     if verbose:
         for name, df in clean.items():
-            print(f"  wrote data/processed/{name}_clean.csv  "
+            print(f"  wrote {paths.rel(PROCESSED / f'{name}_clean.csv')}  "
                   f"({len(df):,} rows, {df.shape[1]} columns)")
         ledger.print()
-        print(f"\n  Database: data/processed/{DB_PATH.name}")
+        print(f"\n  Database: {paths.rel(DB_PATH)}")
         print(f"  Tables loaded: {', '.join(tables)}")
         real_n = sum(t.startswith('real_') for t in tables)
         print(f"  ({real_n} real table(s) auto-loaded from data/processed/real/; "

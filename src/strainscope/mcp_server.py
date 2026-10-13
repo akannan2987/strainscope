@@ -282,6 +282,11 @@ def query_database(sql: str, max_rows: int = 50) -> dict:
     return _run("query_database", {"sql": sql, "max_rows": max_rows}, work)
 
 
+# What the results describe. The server reads the library, or a dataset when
+# STRAINSCOPE_DATASET names one (src/strainscope/paths.py, Phase 9).
+DATA_KIND = "your own data" if sv.paths.info()["kind"] == "yours" else "simulated"
+
+
 def get_signature() -> dict:
     """Phase 3's multi-omics signature: the genes and compounds DIABLO picked
     as telling one shared story about disease suppression, with their loading
@@ -312,7 +317,7 @@ def rank_strain(strain_id: str) -> dict:
         return {"strain_id": sid, "rank": int(row["rank"]), "of": total, "kingdom": row["kingdom"],
                 "probability": round(p, 4), "band": sv.confidence_band(p),
                 "trial": {"suppression_score": row["suppression_score"], "is_effective": bool(row["is_effective"])},
-                "data": "simulated"}
+                "data": DATA_KIND}
     return _run("rank_strain", {"strain_id": strain_id}, work)
 
 
@@ -330,7 +335,7 @@ def explain_strain(strain_id: str) -> dict:
             {"kind": r["kind"], "text": r["text"], "route": r["path"], "sources": r["provenance"]}
             for _, r in mine.iterrows()]
         return {"strain_id": sid, "rank": int(row["rank"]), "of": total, "in_plain_words": words["text"],
-                "reasons": routes, "data": "simulated"}
+                "reasons": routes, "data": DATA_KIND}
     return _run("explain_strain", {"strain_id": strain_id}, work)
 
 
@@ -347,9 +352,9 @@ def shortlist(n: int = 50) -> dict:
         top = pred.nsmallest(k, "rank")
         return {"n": k, "expected_effective": round(float(top["probability"].sum()), 1),
                 "effective_in_trial": int(top["is_effective"].sum()),
-                "in_plain_words": narrate.shortlist(pred, k).text,
+                "in_plain_words": narrate.shortlist(pred, k, place=sv.paths.info()).text,
                 "strains": top[["rank", "strain_id", "kingdom", "probability"]].head(MAX_ROWS).to_dict("records"),
-                "data": "simulated"}
+                "data": DATA_KIND}
     return _run("shortlist", {"n": n}, work)
 
 

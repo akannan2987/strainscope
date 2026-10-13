@@ -25,6 +25,14 @@
 #   artifacts/integration/diablo_summary.csv             the decisions and headline numbers
 #   figures/diablo_mixomics_*.png                        mixOmics' own standard plots
 #
+# ON A DATASET OF YOUR OWN (Phase 9)
+#   src/strainscope/integrate.py runs this script with STRAINSCOPE_DATASET set
+#   to the dataset's folder (and STRAINSCOPE_REPEATS to its number of
+#   cross-validation repeats). The script then reads that dataset's blocks and
+#   writes its results and pictures into the dataset's folder, never into the
+#   library's artifacts/ or figures/. Without the variable: the library, as
+#   before.
+#
 # THE MAIN IDEA IN ONE PARAGRAPH
 #   A plain classifier looks at one big table. DIABLO keeps each block separate
 #   and looks for a "summary score" per block (a weighted sum of a FEW of its
@@ -50,9 +58,16 @@ if (!requireNamespace("mixOmics", quietly = TRUE)) {
 suppressPackageStartupMessages(library(mixOmics))
 
 # --- 1. Paths (relative to the project root: identical on every OS) ----------
-blocks_dir   <- file.path("data", "processed", "integration")
-out_dir      <- file.path("artifacts", "integration")
-fig_dir      <- "figures"
+dataset_home <- Sys.getenv("STRAINSCOPE_DATASET", "")
+if (nzchar(dataset_home)) {          # a dataset of Phase 9: everything stays in its folder
+  blocks_dir <- file.path(dataset_home, "processed", "integration")
+  out_dir    <- file.path(dataset_home, "artifacts", "integration")
+  fig_dir    <- file.path(dataset_home, "figures")
+} else {                             # the built-in library
+  blocks_dir <- file.path("data", "processed", "integration")
+  out_dir    <- file.path("artifacts", "integration")
+  fig_dir    <- "figures"
+}
 dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
 dir.create(fig_dir, showWarnings = FALSE)
 
@@ -104,7 +119,7 @@ diag(design) <- 0
 #   5-fold cross-validation, repeated 10 times, seeded.
 #   Error = BER (balanced error rate) of the weighted vote across blocks,
 #   classifying each strain by the nearest class centre ("centroids.dist").
-FOLDS <- 5; NREPEAT <- 10; DIST <- "centroids.dist"
+FOLDS <- 5; NREPEAT <- as.integer(Sys.getenv("STRAINSCOPE_REPEATS", "10")); DIST <- "centroids.dist"
 
 ber_table <- function(perf_obj) {
   m <- perf_obj$WeightedVote.error.rate[[DIST]]
@@ -153,10 +168,13 @@ cat("  step 2/4  tuning keepX (how many features per block) …\n")
 # The list lengths tried. The cap at 16 is a READABILITY choice: a
 # signature a scientist can read beats a slightly better one nobody can. Step 3
 # measures exactly what the cap costs (see "cost of sparsity" in the summary).
-grid <- list(genomics = c(4, 8, 12, 16), metabolomics = c(4, 8, 12, 16))
+# A block with fewer columns than a list length can't fill it, so the grid
+# stops at the block's width (the library's blocks are wider than 16).
+grid <- list(genomics = unique(pmin(c(4, 8, 12, 16), ncol(X$genomics))),
+             metabolomics = unique(pmin(c(4, 8, 12, 16), ncol(X$metabolomics))))
 tune <- suppressMessages(tune.block.splsda(X, Y, ncomp = ncomp, test.keepX = grid,
                                            design = design, validation = "Mfold",
-                                           folds = FOLDS, nrepeat = 5, dist = DIST,
+                                           folds = FOLDS, nrepeat = min(5, NREPEAT), dist = DIST,
                                            measure = "BER", seed = 42))
 keepX <- tune$choice.keepX
 tune_err <- as.data.frame(as.table(tune$error.rate))

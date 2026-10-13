@@ -82,6 +82,7 @@ flowchart TD
     APPAI["an AI assistant app<br/>(Claude Desktop, Claude Code, ...)"]
     DOCS[/"docs/: the guides,<br/>Handbook, glossary, cookbook"/]
     P["13 · One command + automatic tests (Phase 8)<br/>pipeline.py runs boxes 1 to 7 in order ·<br/>GitHub tests every push on 4 systems ·<br/>the app in a container"]
+    DS["14 · Datasets (Phase 9)<br/>your own 3 tables, checked, or a new<br/>simulated library: boxes 1 to 7 again,<br/>in a folder of its own"]
 
     A -->|writes 3 raw tables| B
     R -->|tidy real tables| C
@@ -103,6 +104,8 @@ flowchart TD
     M -.->|reads| G
     APPAI <-->|"MCP over stdio"| M
     P -.->|"runs in order"| A
+    DS -.->|"the same steps,<br/>its own folder"| B
+    H -.->|"Workflow page"| DS
 
     classDef laptop fill:#E8F0FE,stroke:#5B8DEF,color:#0B2545;
     classDef store fill:#FFF3CD,stroke:#C9A227,color:#4A3B00;
@@ -115,7 +118,7 @@ flowchart TD
     class G artifact
     class H cloud
     class I,Q,M ai
-    class P laptop
+    class P,DS laptop
     class DOCS artifact
     class LLM,APPAI roadmap
     style LAPTOP fill:#F5F9FF,stroke:#B9D2FF,color:#0B2545
@@ -130,8 +133,9 @@ deployed into the public app; and the AI layer switches on only when an API
 key is present. Ask StrainScope reads the project's own documentation and answers
 inside the app; the MCP server, last, offers the same functions to an AI
 assistant app on your own computer. One command runs the laptop's boxes in
-order, and GitHub tests all of it at every push. The box-by-box tour below says
-the same thing in words.)*
+order, and GitHub tests all of it at every push. Since Phase 9 the same boxes
+also run on a dataset of your own, in a folder of its own, started from the
+app's Workflow page. The box-by-box tour below says the same thing in words.)*
 
 ### Box 1: Data Generator (Python) · *backend*
 **What it does:** creates our dataset from scratch, in code. It invents a realistic library of microbial strains and, for each one, three tables of measurements plus a performance score.
@@ -166,7 +170,7 @@ A party is a good comparison. Three people each hand you a guest list for the sa
 
 ### Box 6: Artifacts · *the hand-off between laptop and cloud*
 **What it does:** stores the small, finished outputs: the DIABLO results (`artifacts/integration/`), the ranking, the feature-importance table, the trained model and its model card (`artifacts/model/`), and the knowledge graph with its explanations (`artifacts/graph/`).
-**Why it exists:** artifacts are the bridge between the slow backend on your laptop and the fast frontend on the internet. The app never re-runs the heavy work; it just reads these files. This is what keeps the free deployment fast and within its memory budget.
+**Why it exists:** artifacts are the bridge between the slow backend on your laptop and the fast frontend on the internet. For the library, the app never re-runs the heavy work; it just reads these files. This is what keeps the free deployment fast and within its memory budget. (A dataset of your own, Box 14, is computed when you ask for it, into its own folder.)
 
 ### Box 7: Knowledge Graph (NetworkX) · *backend, where the explanations come from*
 **What it does:** turns the data into a *network* of things and relationships (a strain *carries* a gene, the gene *makes* a compound, the compound *acts by* a mode of action, which *contributes to* disease suppression) that you can query, walk and visualise. Every connection records where it came from: the synthetic library, the domain model, KEGG, RefMet, BacDive, or the results of Boxes 4 and 5.
@@ -205,13 +209,18 @@ If an ontology is a "family tree for concepts" (the rules of what connects to wh
 **Why it exists:** so that people other than its author can rely on the project. This box lets anyone rebuild every result with one command and check the numbers, has every change tested on four systems at every push, and adds what other people need to reuse the project: a licence, a citation file, a contribution guide and a security policy.
 **✅ Built in Phase 8:** [`docs/09-packaging.md`](09-packaging.md) (`src/strainscope/pipeline.py`, `.github/workflows/ci.yml`, `Dockerfile`, `tools/check_accessibility.py`).
 
+### Box 14: Datasets · *the same boxes, on data of your own (Phase 9)*
+**What it does:** runs Boxes 2 to 7 (and Box 1, for a fresh simulated library) on a **dataset**: three tables of your own (genes, compounds, trial results), checked cell by cell before anything is saved, or a new simulated library with a seed and a size you choose. Each dataset has a folder of its own under `data/processed/datasets/`, laid out like the library's, with its own database and results. One setting, the environment variable `STRAINSCOPE_DATASET`, tells every script which folder to use, and `src/strainscope/paths.py` turns it into the folders. The app's **Workflow** page runs the steps with buttons, and a Dataset box in its sidebar switches every page to the dataset.
+**Why it exists:** a screening team has its own strains and its own trial results, and wants to know what the workflow says about *those*. Running the same recipes on another box of ingredients, without mixing it up with the library's, is what this box is for. With your own data there's no answer key, so nothing is graded, and nothing about it is sent to a language model.
+**✅ Built in Phase 9:** [`docs/10-workflow-and-your-data.md`](10-workflow-and-your-data.md) (`src/strainscope/paths.py`, `src/strainscope/datasets.py`, `app/views/workflow.py`, `pipeline.py --dataset NAME`).
+
 ---
 
 ## 5. How data flows, start to finish (the one-paragraph story)
 
-You run the **generator** (Box 1), which writes three raw tables. You run **harmonise + QC** (Box 2), which turns them into clean, aligned tables. Those load into **DuckDB** (Box 3). From the database, the **integration** step (Box 4) finds the cross-layer signature and saves it as an artifact; the **ML models** (Box 5) train and save predictions and a trained model as artifacts (Box 6); the **knowledge graph** (Box 7) is built from the same clean data. You commit everything to GitHub. Streamlit Community Cloud notices the new commit and (re)builds your **app** (Box 8), which reads the small artifacts and serves them quickly to anyone on the internet. Around it, **Ask StrainScope** (Box 11) answers questions about the project from its own docs, **plain words** (Box 9) explain each result, **Ask the data** and **Ask the graph** (Box 10) answer questions about the data and the graph, an optional language model rewrites what they found, and the **MCP server** (Box 12) offers the same functions to an AI assistant app on your computer. Since Phase 8, one command (Box 13) runs Boxes 1 to 7 in order, and GitHub tests everything at every push.
+You run the **generator** (Box 1), which writes three raw tables. You run **harmonise + QC** (Box 2), which turns them into clean, aligned tables. Those load into **DuckDB** (Box 3). From the database, the **integration** step (Box 4) finds the cross-layer signature and saves it as an artifact; the **ML models** (Box 5) train and save predictions and a trained model as artifacts (Box 6); the **knowledge graph** (Box 7) is built from the same clean data. You commit everything to GitHub. Streamlit Community Cloud notices the new commit and (re)builds your **app** (Box 8), which reads the small artifacts and serves them quickly to anyone on the internet. Around it, **Ask StrainScope** (Box 11) answers questions about the project from its own docs, **plain words** (Box 9) explain each result, **Ask the data** and **Ask the graph** (Box 10) answer questions about the data and the graph, an optional language model rewrites what they found, and the **MCP server** (Box 12) offers the same functions to an AI assistant app on your computer. Since Phase 8, one command (Box 13) runs Boxes 1 to 7 in order, and GitHub tests everything at every push. Since Phase 9, the same steps run on a dataset of your own (Box 14), in a folder of its own, while the library's results stay as they are.
 
-And that's the whole system: a dozen boxes in one straight line with a couple of branches, and nothing hidden anywhere.
+And that's the whole system: a dozen or so boxes in one straight line with a couple of branches, and nothing hidden anywhere.
 
 ---
 
@@ -225,7 +234,7 @@ This matters because it makes the whole project **reproducible**. Delete everyth
 
 A factory line works the same way. Each station takes the part from the station before it, does one job and passes it on; nobody reaches back to re-cut a piece that has already moved down the line. If the final product is ever wrong, you can walk backwards station by station and find exactly where, because each station's output is kept. A pipeline that edits its own inputs is more like a kitchen that keeps re-seasoning the same pot with no record of what went in, so you can never make the dish the same way twice.
 
-There's a second half to the rule, and it's the part that makes the *free public deployment* possible: **compute the expensive things once, offline, and save small results the app just reads.** The heavy work (integration, model training) runs on your laptop and leaves behind small artifact files; the online app never re-runs it. So the one-way flow is what keeps the project *correct and reproducible*, and computing once to serve many times is what keeps it *fast and free*.
+There's a second half to the rule, and it's the part that makes the *free public deployment* possible: **compute the expensive things once, offline, and save small results the app just reads.** The heavy work (integration, model training) runs on your laptop and leaves behind small artifact files; the online app never re-runs it for the library. (Since Phase 9 a visitor can run a small dataset of their own there, with quick settings and one run at a time.) So the one-way flow is what keeps the project *correct and reproducible*, and computing once to serve many times is what keeps it *fast and free*.
 
 ---
 
@@ -278,6 +287,7 @@ Every box in the diagram is built and explained by one numbered document in `doc
 | 7 | [`docs/08-deployment-ai.md`](08-deployment-ai.md) | Box 8 online + Boxes 9-10: the online copy (shared mode, pinned versions, secrets on the host), plain words, Ask the data, Ask the graph | ✅ |
 | 7b | [`docs/08b-mcp-server.md`](08b-mcp-server.md) | Box 12: the MCP server, nine read-only tools for AI assistant apps (`src/strainscope/mcp_server.py`) | ✅ |
 | 8 | [`docs/09-packaging.md`](09-packaging.md), [`docs/UNINSTALL.md`](UNINSTALL.md) | Box 13: the one-command pipeline and `compare`, automatic tests on four systems at every push, the container, the keyboard and screen-reader check, licence, citation, contribution guide, the 1.0 release | ✅ **v1.0.0** |
+| 9 | [`docs/10-workflow-and-your-data.md`](10-workflow-and-your-data.md) | Box 14: datasets (your own three tables, checked, or a fresh simulated library), every phase run on them, the Workflow page | ✅ **v1.1.0** |
 
 Every guide is linked. The order, the reasons for it and the deferred items (with the event that would schedule each) are in [`docs/ROADMAP.md`](ROADMAP.md); what an industrial version would add is in [`docs/PRODUCT_ROADMAP.md`](PRODUCT_ROADMAP.md).
 

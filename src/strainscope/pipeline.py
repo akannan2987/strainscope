@@ -24,10 +24,20 @@ THE PLANS
               (needs the internet; a few minutes).
   probe       ask the public databases what a fetch would bring (downloads nothing).
 
+and two for a dataset of Phase 9 (src/strainscope/datasets.py), chosen for
+you by --dataset:
+
+  simulate    a simulated dataset: generate it with its own seed and size,
+              then every phase, all inside the dataset's folder.
+  workflow    your own data: clean it, then every phase, inside its folder.
+
 and one check, which builds nothing:
 
   compare     compare the results in artifacts/ with the committed ones (Git's
               last commit): every number to within 0.001, every word exactly.
+              With --dataset NAME: that dataset's results against the
+              library's committed ones, the check that a simulated dataset
+              with seed 42 and 600 strains rebuilds the library (Phase 9).
               Run it after `everything` to see that a rebuild from scratch
               gives the same results on your computer. On an ARM processor
               (a Mac with an M chip, for example), the random forest's numbers
@@ -42,6 +52,9 @@ USAGE
     python src/strainscope/pipeline.py --list          the plans and their steps; runs nothing
     python src/strainscope/pipeline.py --from 4        start at step 4 (after fixing a failed step)
     python src/strainscope/pipeline.py --quiet         only the steps and the summary
+    python src/strainscope/pipeline.py --dataset trial every phase on the dataset "trial" (Phase 9)
+    python src/strainscope/pipeline.py --dataset trial --from 3   ... starting at its step 3
+    python src/strainscope/pipeline.py compare --dataset seed42   a dataset's results vs the library's
 
 The exit code is 0 when everything finished (or matched), 1 when a step
 failed (or a result differs) and 130 when you pressed Ctrl+C, so continuous
@@ -53,6 +66,7 @@ import argparse
 import csv
 import io
 import json
+import os
 import platform
 import subprocess
 import sys
@@ -62,6 +76,7 @@ from pathlib import Path
 # Make `strainscope` importable no matter where the script is run from.
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from strainscope import paths  # noqa: E402
 from strainscope import service as sv  # noqa: E402
 
 ROOT = sv.ROOT
@@ -83,6 +98,13 @@ NOT_COMPARED = {
 # These four also hold the real reference data (BacDive strains, KEGG pathways,
 # RefMet classes). They can only match when the database has the real tables.
 REAL_DATA_TABLES = ("graph/nodes.csv", "graph/edges.csv", "graph/hubs.csv", "graph/graph_summary.csv")
+# Files that exist only when DIABLO (R) has run (besides integration/diablo_*.csv),
+# and files that hold some of DIABLO's results. A dataset that ran without R
+# can't match these; compare --dataset says so instead of counting them (Phase 9).
+DIABLO_FILES = ("integration/language_agreement.csv", "model/phase3_agreement.csv")
+DIABLO_DEPENDENT = ("integration/signature_report_card.csv", "model/feature_importance.csv",
+                    "graph/knowledge_vs_data.csv", "graph/nodes.csv", "graph/edges.csv", "graph/hubs.csv",
+                    "graph/graph_summary.csv")
 ID_COLUMNS = ("strain_id", "node_id", "feature", "key", "approach", "model_key")   # names a row in a message
 
 # ARM processors (Apple's M chips, and some Linux servers) can do a
@@ -121,21 +143,24 @@ def print_plans() -> None:
             print(f"      {number}. {sv.step_label(step)}")
     print("\n  compare: the results in artifacts/ against the committed ones (builds nothing)")
     print("\n  Run one with: python src/strainscope/pipeline.py <plan>")
+    print("  On a dataset (simulate or workflow, chosen for you): python src/strainscope/pipeline.py --dataset NAME")
 
 
-def run(name: str, start: int = 1, quiet: bool = False) -> int:
+def run(name: str, start: int = 1, quiet: bool = False, dataset: str | None = None) -> int:
     """Run one plan and print it; return the exit code (0, 1 or 130)."""
     spec = sv.PIPELINES[name]
     steps = spec["steps"]
     print(f"  ── StrainScope pipeline: {name} ({len(steps)} steps, {spec['takes']}) ──")
     print(f"  It {spec['what']}.")
+    if dataset:
+        print(f"  Dataset: {dataset}, in {paths.rel(paths.locate(dataset))}/ (the library isn't touched).")
     if start > 1:
         print(f"  Starting at step {start}, as asked (--from {start}).")
     finished: list[tuple[int, str, float]] = []
     recent: list[str] = []
     started = time.time()
     outcome = None
-    events = sv.pipeline_events(name, ROOT, start)
+    events = sv.pipeline_events(name, ROOT, start, dataset)
     try:
         for e in events:
             if e["event"] == "start":
@@ -153,8 +178,9 @@ def run(name: str, start: int = 1, quiet: bool = False) -> int:
     except KeyboardInterrupt:
         events.close()                               # stops the running step and frees the lock
         stopped = len(finished) + start
+        again = f"--dataset {dataset}" if dataset else name
         print(f"\n  Stopped by you during step {stopped}. The steps before it finished; to carry on "
-              f"from there: python src/strainscope/pipeline.py {name} --from {stopped}")
+              f"from there: python src/strainscope/pipeline.py {again} --from {stopped}")
         return 130
 
     print("\n  ── Summary ─────────────────────────────────────────────────────")
@@ -167,10 +193,18 @@ def run(name: str, start: int = 1, quiet: bool = False) -> int:
                 print(f"    {line}")
         print(f"  ✗ {outcome['text'] if outcome else 'The pipeline stopped.'}")
         if outcome and outcome.get("step"):
+            again = f"--dataset {dataset}" if dataset else name
             print(f"  Fix what the step says, then carry on from there: "
-                  f"python src/strainscope/pipeline.py {name} --from {outcome['step']}")
+                  f"python src/strainscope/pipeline.py {again} --from {outcome['step']}")
         return 1
     print(f"  {outcome['text'].rstrip('.')} in {_duration(time.time() - started)}.")
+    if dataset:
+        f = paths.folders(dataset)
+        print()
+        sv._print_status(f.db, f.artifacts)
+        print(f"\n  See it in the app: choose {dataset} under Dataset in the sidebar. "
+              f"Step by step: python src/strainscope/datasets.py show {dataset}")
+        return 0
     if name != "probe":
         print()
         sv._print_status()
@@ -282,18 +316,36 @@ def has_real_tables(db_path: Path = sv.DB_PATH) -> bool:
     return any(t.startswith("real_") for t in sv.database_tables(db_path)["table"])
 
 
-def compare(root: Path = ROOT, db_path: Path = sv.DB_PATH) -> dict:
+def compare(root: Path = ROOT, db_path: Path = sv.DB_PATH, dataset: str | Path | None = None) -> dict:
     """Compare every committed result file in artifacts/ with the one on disk.
     Returns {"matched": [...], "differ": {path: [sentences]}, "skipped": {path: reason},
     "expected": {path: [sentences]}}; the last holds, on an ARM processor only,
-    files whose only differences are the random forest's numbers (ARM_SENSITIVE)."""
+    files whose only differences are the random forest's numbers (ARM_SENSITIVE).
+
+    With `dataset` (Phase 9), the files on disk are that dataset's results, so
+    a simulated dataset with seed 42 and 600 strains can show that it rebuilds
+    the library: the same recipe and the same data give the same results."""
     artifacts = root / "artifacts"
+    here = artifacts if dataset is None else paths.folders(dataset).artifacts
+    if dataset is not None:
+        db_path = paths.folders(dataset).db
     real = has_real_tables(db_path)
+    diablo = (here / "integration" / "diablo_signature.csv").exists()
     out = {"matched": [], "differ": {}, "skipped": {}, "expected": {}}
     for path in sorted(artifacts.rglob("*")):
         if not path.is_file():
             continue
         rel = path.relative_to(artifacts).as_posix()
+        if dataset is not None:
+            if not diablo and rel in DIABLO_DEPENDENT:
+                out["skipped"][rel] = ("they hold some of DIABLO's results too, and DIABLO didn't run for this "
+                                       "dataset: R isn't installed here")
+                continue
+            if not (here / rel).exists():
+                out["skipped"][rel] = ("not made for this dataset" + (
+                    ": DIABLO runs only where R is installed" if "diablo" in rel or rel in DIABLO_FILES else ""))
+                continue
+            path = here / rel
         if rel in NOT_COMPARED:
             out["skipped"][rel] = NOT_COMPARED[rel]
             continue
@@ -301,13 +353,15 @@ def compare(root: Path = ROOT, db_path: Path = sv.DB_PATH) -> dict:
             out["skipped"][rel] = ("they also hold the real reference data, and this database has no real "
                                    "tables; python src/strainscope/pipeline.py real fetches them")
             continue
-        old = committed(path, root)
+        old = committed(artifacts / rel, root)
         if old is None:
             out["skipped"][rel] = "not in the last commit: a new file"
             continue
         new = path.read_text(encoding="utf-8")
         if path.suffix == ".json":
-            problems = compare_json(old, new)
+            # a dataset's model card names its own database file; everything else must match
+            problems = [p for p in compare_json(old, new)
+                        if dataset is None or not p.startswith("training_data.source:")]
         elif path.suffix == ".csv":
             cells, problems = table_differences(old, new, COMPUTER_LINES.get(rel, set()))
             if ARM and rel in ARM_SENSITIVE:
@@ -326,8 +380,11 @@ def compare(root: Path = ROOT, db_path: Path = sv.DB_PATH) -> dict:
     return out
 
 
-def print_compare(result: dict, show_all: bool = False) -> int:
-    print("  ── StrainScope: the results in artifacts/ against the committed ones ──")
+def print_compare(result: dict, show_all: bool = False, dataset: str | None = None) -> int:
+    if dataset:
+        print(f"  ── StrainScope: dataset {dataset}'s results against the library's committed ones ──")
+    else:
+        print("  ── StrainScope: the results in artifacts/ against the committed ones ──")
     print(f"  Committed means Git's last commit. Numbers count as the same within {TOLERANCE}.")
     shown = None if show_all else 3
     by_folder: dict[str, int] = {}
@@ -387,16 +444,51 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--quiet", action="store_true", help="only the steps and the summary")
     parser.add_argument("--all", dest="show_all", action="store_true",
                         help="with compare: list every difference, not only the first three of each file")
+    parser.add_argument("--dataset", metavar="NAME",
+                        help="run on a dataset of your own (python src/strainscope/datasets.py list); "
+                             "its plan is chosen for you. With compare: its results against the library's")
     args = parser.parse_args(argv)
     if args.list:
         print_plans()
         return 0
+    leftover = os.environ.get(paths.ENV, "").strip()
+    if leftover and not args.dataset:
+        # Forgotten in a terminal (PowerShell keeps it until the window closes), it would send a
+        # library plan into the dataset's folder, and the generator would write over its tables.
+        again = "compare --dataset" if args.plan == "compare" else "--dataset"
+        print(f"  {paths.ENV} is set (to {leftover}), so this would run in that dataset's folder, not the "
+              "library's. Nothing was run. Choose one:")
+        print(f"    the dataset: python src/strainscope/pipeline.py {again} {leftover}")
+        print(f"    the library: remove the setting first (macOS and Linux: unset {paths.ENV}; "
+              f"Windows PowerShell: Remove-Item Env:{paths.ENV}), then run the command again")
+        return 1
+    if args.plan in ("simulate", "workflow") and not args.dataset:
+        parser.error(f"'{args.plan}' runs on a dataset: python src/strainscope/pipeline.py --dataset NAME "
+                     "(see them all: python src/strainscope/datasets.py list)")
     if args.plan == "compare":
         if not git_ready():
             print("  compare needs Git and the project's Git history: it reads the committed results "
                   "from the last commit. A folder downloaded as a zip file has no history; clone it instead.")
             return 1
+        if args.dataset:
+            home = paths.locate(args.dataset)
+            if home is None or not (home / paths.INFO_FILE).exists():
+                print(f"  There's no dataset called {args.dataset}. See them all: python src/strainscope/datasets.py list")
+                return 1
+            return print_compare(compare(dataset=args.dataset), args.show_all, args.dataset)
         return print_compare(compare(), args.show_all)
+    if args.dataset:
+        home = paths.locate(args.dataset)
+        if home is None or not (home / paths.INFO_FILE).exists():
+            print(f"  There's no dataset called {args.dataset}. See them all: python src/strainscope/datasets.py list")
+            return 1
+        plan = sv.plan_for(args.dataset)
+        if args.plan not in ("everything", plan):
+            parser.error(f"a dataset runs its own plan ({plan}); leave the plan out")
+        total = len(sv.PIPELINES[plan]["steps"])
+        if not 1 <= args.start <= total:
+            parser.error(f"--from must be a step of '{plan}': 1 to {total}")
+        return run(plan, args.start, args.quiet, args.dataset)
     total = len(sv.PIPELINES[args.plan]["steps"])
     if not 1 <= args.start <= total:
         parser.error(f"--from must be a step of '{args.plan}': 1 to {total}")

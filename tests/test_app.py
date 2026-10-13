@@ -18,7 +18,11 @@ a button and read what was drawn. These tests check that:
   * the shared ("public") mode hides the buttons that download or rewrite,
     builds the database on its first start, and gives a visitor messages
     they can act on;
-  * every chart can be drawn from the committed results.
+  * every chart can be drawn from the committed results;
+  * the Workflow page (Phase 9) explains the library, follows a dataset's
+    steps, and every page switches to the dataset chosen in the sidebar,
+    with its own numbers and words; a shared copy lists only the datasets
+    its browser tab made, and a dataset of your own never reaches a model.
 
 Run:  pytest -q tests/test_app.py
 """
@@ -45,7 +49,7 @@ TITLES = {"views/home.py": "StrainScope", "views/about.py": "About this copy", "
           "views/ask_data.py": "Ask the data", "views/ask_graph.py": "Ask the graph", "views/ranking.py": "Ranking",
           "views/strain.py": "STRAIN_",
           "views/knowledge_graph.py": "Knowledge graph", "views/integration.py": "Integration",
-          "views/data.py": "Data", "views/sql_console.py": "SQL console"}
+          "views/data.py": "Data", "views/sql_console.py": "SQL console", "views/workflow.py": "Workflow"}
 PAGES = list(TITLES)
 HAS_DB = ui.DB_PATH.exists()
 needs_db = pytest.mark.skipif(not HAS_DB, reason="needs the database (python src/strainscope/harmonize.py)")
@@ -267,3 +271,99 @@ def test_every_chart_draws_from_the_committed_results():
     assert all(len(f.data) > 0 for f in figures)
     # the top-N chart tells the same story as the model card: 47 of the top 50
     assert int(pred.nsmallest(50, "rank")["is_effective"].sum()) == sv.model_card()["top_n_check"]["truly_effective"]
+
+
+# =============================================================================
+# The Workflow page and datasets (Phase 9)
+# =============================================================================
+
+@pytest.fixture()
+def chosen(workflow_dataset, monkeypatch):
+    """The app with the test dataset (every phase run) in its list."""
+    from strainscope import paths
+    home, _ = workflow_dataset
+    monkeypatch.setattr(paths, "DATASETS", home.parent)
+    monkeypatch.setenv("STRAINSCOPE_ASK_BACKEND", "none")
+    return home.name
+
+
+def test_the_workflow_page_explains_the_library():
+    at = open_app("views/workflow.py")
+    assert "a simulated library with seed 42 and 600 strains reproduces the library" in " ".join(
+        i.value for i in at.info)
+
+
+def test_the_workflow_page_follows_a_datasets_steps(chosen):
+    at = open_app("views/workflow.py", dataset=chosen)
+    assert not at.exception, at.exception[0].value
+    body = texts(at)
+    assert "1. Clean it into a database" in body and "4. Build the knowledge graph" in body
+    assert "winner: " in body and at.get("progress")[0].proto.text == "4 of 4 steps done"
+    assert any(b.label.startswith("Run every step") for b in at.button)
+
+
+@pytest.mark.parametrize("page", PAGES)
+def test_every_page_opens_on_a_dataset_of_your_own(chosen, page):
+    at = open_app(page, dataset=chosen)
+    assert not at.exception, at.exception[0].value
+
+
+def test_the_pages_speak_of_the_dataset_not_the_library(chosen):
+    at = open_app("views/ranking.py", dataset=chosen)
+    body = texts(at)
+    assert f"All 120 strains of dataset {chosen}" in body and "600" not in body.split("How good")[0]
+    assert "no answer key" in body and "accE" not in body
+    at.switch_page("views/strain.py")
+    at.run()
+    assert "In your trial results" in [m.label for m in at.metric][3]
+    assert "simulated" not in texts(at).split("Why it ranks here")[0]
+    assert at.selectbox(key="sidebar_dataset").value == chosen
+
+
+def test_the_sidebar_switches_every_page(chosen):
+    at = open_app("views/home.py")
+    at.selectbox(key="sidebar_dataset").set_value(chosen)
+    at.run()
+    assert at.session_state["dataset"] == chosen
+    assert "Strains in this dataset" in [m.label for m in at.metric]
+    at.selectbox(key="sidebar_dataset").set_value(ui.LIBRARY)
+    at.run()
+    assert "Strains in the library" in [m.label for m in at.metric]
+
+
+def test_a_shared_copy_shows_a_tab_only_its_own_datasets(chosen, monkeypatch):
+    monkeypatch.setattr(ui, "PUBLIC", True)
+    at = open_app("views/workflow.py", dataset=chosen)          # made on someone's own computer: no owner
+    assert at.session_state["dataset"] is None                   # so this tab can't see it
+    assert at.selectbox(key="workflow_dataset").options == [ui.LIBRARY_LABEL]
+
+
+def test_your_own_data_never_reaches_a_model(chosen, monkeypatch, model):
+    from conftest import stand_in
+    from strainscope import llm
+    monkeypatch.setattr(llm, "settings", lambda env=None: stand_in(model))
+    at = open_app("views/ask_data.py", dataset=chosen)
+    at.text_input(key="data_question").set_value("Which genes did I measure that nobody has a recipe for?")
+    at.run()
+    at.switch_page("views/ask_graph.py")
+    at.run()
+    at.text_input(key="graph_question").set_value("How does iturin suppress disease?")
+    at.run()
+    assert not at.exception, at.exception[0].value
+    assert model.calls == []                                     # not one request
+    assert "nothing about your data leaves this copy" in texts(at)
+
+
+def test_a_shared_copy_makes_temporary_datasets_with_quick_settings(monkeypatch, tmp_path):
+    from strainscope import datasets as ds
+    from strainscope import paths
+    monkeypatch.setattr(ui, "PUBLIC", True)
+    monkeypatch.setattr(paths, "DATASETS", tmp_path)
+    at = open_app("views/workflow.py")
+    at.button(key="save_sim").click()
+    at.run()
+    assert not at.exception, at.exception[0].value
+    [made] = ds.list_datasets(tmp_path)
+    assert made["temporary"] and made["quick"] and made["owner"] == at.session_state["owner"]
+    assert made["name"].startswith("visit_") and at.session_state["dataset"] == made["name"]
+    assert "deleted an hour after you last use it" in texts(at)

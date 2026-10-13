@@ -17,8 +17,9 @@ from strainscope import service as sv
 st.title("About this copy")
 info = sv.release_info()
 version = f"v{info['version']}" + (" with the changes listed under [Unreleased]" if info["unreleased"] else "")
-mode = ("a **shared copy**: other people can use it, so the real-data buttons are hidden, the database was built "
-        "on its first start and can't be rebuilt from here, and the AI features have a daily cap"
+mode = ("a **shared copy**: other people can use it, so the real-data buttons are hidden, the library's database "
+        "was built on its first start and can't be rebuilt from here, datasets made on the Workflow page are "
+        "temporary and seen only by the browser tab that made them, and the AI features have a daily cap"
         if ui.PUBLIC else "a **local copy** on your own computer, with every button available")
 st.markdown(f"StrainScope **{version}** (released {info['date']}: *{info['title']}*). This is {mode}. "
             f"Source, guides and every step: [{ui.REPO.removeprefix('https://')}]({ui.REPO}).")
@@ -82,7 +83,15 @@ with st.expander("What may leave this copy, and what never does"):
         "browser tab only and never writes them to disk) and usage statistics (switched off in "
         "`.streamlit/config.toml`). A hosted key goes only in each request's header, where the provider "
         "expects it, never in the text the model reads. "
-        f"The full rules: {ui.doc('08-deployment-ai.md', 'docs/08-deployment-ai.md')}, section 1.")
+        f"The full rules: {ui.doc('08-deployment-ai.md', 'docs/08-deployment-ai.md')}, section 1.\n\n"
+        "**Datasets of your own** (the Workflow page) are written to a folder of this copy, "
+        "`data/processed/datasets/`, because the scripts of every phase read and write files. "
+        + ("On this shared copy each one is seen only by the browser tab that made it and is deleted an hour "
+           "after its last use. " if ui.PUBLIC else "On your own computer they stay until you delete them, and "
+                                                   "Git never sees them. ")
+        + "Nothing about a dataset of your own goes to a language model, not even a column name: with one, Ask "
+          "the data answers by tested recipes only and Ask the graph by facts and routes only. "
+          f"Details: {ui.doc('10-workflow-and-your-data.md', 'docs/10-workflow-and-your-data.md')}.")
 
 # -- versions -----------------------------------------------------------------------
 with st.expander("Versions of the main packages"):

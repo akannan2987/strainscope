@@ -68,6 +68,8 @@ Here this phase differs from Phase 7. In the app, a language model never sees a 
 
 The data is simulated, so nothing here is confidential. Uploaded strains (Phase 6) are out of reach: they live only in the app's memory, and no tool can read a file. If you ever point StrainScope at real data you can't share, connect an assistant whose model runs on your computer, or check your provider's terms first.
 
+Since Phase 9 the server reads the dataset that `STRAINSCOPE_DATASET` names when it starts, and the library when nothing is set ([`docs/10-workflow-and-your-data.md`](10-workflow-and-your-data.md)). On a dataset of your own its results say `"data": "your own data"`, and the assistant app's model sees what the tools return about your strains, so the advice above applies. The `config` helper doesn't offer a dataset yet; that's a deferred item in the [roadmap](ROADMAP.md#deferred-items-and-their-triggers).
+
 ---
 
 ## 2. The data flow of this phase

@@ -47,17 +47,36 @@ From the project root, with your virtual environment active:
     python src/strainscope/generate_data.py
 
 It writes three CSV files into data/raw/ and prints a summary "ledger".
+
+A FRESH LIBRARY OF YOUR OWN (Phase 9)
+-------------------------------------
+The built-in library always uses seed 42 and 600 strains, because its results
+are committed. A dataset (src/strainscope/datasets.py) can have its own seed
+and size, and this script then writes into that dataset's raw/ folder:
+
+    python src/strainscope/datasets.py new demo --simulate --seed 7 --strains 300
+    python src/strainscope/pipeline.py --dataset demo
+
+The second command runs this script with the dataset's seed and size, then
+every later phase. --seed and --strains given by hand work only inside a
+dataset (STRAINSCOPE_DATASET set), so the library's raw tables never change.
 """
 
 from __future__ import annotations
 
 # --- Standard-library imports (these ship with Python) -----------------------
+import argparse                   # reads --seed and --strains from the command line.
+import sys                        # lets us find the strainscope package (below).
 from pathlib import Path          # builds file paths that work on every OS.
 
 # --- Third-party imports (installed via requirements.txt) --------------------
 import numpy as np                # fast number crunching + the seeded RNG.
 import pandas as pd               # tables ("programmable spreadsheets").
 from faker import Faker           # realistic fake metadata (dates, etc.).
+
+# Make `strainscope` importable no matter where the script is run from.
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from strainscope import paths     # noqa: E402  where to write (the library, or a dataset)
 
 
 # =============================================================================
@@ -73,8 +92,8 @@ METAB_MISSING_RATE = 0.06 # ~6% of metabolite readings go missing.
 GENE_MISSING_RATE = 0.02  # ~2% of gene calls go missing.
 OUTLIER_RATE = 0.01       # ~1% of metabolite readings become wild spikes.
 
-ROOT = Path(__file__).resolve().parents[2]   # .../strainscope  (repo root)
-RAW = ROOT / "data" / "raw"                  # .../strainscope/data/raw
+ROOT = paths.ROOT                            # .../strainscope  (repo root)
+RAW = paths.HERE.raw                         # data/raw, or a dataset's raw/ folder (Phase 9)
 
 
 # =============================================================================
@@ -167,10 +186,14 @@ GENUS_TYPOS = {"Pseudomonas": "Psuedomonas", "Trichoderma": "trichoderma"}
 # 3. THE GENERATOR
 # =============================================================================
 
-def generate() -> dict[str, pd.DataFrame]:
-    """Build and return the three tables as pandas DataFrames."""
-    rng = np.random.default_rng(SEED)      # one seeded RNG => reproducible data.
-    faker = Faker(); Faker.seed(SEED)
+def generate(seed: int = SEED, n_strains: int = N_STRAINS) -> dict[str, pd.DataFrame]:
+    """Build and return the three tables as pandas DataFrames.
+
+    The defaults (seed 42, 600 strains) make the built-in library; a dataset
+    of Phase 9 may ask for another seed or size. Same seed and size, same data."""
+    N_STRAINS = n_strains                  # the name the code below was written with
+    rng = np.random.default_rng(seed)      # one seeded RNG => reproducible data.
+    faker = Faker(); Faker.seed(seed)
 
     strain_ids = [f"STRAIN_{i:04d}" for i in range(1, N_STRAINS + 1)]
 
@@ -319,14 +342,43 @@ def generate() -> dict[str, pd.DataFrame]:
     return {"genomics": genomics, "metabolomics": metabolomics, "phenotype": phenotype}
 
 
-def main() -> None:
-    """Generate the tables, write them to data/raw/, and print a summary."""
+def settings(argv: list[str] | None = None) -> tuple[int, int]:
+    """The seed and size to use: the library's (42 and 600), a dataset's own
+    (from its dataset.json), or --seed and --strains given inside a dataset."""
+    parser = argparse.ArgumentParser(description="StrainScope Phase 1: the synthetic library.")
+    parser.add_argument("--seed", type=int, help="random seed (only inside a dataset; the library uses 42)")
+    parser.add_argument("--strains", type=int, help="how many strains (only inside a dataset; the library has 600)")
+    args = parser.parse_args(argv)
+    if paths.HERE.builtin:
+        if args.seed not in (None, SEED) or args.strains not in (None, N_STRAINS):
+            parser.error("the built-in library always uses seed 42 and 600 strains, because its results are "
+                         "committed. For another seed or size, make a dataset: "
+                         "python src/strainscope/datasets.py new demo --simulate --seed 7 --strains 300")
+        return SEED, N_STRAINS
+    if paths.info().get("kind") == "yours":
+        parser.error(f"{paths.rel(paths.HERE.home)} holds your own tables, and the generator would write over "
+                     f"them, so nothing was written. Only a simulated dataset is generated "
+                     f"(datasets.py new NAME --simulate). If you meant the library, {paths.ENV} is still set: "
+                     f"remove it (macOS and Linux: unset {paths.ENV}; Windows PowerShell: Remove-Item Env:{paths.ENV}).")
+    seed = args.seed if args.seed is not None else int(paths.setting("seed", SEED))
+    strains = args.strains if args.strains is not None else int(paths.setting("strains", N_STRAINS))
+    if not 40 <= strains <= 20_000:
+        parser.error("--strains must be between 40 and 20000")
+    return seed, strains
+
+
+def main(argv: list[str] | None = None) -> None:
+    """Generate the tables, write them to data/raw/ (or the dataset's raw/
+    folder), and print a summary."""
+    seed, n_strains = settings(argv)
     RAW.mkdir(parents=True, exist_ok=True)
-    tables = generate()
+    tables = generate(seed, n_strains)
+    if not paths.HERE.builtin:
+        print(f"  dataset {paths.HERE.home.name}: seed {seed}, {n_strains:,} strains")
     for name, df in tables.items():
         out = RAW / f"{name}.csv"
         df.to_csv(out, index=False)
-        print(f"  wrote {out.relative_to(ROOT)}  ({len(df):,} rows, {df.shape[1]} columns)")
+        print(f"  wrote {paths.rel(out)}  ({len(df):,} rows, {df.shape[1]} columns)")
 
     L = generate.ledger                        # type: ignore[attr-defined]
     print("\n  ── StrainScope synthetic dataset: ledger ───────────────────────")

@@ -17,7 +17,14 @@ animated tour:
     docs/img/app_sql.png          a cookbook recipe run in the SQL console
     docs/img/app_upload.png       twelve uploaded strains, checked and scored
     docs/img/app_rebuild.png      the Data page's rebuild from scratch, with its plan (Phase 8)
+    docs/img/app_workflow_checks.png  the Workflow page: three uploaded tables, checked (Phase 9)
+    docs/img/app_workflow_run.png     ... every step running, with its live log
+    docs/img/app_workflow.png         ... and finished, with what each step found
     docs/img/app_tour.gif         the same pages as a slideshow
+
+For the Workflow pictures it saves the example tables (src/strainscope/datasets.py,
+example()) as a dataset called screenshot_example, runs every step on it with quick
+settings (about a minute), and deletes it again at the end.
 
 You only need this when the app's look changes; the pictures are committed.
 It drives a real browser, so it needs Playwright, which isn't in
@@ -77,13 +84,26 @@ def choose(page, label: str, value: str) -> None:
     page.keyboard.press("Enter")
 
 
+DATASET = "screenshot_example"     # made and deleted again for the Workflow pictures
+
+
+def to_top(page, locator) -> None:
+    """Scroll so this element sits at the top of the page."""
+    locator.first.evaluate("e => e.scrollIntoView({block: 'start'})")
+
+
 def main() -> None:
     from playwright.sync_api import sync_playwright
+    from strainscope import datasets as ds
+    from strainscope import paths
     from strainscope import service as sv
     if not sv.DB_PATH.exists():
         sys.exit("Build the database first (Data page, or python src/strainscope/harmonize.py).")
     example = Path(tempfile.mkdtemp()) / "strainscope_example.csv"
     sv.example_upload().to_csv(example, index=False)
+    tables = ds.write_tables(ds.example(), example.parent / "tables")
+    if (paths.DATASETS / DATASET).exists():
+        ds.remove(DATASET)
     frames: list[Path] = []
     proc = start_app()
     try:
@@ -183,10 +203,43 @@ def main() -> None:
             page.get_by_role("button", name="Rebuild everything from scratch").scroll_into_view_if_needed()
             settle(page, 1.5)
             shot("app_rebuild.png", frame=False)
+
+            # The Workflow page (Phase 9): upload the example, check, save, run, see.
+            page.goto(f"{BASE}/workflow")
+            settle(page)
+            page.get_by_text("Start a new dataset").click()
+            settle(page, 1.5)
+            uploads = page.locator("input[type='file']")
+            for i, path in enumerate(tables):
+                uploads.nth(i).set_input_files(str(path))
+                settle(page, 2)
+            name = page.get_by_label("Name for the dataset", exact=True).first
+            name.fill(DATASET)
+            name.press("Enter")
+            settle(page, 4)
+            page.get_by_text("The checks.", exact=True).scroll_into_view_if_needed()
+            settle(page, 1)
+            shot("app_workflow_checks.png")
+            page.get_by_role("button", name="Save it as a dataset and choose it").first.click()
+            settle(page, 4)
+            page.get_by_text("Start a new dataset").click()          # fold the form away again
+            settle(page, 1)
+            page.get_by_role("button", name="Run every step").click()
+            page.wait_for_timeout(9000)
+            to_top(page, page.get_by_role("heading", name="2. Run the phases"))
+            page.wait_for_timeout(1000)
+            shot("app_workflow_run.png", frame=False)
+            page.wait_for_selector("text=Every step finished", timeout=600000)
+            settle(page, 2)
+            to_top(page, page.get_by_role("heading", name="2. Run the phases"))
+            settle(page, 1)
+            shot("app_workflow.png")
             browser.close()
     finally:
         proc.terminate()
         proc.wait(timeout=20)
+        if (paths.DATASETS / DATASET).exists():
+            ds.remove(DATASET)
 
     from PIL import Image
     pictures = [Image.open(f).convert("RGB") for f in frames]

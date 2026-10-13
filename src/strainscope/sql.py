@@ -44,10 +44,11 @@ from pathlib import Path
 # Make `strainscope` importable no matter where the script is run from.
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from strainscope import paths  # noqa: E402
 from strainscope.service import safe_connect  # noqa: E402
 
-ROOT = Path(__file__).resolve().parents[2]
-DB_PATH = ROOT / "data" / "processed" / "strainscope.duckdb"
+ROOT = paths.ROOT
+DB_PATH = paths.HERE.db       # the library's database, or a dataset's (STRAINSCOPE_DATASET, Phase 9)
 
 BANNER = """StrainScope SQL console: read-only, break-nothing mode.
 Multi-line statements welcome: keep typing (or paste), and the query runs when

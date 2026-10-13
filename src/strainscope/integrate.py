@@ -26,6 +26,9 @@ WHERE THINGS GO
   artifacts/integration/        small result tables (committed, since the app reads them)
   data/processed/strainscope.duckdb   gains int_* tables after `publish`
 
+Inside a dataset of Phase 9 (src/strainscope/paths.py) the same files go into
+that dataset's folder instead, and the R step reads and writes there too.
+
 THE DECISIONS, WRITTEN DOWN (each is explained in docs/04-integration.md)
 ------------------------------------------------------------------------
 1. ALIGN on strain_id and refuse to continue if any strain is missing from a
@@ -50,6 +53,7 @@ import shutil
 import subprocess
 import sys
 import time
+import warnings
 from pathlib import Path
 
 import numpy as np
@@ -59,19 +63,22 @@ import pandas as pd
 # (the same pattern as fetch_real.py).
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from strainscope import paths  # noqa: E402
 from strainscope.generate_data import (  # noqa: E402  (after the path fix)
     HOUSEKEEPING_GENES, KINGDOM_ORDER, NOISE_GENES, NOISE_METABOLITES,
     PGP_GENES, SIGNAL_GENES, SIGNAL_METABOLITES)
 
-ROOT = Path(__file__).resolve().parents[2]
-DB_PATH = ROOT / "data" / "processed" / "strainscope.duckdb"
-BLOCKS = ROOT / "data" / "processed" / "integration"
-ARTIFACTS = ROOT / "artifacts" / "integration"
+ROOT = paths.ROOT
+DB_PATH = paths.HERE.db                 # the library's database, or a dataset's (Phase 9)
+BLOCKS = paths.HERE.blocks
+ARTIFACTS = paths.HERE.integration
 R_SCRIPT = ROOT / "R" / "diablo_integration.R"
 
 SEED = 42                    # same seed as the generator: reproducible folds
 NEAR_CONSTANT_SHARE = 0.95   # rule 3 above
-CV_FOLDS, CV_REPEATS = 5, 10 # 5-fold cross-validation, repeated 10 times
+CV_FOLDS = 5                 # 5-fold cross-validation, ...
+CV_REPEATS = int(paths.setting("repeats", 10))   # ... repeated 10 times (a dataset may ask for fewer)
+UNGRADED = "not graded"      # the role of every feature when there's no answer key (your own data)
 
 
 # =============================================================================
@@ -87,14 +94,45 @@ def _arsenal(prev: tuple[float, ...]) -> str:
     return KINGDOM_ORDER[int(np.argmax(prev))]
 
 
-def feature_annotations() -> pd.DataFrame:
+def feature_annotations(genes: list[str] | None = None, metabolites: list[str] | None = None,
+                        answer_key: bool | None = None) -> pd.DataFrame:
     """One row per feature: its block, its role in the simulation, and which
     kingdom's arsenal it belongs to.
 
     Because the data is synthetic, we know the ground truth: which features
     were written into the efficacy formula ('signal') and which were not
     ('decoy'). Real projects never get this answer key. We use it to GRADE the
-    signatures the methods find, which is the point of building on known data."""
+    signatures the methods find, which is the point of building on known data.
+
+    Your own data (Phase 9) has no answer key. Give the columns it has and
+    answer_key=False: a name StrainScope knows keeps what is known about it
+    (its description and arsenal; a housekeeping gene stays 'housekeeping'),
+    every other role becomes 'not graded', and a name it doesn't know is
+    listed as 'your column'. Without arguments: the simulated library."""
+    if answer_key is None:
+        answer_key = bool(paths.setting("answer_key", True))
+    known = _known_annotations()
+    if genes is None and metabolites is None and answer_key:
+        return known
+    table = known.set_index("feature")
+    rows = []
+    for block, names in (("genomics", genes), ("metabolomics", metabolites)):
+        if names is None:
+            names = known.loc[known["block"] == block, "feature"].tolist()
+        for name in names:
+            if name in table.index and table.loc[name, "block"] == block:
+                row = {"feature": name, **table.loc[name].to_dict()}
+            else:
+                row = {"feature": name, "block": block, "role": UNGRADED,
+                       "arsenal": "not in StrainScope's list", "description": "your column"}
+            if not answer_key and row["role"] != "housekeeping":
+                row["role"] = UNGRADED
+            rows.append(row)
+    return pd.DataFrame(rows, columns=known.columns)
+
+
+def _known_annotations() -> pd.DataFrame:
+    """The simulated library's 51 features, with their planted roles."""
     rows = []
     for gene, info in SIGNAL_GENES.items():
         rows.append({"feature": gene, "block": "genomics", "role": "signal",
@@ -240,7 +278,9 @@ def prepare(db_path: Path = DB_PATH, blocks_dir: Path = BLOCKS,
     m_cen.round(6).to_csv(blocks_dir / "block_metabolomics_centred.csv")
     outcome = p[["kingdom", "is_effective", "suppression_score"]]
     outcome.to_csv(blocks_dir / "outcome.csv")
-    feature_annotations().to_csv(artifacts_dir / "feature_annotations.csv", index=False)
+    # Every column the data has (dropped or not), so the app and the models know them all.
+    feature_annotations(list(g.columns), list(m.columns)).to_csv(
+        artifacts_dir / "feature_annotations.csv", index=False)
     led = pd.DataFrame(ledger)
     led.to_csv(artifacts_dir / "prepare_ledger.csv", index=False)
 
@@ -260,8 +300,8 @@ def prepare(db_path: Path = DB_PATH, blocks_dir: Path = BLOCKS,
               "(kingdom-wise, labels never used)")
         print("  versions written ....... as-measured + centred within kingdom")
         print("  ─────────────────────────────────────────────────────────────")
-        print(f"  blocks  → {blocks_dir.relative_to(ROOT)}/")
-        print(f"  ledger  → {(artifacts_dir / 'prepare_ledger.csv').relative_to(ROOT)}")
+        print(f"  blocks  → {paths.rel(blocks_dir)}/")
+        print(f"  ledger  → {paths.rel(artifacts_dir / 'prepare_ledger.csv')}")
     return summary
 
 
@@ -272,7 +312,7 @@ def read_blocks(blocks_dir: Path = BLOCKS, centred: bool = True):
              blocks_dir / f"block_metabolomics{suffix}.csv", blocks_dir / "outcome.csv"]
     for path in paths:
         if not path.exists():
-            sys.exit(f"Missing {path.relative_to(ROOT) if path.is_relative_to(ROOT) else path}.\n"
+            sys.exit(f"Missing {paths.rel(path)}.\n"
                      "Prepare the blocks first:  python src/strainscope/integrate.py prepare")
     g, m, o = (pd.read_csv(path, index_col=0) for path in paths)
     return g, m, o
@@ -289,9 +329,35 @@ def balanced_error_rate(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     that always says "not effective" is 76 % accurate and completely useless.
     BER asks "how often are you wrong about the effective ones, and how often
     about the others?" and averages the two. The lazy model scores 0.50,
-    exactly what a coin would. Lower is better."""
+    exactly what a coin would. Lower is better.
+
+    A test fold with strains of one class only (possible in a small dataset of
+    your own, Phase 9, when labels are shuffled for a control) has no second
+    error rate to average, so its BER is "not a number" and the summaries skip it."""
+    if not (np.any(y_true == 0) and np.any(y_true == 1)):
+        return float("nan")
     errors = [np.mean(y_pred[y_true == c] != c) for c in (0, 1)]
     return float(np.mean(errors))
+
+
+def per_repeat_means(values: list[float], repeats: int, folds: int = CV_FOLDS) -> np.ndarray:
+    """One number per repeat: the average of its folds. A fold that couldn't
+    be scored (see balanced_error_rate) is left out of its repeat's average."""
+    table = np.asarray(values, dtype=float).reshape(repeats, folds)
+    if np.isnan(table).any():
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", RuntimeWarning)    # a repeat with no scored fold stays NaN
+            return np.nanmean(table, axis=1)
+    return table.mean(axis=1)
+
+
+def mean_and_sd(per_repeat: np.ndarray) -> tuple[float, float]:
+    """The mean of the repeats and how much they spread (the ± everywhere in
+    the project). Repeats that couldn't be scored are left out."""
+    kept = per_repeat[~np.isnan(per_repeat)]
+    if not len(kept):
+        return float("nan"), float("nan")
+    return float(kept.mean()), (float(kept.std(ddof=1)) if len(kept) > 1 else float("nan"))
 
 
 def _lasso_args() -> dict:
@@ -377,7 +443,8 @@ def cross_validate_models(g: pd.DataFrame, m: pd.DataFrame, outcome: pd.DataFram
     for fold_number, (train, test) in enumerate(cv.split(G, y)):
         def score(name, prob, thr=0.5, truth=None):
             truth = y[test] if truth is None else truth
-            scores[name]["auc"].append(roc_auc_score(truth, prob))
+            both = len(np.unique(truth)) == 2           # always, except shuffled labels in a small dataset
+            scores[name]["auc"].append(roc_auc_score(truth, prob) if both else float("nan"))
             scores[name]["ber"].append(balanced_error_rate(truth, (prob >= thr).astype(int)))
 
         pg = logistic().fit(G[train], y[train]).predict_proba(G[test])[:, 1]
@@ -417,16 +484,16 @@ def cross_validate_models(g: pd.DataFrame, m: pd.DataFrame, outcome: pd.DataFram
         # One number per repeat (the average over its 5 folds). The ± we report
         # is how much that number moves when the folds are reshuffled. It's the
         # same definition mixOmics uses, so R and Python uncertainties are comparable.
-        return np.asarray(values).reshape(repeats, folds).mean(axis=1)
+        return per_repeat_means(values, repeats, folds)
 
-    board = pd.DataFrame([{
-        "approach": n,
-        "ber_mean": round(float(per_repeat(s["ber"]).mean()), 4),
-        "ber_sd": round(float(per_repeat(s["ber"]).std(ddof=1)), 4),
-        "auc_mean": round(float(per_repeat(s["auc"]).mean()), 4),
-        "auc_sd": round(float(per_repeat(s["auc"]).std(ddof=1)), 4),
-        "n_folds_scored": len(s["ber"]),
-    } for n, s in scores.items()])
+    rows = []
+    for n, s in scores.items():
+        ber_mean, ber_sd = mean_and_sd(per_repeat(s["ber"]))
+        auc_mean, auc_sd = mean_and_sd(per_repeat(s["auc"]))
+        rows.append({"approach": n, "ber_mean": round(ber_mean, 4), "ber_sd": round(ber_sd, 4),
+                     "auc_mean": round(auc_mean, 4), "auc_sd": round(auc_sd, 4),
+                     "n_folds_scored": int(np.sum(~np.isnan(np.asarray(s["ber"], dtype=float))))})
+    board = pd.DataFrame(rows)
     stability = (l1_counts / n_fits).rename("selection_frequency").reset_index()
     stability = stability.rename(columns={"index": "feature"})
     return board, stability
@@ -458,10 +525,15 @@ def grade_signature(selected: list[str], annotations: pd.DataFrame) -> dict:
 
     precision = of the features it picked, how many truly drive efficacy;
     recall    = of the true drivers available, how many it picked.
-    Only possible because the data is synthetic and the truth is known."""
+    Only possible because the data is synthetic and the truth is known. With
+    your own data (no answer key) only the count is filled in."""
     ann = annotations.set_index("feature")
     available_signal = set(ann.index[ann["role"] == "signal"])
     picked = set(selected)
+    if not available_signal:
+        return {"n_selected": len(picked), "n_signal_selected": float("nan"),
+                "n_decoys_selected": float("nan"), "precision": float("nan"), "recall": float("nan"),
+                "decoys_selected": "not graded (no answer key)"}
     true_pos = picked & available_signal
     return {"n_selected": len(picked),
             "n_signal_selected": len(true_pos),
@@ -527,10 +599,16 @@ def twin(blocks_dir: Path = BLOCKS, artifacts_dir: Path = ARTIFACTS,
         for _, r in board.iterrows():
             print(f"  {r['approach']:<48} BER {r['ber_mean']:.3f} ± {r['ber_sd']:.3f}   "
                   f"AUC {r['auc_mean']:.3f}")
-        print("  ── Signature report card (graded against the planted truth) ───")
-        for gr in grades:
-            print(f"  {gr['method']:<52} {gr['n_selected']:>2} picked · "
-                  f"{gr['n_signal_selected']:>2} true drivers · decoys: {gr['decoys_selected']}")
+        if any(a["role"] == "signal" for _, a in annotations.iterrows()):
+            print("  ── Signature report card (graded against the planted truth) ───")
+            for gr in grades:
+                print(f"  {gr['method']:<52} {gr['n_selected']:>2} picked · "
+                      f"{gr['n_signal_selected']:>2} true drivers · decoys: {gr['decoys_selected']}")
+        else:
+            print("  ── Signatures (your own data: no answer key, so nothing is graded) ───")
+            for gr in grades:
+                print(f"  {gr['method']:<52} {gr['n_selected']:>2} picked")
+            print("  picked by the Python lasso: " + (", ".join(python_signature) or "none"))
         if agreement:
             print(f"  ── Two languages, one answer? robust lists share {agreement['in_both']} features; "
                   f"{agreement['diablo_only']} DIABLO-only, {agreement['python_only']} Python-only "
@@ -539,10 +617,12 @@ def twin(blocks_dir: Path = BLOCKS, artifacts_dir: Path = ARTIFACTS,
             print("  (DIABLO results not found yet. Run the R step, then `twin` again "
                   "for the two-language agreement check)")
         top = corr[corr["is_producer_pair"]].sort_values("spearman_rho", ascending=False)
-        print(f"  gene ↔ own-product correlations: median rho "
-              f"{top['spearman_rho'].median():.2f} across {len(top)} producer pairs")
-        print(f"  results → {artifacts_dir.relative_to(ROOT) if artifacts_dir.is_relative_to(ROOT) else artifacts_dir}/"
-              f"   ({time.time() - started:.0f} s)")
+        if len(top):
+            print(f"  gene ↔ own-product correlations: median rho "
+                  f"{top['spearman_rho'].median():.2f} across {len(top)} producer pairs")
+        else:
+            print("  gene ↔ own-product correlations: none of the known producer pairs is in this data")
+        print(f"  results → {paths.rel(artifacts_dir)}/   ({time.time() - started:.0f} s)")
     return {"scoreboard": board, "python_signature": python_signature,
             "agreement": agreement, "grades": grades}
 
@@ -575,7 +655,7 @@ def publish(artifacts_dir: Path = ARTIFACTS, db_path: Path = DB_PATH,
     finally:
         con.close()
     if verbose:
-        print(f"  published {len(created)} tables into {db_path.relative_to(ROOT) if db_path.is_relative_to(ROOT) else db_path}:")
+        print(f"  published {len(created)} tables into {paths.rel(db_path)}:")
         for t in created:
             print(f"    {t}")
     return created
@@ -590,9 +670,12 @@ def find_rscript() -> str | None:
 
     macOS/Linux installers put Rscript on the PATH. The Windows installer does
     NOT, so we also look in the standard install folders, newest first. The
-    STRAINSCOPE_RSCRIPT environment variable overrides everything."""
+    STRAINSCOPE_RSCRIPT environment variable overrides everything: a path to
+    Rscript, or the word none to leave the R step out."""
     import os
     override = os.environ.get("STRAINSCOPE_RSCRIPT")
+    if override and override.strip().lower() == "none":    # skip R on purpose (the tests do, Phase 9)
+        return None
     if override and Path(override).exists():
         return override
     found = shutil.which("Rscript")
@@ -606,16 +689,23 @@ def find_rscript() -> str | None:
     return None
 
 
-def run_r_step() -> bool:
+def run_r_step(repeats: int = CV_REPEATS) -> bool:
     """Run R/diablo_integration.R from the project root (so renv activates).
-    Returns True if it ran successfully, False if R is unavailable or failed."""
+    Returns True if it ran successfully, False if R is unavailable or failed.
+    Inside a dataset (Phase 9), the R script is told the dataset's folder and
+    the number of repeats through two environment variables, and reads and
+    writes there instead of the library's folders."""
     rscript = find_rscript()
     if rscript is None:
         print("  R not found; skipping DIABLO. Everything else still runs (Python-only path).\n"
               "  To include it: install R (docs/01-setup.md, Part I) or set STRAINSCOPE_RSCRIPT.")
+        if not paths.HERE.builtin:
+            for old in paths.HERE.integration.glob("diablo_*.csv"):      # results of an earlier run with R
+                old.unlink()
         return False
     print(f"  running DIABLO with {rscript} (about 3 minutes) …")
-    done = subprocess.run([rscript, str(R_SCRIPT.relative_to(ROOT))], cwd=ROOT)
+    env = paths.child_environment(paths.HERE.home, STRAINSCOPE_REPEATS=str(repeats))
+    done = subprocess.run([rscript, str(R_SCRIPT.relative_to(ROOT))], cwd=ROOT, env=env)
     if done.returncode != 0:
         print("  the R step failed. Read its message above and see docs/04-integration.md §11.")
         return False
@@ -634,7 +724,7 @@ def main() -> None:
     if args.step in ("prepare", "all"):
         prepare()
     if args.step == "all":
-        run_r_step()
+        run_r_step(args.repeats)
     if args.step in ("twin", "all"):
         twin(repeats=args.repeats)
     if args.step in ("publish", "all"):

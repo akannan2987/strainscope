@@ -12,7 +12,10 @@ st.markdown(
 ui.simulated_note()
 
 checks = ui.status()
-if not ui.has_database():
+if not ui.builtin():
+    st.info(f"Showing **{ui.label(ui.dataset())}**. Switch back to the library in the sidebar; run or change "
+            "this dataset on the **Workflow** page.")
+if ui.builtin() and not ui.has_database():
     st.warning("There's no database yet, so the SQL console, the example upload and some numbers are "
                "missing. The rankings, graph and charts already work, because they read the committed "
                "results in `artifacts/`.")
@@ -25,16 +28,19 @@ summary = ui.artifact("graph/graph_summary.csv")
 cols = st.columns(4)
 if pred is not None:
     eff = int(pred["is_effective"].sum())
-    cols[0].metric("Strains in the library", f"{len(pred)}", f"{eff} effective ({eff / len(pred):.0%})",
-                   delta_color="off", delta_arrow="off", help="Effective = disease suppressed by at least 65 % in the simulated trial.")
+    line = f"{float(ui.info().get('effective_at', 65)):g}"
+    cols[0].metric("Strains in the library" if ui.builtin() else "Strains in this dataset", f"{len(pred)}",
+                   f"{eff} effective ({eff / len(pred):.0%})", delta_color="off", delta_arrow="off",
+                   help=f"Effective = disease suppressed by at least {line} % in the trial.")
 if card is not None:
     perf = card["cross_validated_performance"]
     cols[1].metric("Model error (balanced)", f"{perf['ber']:.3f}", f"AUC {perf['auc']:.3f}", delta_color="off", delta_arrow="off",
-                   help="Measured on strains the model hadn't seen (5 folds x 10 repeats). A coin scores 0.50.")
+                   help=f"Measured on strains the model hadn't seen ({perf['folds']} folds x {perf['repeats']} "
+                        "repeats). A coin scores 0.50.")
     top = card["top_n_check"]
     cols[2].metric(f"Effective among the top {top['n']}", f"{top['truly_effective']}",
                    f"chance: about {top['expected_by_chance']:.0f}", delta_color="off", delta_arrow="off",
-                   help="If a team tested the 50 best-ranked strains, how many would really work?")
+                   help=f"If a team tested the {top['n']} best-ranked strains, how many would really work?")
 if summary is not None:
     n_nodes = int(summary.loc[summary["kind"] == "nodes", "count"].sum())
     n_edges = int(summary.loc[summary["kind"] == "edges", "count"].sum())
@@ -65,9 +71,14 @@ with left:
     st.caption("The network of genes, compounds and modes of action. Find the path between any two things.")
 with right:
     st.page_link(ui.PAGES["integration"], label="Integration", icon=":material/join_inner:")
-    st.caption("How genes and chemistry were read together (Phase 3), graded against the planted truth.")
+    st.caption("How genes and chemistry were read together (Phase 3), graded against the planted truth "
+               "when the data is simulated.")
+    st.page_link(ui.PAGES["workflow"], label="Workflow", icon=":material/play_circle:")
+    st.caption("Every phase on data of your choice: your own genes, compounds and trial results, or a fresh "
+               "simulated library, with a live log and what each step found.")
     st.page_link(ui.PAGES["data"], label="Data", icon=":material/database:")
-    st.caption("The simulated library, your own strains (upload a CSV), and real data from public databases.")
+    st.caption("The simulated library, your own strains scored by the saved model, and real data from public "
+               "databases.")
     st.page_link(ui.PAGES["sql"], label="SQL console", icon=":material/terminal:")
     st.caption("Ask the database anything in SQL, read-only, with the Query Cookbook's recipes one click away.")
 
@@ -78,15 +89,17 @@ with st.expander("What the app is reading (health check)", expanded=not all(c.ok
         st.markdown(f"{mark[c.ok]} **{c.name}**: {c.detail}")
         if c.fix and c.ok is not True:
             st.caption(("For the owner: " if ui.PUBLIC else "To add: " if c.ok is None else "To fix: ") + f"`{c.fix}`")
-    st.caption("The same check from a terminal: `python src/strainscope/service.py status`. More on the "
-               "**About this copy** page.")
+    st.caption("The same check from a terminal: `python src/strainscope/service.py status`"
+               + ("" if ui.builtin() else f" (for this dataset: `python src/strainscope/datasets.py show {ui.dataset()}`)")
+               + ". More on the **About this copy** page.")
 
 with st.expander("How this app works"):
     st.markdown(
         "The app is the last link in a chain. The scripts of Phases 1 to 5 did the heavy work once, on a laptop, "
-        "and saved small result files in `artifacts/` plus a database. The app only **reads** them, which is why "
+        "and saved small result files in `artifacts/` plus a database. The pages only **read** them, which is why "
         "every page opens quickly. Every click reruns the page from the top; the files are read once and kept "
-        "in memory until they change.")
+        "in memory until they change. The **Workflow** page runs the same scripts on a dataset of your choice, "
+        "in a folder of its own, and the pages then read that dataset's files instead.")
     st.graphviz_chart("""
 digraph {
   rankdir=LR; bgcolor="transparent"; node [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=11];
