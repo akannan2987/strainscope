@@ -11,13 +11,13 @@
 #   * scikit-learn at the version the saved model was built with
 #     (artifacts/model/model_card.json), so the model loads without a warning;
 #   * versions that pass every test.
-duckdb==1.5.6
-faker==40.43.0
+duckdb==2.0.0
+faker==40.44.0
 matplotlib==3.11.2
 networkx==3.7
 numpy==2.5.4
-pandas==3.0.6
+pandas==3.1.0
 plotly==7.1.0
 requests==2.34.2
 scikit-learn==1.9.0
-streamlit==1.65.0
+streamlit==1.66.1
